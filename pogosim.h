@@ -19,6 +19,9 @@
 	UDT myuserdata;                 \
 	UDT *mydata = &myuserdata; 
 
+void user_init(void);
+void user_step(void);
+
 #endif // SIMULATOR
 
 
@@ -27,7 +30,7 @@ extern "C" {
 #endif
 
 // TODO
-void pogo_start(void (*setup)(void), void (*loop)(void));
+void pogo_start(void (*user_init)(void), void (*user_step)(void));
 
 #ifdef __cplusplus
 }

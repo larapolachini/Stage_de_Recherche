@@ -77,7 +77,6 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
 }
 
 
-
 void create_robots(Configuration& config) {
     uint32_t const nb_robots = std::stoi(config.get("nBots", "100"));
     if (!nb_robots)
@@ -105,7 +104,7 @@ void main_loop(Configuration& config) {
     for (auto& robot : robots) {
         current_robot = &robot;
         mydata = robot.data;
-        current_robot->user_setup();
+        current_robot->user_init();
     }
 
     // Main loop for all robots
@@ -113,7 +112,7 @@ void main_loop(Configuration& config) {
         for (auto& robot : robots) {
             current_robot = &robot;
             mydata = robot.data;
-            current_robot->user_loop();
+            current_robot->user_step();
         }
     }
 

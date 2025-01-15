@@ -48,13 +48,13 @@ class Robot{
 
 public:
     void *data;
-    void (*user_setup)(void);
-    void (*user_loop)(void);
+    void (*user_init)(void);
+    void (*user_step)(void);
 };
 
 
-extern std::vector<Robot> robots;
 extern Robot* current_robot;
+extern std::vector<Robot> robots;
 extern int UserdataSize;
 extern void* mydata;
 
