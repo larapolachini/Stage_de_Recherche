@@ -1,38 +1,106 @@
-# Compiler settings
-CC = gcc
-CXX = g++
-CFLAGS = -Wall -std=c11
-CXXFLAGS = -Wall -std=c++17
-LDFLAGS = -lyaml-cpp
-TARGET = pogosim
 
-# Object files
-OBJS = simulator.o helloworld.o spogobot.o pogosim.o
 
-# Default target
-all: $(TARGET)
+##### Settings for the pogobot binary #####
+BUILD_DIR=./build
+POGO_SDK=pogobot-sdk
 
-# Linking the final executable
-$(TARGET): $(OBJS)
-#	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)  -Wl,-e,start
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS) #-Wl,--wrap=main
+POGO_SDK_TOOLS=$(POGO_SDK)/tools
+POGO_SDK_INCS=$(POGO_SDK)/includes
+POGO_SDK_LIBS=$(POGO_SDK)/libs
 
-helloworld.o: helloworld.c spogobot.h
-	$(CC) $(CFLAGS) -c helloworld.c
+POGO_VAR=$(POGO_SDK_TOOLS)
 
-simulator.o: simulator.cpp spogobot.h
-	$(CXX) $(CXXFLAGS) -c simulator.cpp
+include $(POGO_VAR)/variables.mak
+include $(POGO_SDK_TOOLS)/common.mak
 
-spogobot.o: spogobot.cpp spogobot.h
-	$(CXX) $(CXXFLAGS) -c spogobot.cpp
+TTY?=/dev/ttyUSB0
 
-pogosim.o: pogosim.cpp pogosim.h
-	$(CXX) $(CXXFLAGS) -c pogosim.cpp
+SRCS=$(wildcard *.c)
+OBJECTS=$(SRCS:.c=.o)
+#OBJECTS_BUILD = $(addprefix $(BUILD_DIR)/, $(OBJECTS))
+OBJECTS_BUILD = $(patsubst %.c,build/bin/%.o,$(SRCS))
 
-# Clean build artifacts
+##### Compiler settings for the simulator #####
+SIM_CC = gcc
+SIM_CXX = g++
+SIM_CFLAGS = -Wall -std=c11
+SIM_CXXFLAGS = -Wall -std=c++17
+SIM_LDFLAGS = -lyaml-cpp
+SIM_TARGET = pogosim
+
+SIM_SRCS_CXX = $(wildcard *.cpp)
+SIM_SRCS_C = $(wildcard *.c)
+#SIM_OBJECTS_CXX = $(SIM_SRCS_CXX:.cpp=.o)
+#SIM_OBJECTS_C = $(SIM_SRCS_C:.c=.o)
+SIM_OBJECTS_CXX = $(patsubst %.cpp,build/sim/%.o,$(SIM_SRCS_CXX))
+SIM_OBJECTS_C = $(patsubst %.c,build/sim/%.o,$(SIM_SRCS_C))
+SIM_OBJECTS = $(SIM_OBJECTS_CXX) $(SIM_OBJECTS_C)
+
+
+all: directories sim bin
+
+# Ensure build directories exist
+$(BUILD_DIR)/bin $(BUILD_DIR)/sim:
+	mkdir -p $@
+
+##### Rules for the simulator #####
+
+#%.o: %.cpp
+$(BUILD_DIR)/sim/%.o: %.cpp | $(BUILD_DIR)/sim
+	$(SIM_CXX) $(SIM_CXXFLAGS) -c $< -o $@
+
+#%.o: %.c
+$(BUILD_DIR)/sim/%.o: %.c | $(BUILD_DIR)/sim
+	$(SIM_CC) $(SIM_CFLAGS) -c $< -o $@
+
+sim: directories $(SIM_TARGET)
+
+$(SIM_TARGET): $(SIM_OBJECTS)
+	$(SIM_CXX) $(SIM_CXXFLAGS) -o $@ $(SIM_OBJECTS) $(SIM_LDFLAGS) #-Wl,--wrap=main
+	cp $(SIM_TARGET) $(BUILD_DIR)/sim/$(SIM_TARGET)
+
+##### Rules for the Pogobot binary #####
+
+bin: directories $(BUILD_DIR)/bin/firmware.bin
+
+INCLUDES+=-I. -I$(POGO_SDK_INCS)
+
+# pull in dependency info for *existing* .o files
+-include $(OBJECTS_BUILD:.o=.d)
+
+$(BUILD_DIR)/bin/%.bin: $(BUILD_DIR)/bin/%.elf
+	$(OBJCOPY) -O binary $< $@
+	chmod -x $@
+
+$(BUILD_DIR)/bin/firmware.elf: $(OBJECTS_BUILD)
+	$(CC) $(LDFLAGS) \
+		-T $(POGO_SDK_TOOLS)/linker.ld \
+		-N -o $@ \
+		$(OBJECTS_BUILD) \
+		-Wl,--whole-archive \
+		-Wl,--gc-sections \
+		-L$(POGO_SDK_LIBS) -lcompiler_rt -lc -lpogobot
+	chmod -x $@
+
+
+$(BUILD_DIR)/bin/%.o: %.c | $(BUILD_DIR)/bin
+	$(compile) -DREAL_ROBOT
+
 clean:
-	rm -f $(OBJS) $(TARGET)
+	$(RM) -r $(BUILD_DIR) .*~ *~
+	$(RM) -f $(SIM_OBJECTS) $(SIM_TARGET)
+
+connect:
+	$(POGO_SDK_TOOLS)/litex_term.py --serial-boot --kernel $(BUILD_DIR)/bin/firmware.bin --kernel-adr $(ROM_BASE) --safe $(TTY)
+
+directories: $(BUILD_DIR)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+#.PHONY: all clean connect
+
 
 # MODELINE "{{{1
-# vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+# vim:noexpandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
 # vim:foldmethod=marker
