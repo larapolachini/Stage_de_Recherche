@@ -1,0 +1,7 @@
+numpy
+tqdm
+pyaml
+matplotlib
+PySDL2
+Box2D
+
