@@ -1,7 +1,8 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
-#include "spogobot.h"
+//#include "spogobot.h"
+#include "pogosim.h"
 
 extern "C" int robot_main(void);
 

@@ -2,6 +2,7 @@
 #define POGOBOT_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // TODO : version of the pogobot lib for pogosim
 
@@ -24,8 +25,21 @@ extern "C" {
 
 // TODO define all functions of the pogobot API
 
+struct Robot;
+
 typedef struct time_reference_t {
+#ifdef __cplusplus
+    void reset();
+    uint32_t get_elapsed_microseconds();
+    void enable();
+    void disable();
+#endif
+
+    bool enabled;
     uint32_t hardware_value_at_time_origin;
+    //std::chrono::time_point<std::chrono::system_clock> start_time;
+    uint64_t start_time;
+    uint32_t elapsed_ms;
 } time_reference_t;
 
 void pogobot_init(void);
@@ -48,42 +62,53 @@ void pogosim_printf(const char* format, ...);
 
 
 #ifdef __cplusplus
-#include <vector>
 
+#include <vector>
+#include <set>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h> // For colored console output
 #include <spdlog/fmt/ostr.h> // Enables << operator for logging
-
-
+#include <chrono>
 
 // Declare a global logger (shared pointer)
 extern std::shared_ptr<spdlog::logger> glogger;
 
 void init_logger();
+std::string log_current_robot();
+
 
 class Robot {
 public:
     Robot(uint16_t _id, size_t _userdatasize);
     //~Robot();
 
-
-    long long current_time_microseconds = 0LL;
-    long pogo_ticks = 0;
+    std::chrono::time_point<std::chrono::system_clock> current_time;
+    uint64_t current_time_microseconds = 0LL;
+    uint32_t pogo_ticks = 0;
 
     uint16_t id;
     void* data = nullptr;
     void (*user_init)(void);
     void (*user_step)(void);
-};
 
+    std::set<time_reference_t*> stop_watches;
+
+    void launch_user_step();
+
+    void update_time();
+    void register_stop_watch(time_reference_t* sw);
+    void enable_stop_watches();
+    void disable_stop_watches();
+};
 
 extern Robot* current_robot;
 extern std::vector<Robot> robots;
 extern int UserdataSize;
 extern void* mydata;
-extern uint64_t pogo_ticks;
 
-std::string log_current_robot();
+//extern std::chrono::time_point<std::chrono::system_clock> sim_starting_time;
+extern uint64_t sim_starting_time_microseconds;
+uint64_t get_current_time_microseconds();
 #endif
 
 

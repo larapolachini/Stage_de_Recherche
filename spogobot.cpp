@@ -5,8 +5,8 @@
 #include <cstdarg>
 #include <sstream>
 
-
 #include "spogobot.h"
+
 
 /************* GLOBALS *************/ // {{{1
 
@@ -14,6 +14,8 @@ Robot* current_robot;
 std::vector<Robot> robots;
 uint64_t pogo_ticks;
 std::shared_ptr<spdlog::logger> glogger;
+//std::chrono::time_point<std::chrono::system_clock> sim_starting_time;
+uint64_t sim_starting_time_microseconds;
 
 void init_logger() {
     // Create a console logger with color support
@@ -21,6 +23,50 @@ void init_logger() {
     glogger->set_level(spdlog::level::info); // Set default log level
     spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v"); // Set log format
 }
+
+/************* time_reference_t *************/ // {{{1
+
+void time_reference_t::reset() {
+    enabled = false;
+    if (current_robot != nullptr)
+        current_robot->register_stop_watch(this);
+
+    start_time = get_current_time_microseconds();
+    auto const duration = start_time - sim_starting_time_microseconds;
+    hardware_value_at_time_origin = duration;
+    elapsed_ms = 0;
+}
+
+void time_reference_t::enable() {
+    enabled = true;
+    start_time = get_current_time_microseconds();
+    //glogger->debug("ENABLE!! {}", start_time);
+}
+
+void time_reference_t::disable() {
+    enabled = false;
+    get_elapsed_microseconds();
+    //glogger->debug("DISABLE!! {}", start_time);
+}
+
+uint32_t time_reference_t::get_elapsed_microseconds() {
+    //start_time = get_current_time_microseconds();
+    auto const duration = get_current_time_microseconds() - start_time;
+    elapsed_ms += duration;
+    return elapsed_ms;
+}
+
+
+uint64_t get_current_time_microseconds() {
+    // Get the current time in microseconds since epoch
+    auto const now = std::chrono::system_clock::now();
+    auto const duration = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+
+    // Convert
+    uint64_t const microseconds = static_cast<uint64_t const>(duration.count());
+    return microseconds;
+}
+
 
 /************* SIMULATED ROBOTS *************/ // {{{1
 
@@ -34,6 +80,33 @@ Robot::Robot(uint16_t _id, size_t _userdatasize) {
 //    data = nullptr;
 //}
 
+void Robot::launch_user_step() {
+    update_time();
+    enable_stop_watches();
+    user_step();
+    disable_stop_watches();
+    pogo_ticks++;
+}
+
+void Robot::update_time() {
+    current_time_microseconds = get_current_time_microseconds() - sim_starting_time_microseconds;
+}
+
+void Robot::register_stop_watch(time_reference_t* sw) {
+    stop_watches.insert(sw);
+}
+
+void Robot::enable_stop_watches() {
+    for (auto* sw : stop_watches) {
+        sw->enable();
+    }
+}
+
+void Robot::disable_stop_watches() {
+    for (auto* sw : stop_watches) {
+        sw->disable();
+    }
+}
 
 /************* SIMULATED POGOLIB *************/ // {{{1
 
@@ -52,12 +125,11 @@ uint16_t pogobot_helper_getid(void) {
 }
 
 void pogobot_stopwatch_reset(time_reference_t *stopwatch) {
-    // TODO
+    stopwatch->reset();
 }
 
 int32_t pogobot_stopwatch_get_elapsed_microseconds(time_reference_t *stopwatch) {
-    // TODO
-    return 0;
+    return stopwatch->get_elapsed_microseconds();
 }
 
 void pogobot_led_setColor(int r, int g, int b) {
@@ -110,18 +182,6 @@ void pogosim_printf(const char* format, ...) {
     // Log to glogger->info()
     glogger->info(final_message);
 
-    va_end(args);
-
-//    // Use fmt::vformat to create a formatted string dynamically
-//    auto aa = fmt::make_format_args(args);
-//    //std::string formatted_message = fmt::vformat(format, fmt::make_format_args(args));
-//
-// //   // Combine the robot log prefix and the message
-// //   std::string final_message = log_current_robot() + "[PRINTF] " + formatted_message;
-//
-// //   // Log to glogger->info()
-////    glogger->info(final_message);
-//
     va_end(args);
 }
 

@@ -13,6 +13,7 @@
 #include <string>
 #include <unordered_map>
 #include <yaml-cpp/yaml.h>
+#include <chrono>
 
 
 // Load configuration from a YAML file
@@ -90,18 +91,8 @@ void create_robots(Configuration& config) {
         robots.emplace_back(i, UserdataSize);
     }
     current_robot = &robots.front();
-}
 
-void set_current_robot(Robot& robot) {
-    current_robot = &robot;
-    mydata = robot.data;
-    pogo_ticks = robot.pogo_ticks;
-}
-
-void main_loop(Configuration& config) {
-    uint32_t const simulation_time = std::stoi(config.get("simulationTime", "100"));
     glogger->info("Initializing all robots...");
-
     // Launch main() on all robots
     for (auto& robot : robots) {
         set_current_robot(robot);
@@ -113,14 +104,29 @@ void main_loop(Configuration& config) {
         set_current_robot(robot);
         current_robot->user_init();
     }
+}
+
+void set_current_robot(Robot& robot) {
+    current_robot = &robot;
+    mydata = robot.data;
+    pogo_ticks = robot.pogo_ticks;
+
+    // Update robot clock and handle time-keeping
+    // TODO
+}
+
+void main_loop(Configuration& config) {
+    uint32_t const simulation_time = std::stoi(config.get("simulationTime", "100"));
+    glogger->info("Launching the main simulation loop.");
+
+    //sim_starting_time = std::chrono::system_clock::now();
+    sim_starting_time_microseconds = get_current_time_microseconds();
 
     // Main loop for all robots
-    glogger->info("Launching the main simulation loop.");
     for (uint32_t i = 0; i < simulation_time; ++i) {
         for (auto& robot : robots) {
             set_current_robot(robot);
-            current_robot->user_step();
-            robot.pogo_ticks++;
+            robot.launch_user_step();
         }
     }
 }

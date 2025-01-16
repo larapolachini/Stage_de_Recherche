@@ -30,6 +30,8 @@ void user_step(void);
 extern "C" {
 #endif
 
+extern uint64_t pogo_ticks;
+
 // TODO
 void pogo_start(void (*user_init)(void), void (*user_step)(void));
 
