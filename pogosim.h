@@ -10,8 +10,9 @@
 
 // Macros to declare the mydata pointer
 #ifdef SIMULATOR // Compiling for the simulator
+#include <stddef.h>
 #define REGISTER_USERDATA(UDT) 		\
-	int UserdataSize = sizeof(UDT); \
+	size_t UserdataSize = sizeof(UDT); \
 	UDT *mydata;
 
 #else // Compiling for real robots

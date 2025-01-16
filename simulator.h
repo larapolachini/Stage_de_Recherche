@@ -1,6 +1,8 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
+#include "spogobot.h"
+
 extern "C" int robot_main(void);
 
 class Configuration {
@@ -10,11 +12,12 @@ public:
     void load(const std::string& file_name);
     std::string get(const std::string& key, const std::string& default_value = "") const;
     bool contains(const std::string& key) const;
-    void print() const;
+    std::string summary() const;
 };
 
 void create_robots(Configuration& config);
 void main_loop(Configuration& config);
+void set_current_robot(Robot& robot);
 
 #endif // SIMULATOR_H
 

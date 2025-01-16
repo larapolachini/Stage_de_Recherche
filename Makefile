@@ -24,8 +24,8 @@ OBJECTS_BUILD = $(patsubst %.c,build/bin/%.o,$(SRCS))
 SIM_CC = gcc
 SIM_CXX = g++
 SIM_CFLAGS = -Wall -std=c11
-SIM_CXXFLAGS = -Wall -std=c++17
-SIM_LDFLAGS = -lyaml-cpp
+SIM_CXXFLAGS = -Wall -std=c++17 `pkg-config --cflags spdlog`
+SIM_LDFLAGS = -lyaml-cpp `pkg-config --libs spdlog`
 SIM_TARGET = pogosim
 
 SIM_SRCS_CXX = $(wildcard *.cpp)

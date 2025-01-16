@@ -3,6 +3,7 @@
 
 #include <yaml-cpp/yaml.h>
 #include <unordered_map>
+#include <spdlog/spdlog.h>
 
 #include "simulator.h"
 #include "spogobot.h"
@@ -43,12 +44,14 @@ bool Configuration::contains(const std::string& key) const {
     return config_map.find(key) != config_map.end();
 }
 
-// Display all configuration parameters
-void Configuration::print() const {
-    std::cout << "Configuration Parameters:" << std::endl;
+// Return all configuration parameters
+std::string Configuration::summary() const {
+    std::ostringstream oss;
+    oss << "Configuration Parameters:\n";
     for (const auto& [key, value] : config_map) {
-        std::cout << key << ": " << value << std::endl;
+        oss << key << ": " << value << "\n";
     }
+    return oss.str();
 }
 
 bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose) {
@@ -79,46 +82,46 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
 
 void create_robots(Configuration& config) {
     uint32_t const nb_robots = std::stoi(config.get("nBots", "100"));
+    glogger->info("Creating {} robots", nb_robots);
     if (!nb_robots)
         throw std::runtime_error("Number of robots is 0 (nBot=0 in configuration).");
 
     for (size_t i = 0; i < nb_robots; ++i) {
-        robots.emplace_back();
+        robots.emplace_back(i, UserdataSize);
     }
     current_robot = &robots.front();
 }
 
+void set_current_robot(Robot& robot) {
+    current_robot = &robot;
+    mydata = robot.data;
+    pogo_ticks = robot.pogo_ticks;
+}
 
 void main_loop(Configuration& config) {
     uint32_t const simulation_time = std::stoi(config.get("simulationTime", "100"));
+    glogger->info("Initializing all robots...");
 
     // Launch main() on all robots
     for (auto& robot : robots) {
-        current_robot = &robot;
-        robot.data = malloc(UserdataSize);
-        mydata = robot.data;
+        set_current_robot(robot);
         robot_main();
     }
 
     // Setup all robots
     for (auto& robot : robots) {
-        current_robot = &robot;
-        mydata = robot.data;
+        set_current_robot(robot);
         current_robot->user_init();
     }
 
     // Main loop for all robots
+    glogger->info("Launching the main simulation loop.");
     for (uint32_t i = 0; i < simulation_time; ++i) {
         for (auto& robot : robots) {
-            current_robot = &robot;
-            mydata = robot.data;
+            set_current_robot(robot);
             current_robot->user_step();
+            robot.pogo_ticks++;
         }
-    }
-
-    // Free robot data
-    for (auto& robot : robots) {
-        free(robot.data);
     }
 }
 
@@ -154,9 +157,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    // Init logging
+    init_logger();
+
     // Enable verbose mode if requested
     if (verbose) {
-        std::cout << "Verbose mode enabled." << std::endl;
+        glogger->info("Verbose mode enabled.");
+        glogger->set_level(spdlog::level::debug);
     }
 
     Configuration config;
@@ -165,12 +172,13 @@ int main(int argc, char** argv) {
         config.load(config_file);
 
         if (verbose) {
-            std::cout << "Loaded configuration from: " << config_file << std::endl;
+            //glogger->info << "Loaded configuration from: " << config_file << std::endl;
+            glogger->info("Loaded configuration from: {}", config_file);
         }
 
         // Display configuration
         if (verbose)
-            config.print();
+            glogger->debug(config.summary());
 
 //        // Example: Access specific parameters
 //        std::string arena_file = config.get("arenaFileName", "default_arena.csv");
@@ -184,10 +192,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::cout << "Starting the program from C++...\n";
+//    std::cout << "Starting the program from C++...\n";
 
     // Perform pre-main initialization or setup
-    std::cout << "Performing pre-main initialization.\n";
+//    std::cout << "Performing pre-main initialization.\n";
 
     // Create the robots
     create_robots(config);
@@ -198,7 +206,7 @@ int main(int argc, char** argv) {
 //    // Call the C `main` function
 //    int exit_code = robot_main();
 
-    std::cout << "Exiting the program from C++...\n";
+//    std::cout << "Exiting the program from C++...\n";
 
     // Ensure proper program termination
     //exit(exit_code);

@@ -24,7 +24,14 @@ extern "C" {
 
 // TODO define all functions of the pogobot API
 
+typedef struct time_reference_t {
+    uint32_t hardware_value_at_time_origin;
+} time_reference_t;
+
 void pogobot_init(void);
+uint16_t pogobot_helper_getid(void);
+void pogobot_stopwatch_reset( time_reference_t *stopwatch );
+int32_t pogobot_stopwatch_get_elapsed_microseconds( time_reference_t *stopwatch );
 void pogobot_led_setColor(int r, int g, int b);
 void pogobot_motor_set(const char* motor, int speed);
 void msleep(int milliseconds);
@@ -43,11 +50,28 @@ void pogosim_printf(const char* format, ...);
 #ifdef __cplusplus
 #include <vector>
 
-class Robot{
-    // TODO
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h> // For colored console output
+#include <spdlog/fmt/ostr.h> // Enables << operator for logging
 
+
+
+// Declare a global logger (shared pointer)
+extern std::shared_ptr<spdlog::logger> glogger;
+
+void init_logger();
+
+class Robot {
 public:
-    void *data;
+    Robot(uint16_t _id, size_t _userdatasize);
+    //~Robot();
+
+
+    long long current_time_microseconds = 0LL;
+    long pogo_ticks = 0;
+
+    uint16_t id;
+    void* data = nullptr;
     void (*user_init)(void);
     void (*user_step)(void);
 };
@@ -57,9 +81,9 @@ extern Robot* current_robot;
 extern std::vector<Robot> robots;
 extern int UserdataSize;
 extern void* mydata;
+extern uint64_t pogo_ticks;
 
-
-void create_robots(void);
+std::string log_current_robot();
 #endif
 
 
