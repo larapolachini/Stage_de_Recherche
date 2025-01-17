@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cstdlib> // For exit()
+#include <string>
+#include <chrono>
 
 #include <yaml-cpp/yaml.h>
 #include <unordered_map>
@@ -9,76 +11,7 @@
 #include "spogobot.h"
 #undef main         // We defined main() as robot_main() in pogobot.h
 
-#include <iostream>
-#include <string>
-#include <unordered_map>
-#include <yaml-cpp/yaml.h>
-#include <chrono>
 
-
-// Load configuration from a YAML file
-void Configuration::load(const std::string& file_name) {
-    try {
-        YAML::Node yaml_config = YAML::LoadFile(file_name);
-
-        for (const auto& item : yaml_config) {
-            std::string key = item.first.as<std::string>();
-            std::string value = item.second.as<std::string>();
-            config_map[key] = value;
-        }
-    } catch (const YAML::Exception& e) {
-        throw std::runtime_error("Error reading the YAML file: " + std::string(e.what()));
-    }
-}
-
-// Get a configuration value by key
-std::string Configuration::get(const std::string& key, const std::string& default_value) const {
-    auto it = config_map.find(key);
-    if (it != config_map.end()) {
-        return it->second;
-    }
-    return default_value;
-}
-
-// Check if a key exists in the configuration
-bool Configuration::contains(const std::string& key) const {
-    return config_map.find(key) != config_map.end();
-}
-
-// Return all configuration parameters
-std::string Configuration::summary() const {
-    std::ostringstream oss;
-    oss << "Configuration Parameters:\n";
-    for (const auto& [key, value] : config_map) {
-        oss << key << ": " << value << "\n";
-    }
-    return oss.str();
-}
-
-bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose) {
-    verbose = false;
-    config_file.clear();
-
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-
-        if (arg == "-c") {
-            if (i + 1 < argc) {
-                config_file = argv[++i];
-            } else {
-                std::cerr << "Error: -c requires a configuration file argument." << std::endl;
-                return false;
-            }
-        } else if (arg == "-v") {
-            verbose = true;
-        } else {
-            std::cerr << "Unknown argument: " << arg << std::endl;
-            return false;
-        }
-    }
-
-    return true;
-}
 
 
 void create_robots(Configuration& config) {
@@ -151,6 +84,32 @@ void main_loop(Configuration& config) {
 //    // Ensure proper program termination
 //    exit(exit_code);
 //}
+
+
+bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose) {
+    verbose = false;
+    config_file.clear();
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+
+        if (arg == "-c") {
+            if (i + 1 < argc) {
+                config_file = argv[++i];
+            } else {
+                std::cerr << "Error: -c requires a configuration file argument." << std::endl;
+                return false;
+            }
+        } else if (arg == "-v") {
+            verbose = true;
+        } else {
+            std::cerr << "Unknown argument: " << arg << std::endl;
+            return false;
+        }
+    }
+
+    return true;
+}
 
 
 int main(int argc, char** argv) {

@@ -3,18 +3,9 @@
 
 //#include "spogobot.h"
 #include "pogosim.h"
+#include "configuration.h"
 
 extern "C" int robot_main(void);
-
-class Configuration {
-private:
-    std::unordered_map<std::string, std::string> config_map;
-public:
-    void load(const std::string& file_name);
-    std::string get(const std::string& key, const std::string& default_value = "") const;
-    bool contains(const std::string& key) const;
-    std::string summary() const;
-};
 
 void create_robots(Configuration& config);
 void main_loop(Configuration& config);
