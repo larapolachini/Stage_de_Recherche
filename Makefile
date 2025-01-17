@@ -23,8 +23,8 @@ OBJECTS_BUILD = $(patsubst %.c,build/bin/%.o,$(SRCS))
 ##### Compiler settings for the simulator #####
 SIM_CC = gcc
 SIM_CXX = g++
-SIM_CFLAGS = -Wall -std=c11
-SIM_CXXFLAGS = -Wall -std=c++17 `pkg-config --cflags spdlog`
+SIM_CFLAGS = -Wall -MMD -MP -std=c11
+SIM_CXXFLAGS = -Wall -MMD -MP -O2 -std=c++20 `pkg-config --cflags spdlog` -pthread
 SIM_LDFLAGS = -lyaml-cpp `pkg-config --libs spdlog`
 SIM_TARGET = pogosim
 
@@ -66,7 +66,7 @@ bin: directories $(BUILD_DIR)/bin/firmware.bin
 INCLUDES+=-I. -I$(POGO_SDK_INCS)
 
 # pull in dependency info for *existing* .o files
--include $(OBJECTS_BUILD:.o=.d)
+-include $(OBJECTS_BUILD:.o=.d) ${SIM_OBJECTS:.o=.d}
 
 $(BUILD_DIR)/bin/%.bin: $(BUILD_DIR)/bin/%.elf
 	$(OBJCOPY) -O binary $< $@
@@ -98,7 +98,7 @@ directories: $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-#.PHONY: all clean connect
+.PHONY: all clean connect directories
 
 
 # MODELINE "{{{1
