@@ -117,7 +117,7 @@ std::string log_current_robot() {
 }
 
 void pogobot_init() {
-    glogger->info(log_current_robot() + "Pogobot initialized successfully.");
+    glogger->info("{} Pogobot initialized successfully.", log_current_robot());
 }
 
 uint16_t pogobot_helper_getid(void) {
@@ -133,11 +133,11 @@ int32_t pogobot_stopwatch_get_elapsed_microseconds(time_reference_t *stopwatch) 
 }
 
 void pogobot_led_setColor(int r, int g, int b) {
-    glogger->debug(log_current_robot() + "LED Color set to R:{} G:{} B:{}", r, g, b);
+    glogger->debug("{} LED Color set to R:{} G:{} B:{}", log_current_robot(), r, g, b);
 }
 
 void pogobot_motor_set(const char* motor, int speed) {
-    glogger->debug(log_current_robot() + "Motor {} set to speed {}", motor, speed);
+    glogger->debug("{} Motor {} set to speed {}", log_current_robot(), motor, speed);
 }
 
 void msleep(int milliseconds) {
