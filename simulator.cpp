@@ -12,8 +12,6 @@
 #undef main         // We defined main() as robot_main() in pogobot.h
 
 
-
-
 void create_robots(Configuration& config) {
     uint32_t const nb_robots = std::stoi(config.get("nBots", "100"));
     glogger->info("Creating {} robots", nb_robots);
@@ -39,10 +37,36 @@ void create_robots(Configuration& config) {
     }
 }
 
+// TODO Move into Robot class?
 void set_current_robot(Robot& robot) {
+    // Store values of previous robot
+    if (current_robot != nullptr) {
+        current_robot->pogo_ticks           = pogo_ticks;
+        current_robot->main_loop_hz         = main_loop_hz;
+        current_robot->send_msg_hz          = send_msg_hz;
+        current_robot->process_msg_hz       = process_msg_hz;
+        current_robot->msg_rx_fn            = msg_rx_fn;
+        current_robot->msg_tx_fn            = msg_tx_fn;
+        current_robot->error_codes_led_idx  = error_codes_led_idx;
+        current_robot->_global_timer        = _global_timer;
+        current_robot->timer_main_loop      = timer_main_loop;
+        current_robot->_current_time_milliseconds = _current_time_milliseconds;
+    }
+
     current_robot = &robot;
     mydata = robot.data;
-    pogo_ticks = robot.pogo_ticks;
+
+    // Update robot values
+    pogo_ticks          = robot.pogo_ticks;
+    main_loop_hz        = robot.main_loop_hz;
+    send_msg_hz         = robot.send_msg_hz;
+    process_msg_hz      = robot.process_msg_hz;
+    msg_rx_fn           = robot.msg_rx_fn;
+    msg_tx_fn           = robot.msg_tx_fn;
+    error_codes_led_idx = robot.error_codes_led_idx;
+    _global_timer       = robot._global_timer;
+    timer_main_loop     = robot.timer_main_loop;
+    _current_time_milliseconds = robot._current_time_milliseconds;
 
     // Update robot clock and handle time-keeping
     // TODO

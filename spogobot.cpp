@@ -6,13 +6,13 @@
 #include <sstream>
 
 #include "spogobot.h"
+#include "pogosim.h"
 
 
 /************* GLOBALS *************/ // {{{1
 
 Robot* current_robot;
 std::vector<Robot> robots;
-uint64_t pogo_ticks;
 std::shared_ptr<spdlog::logger> glogger;
 //std::chrono::time_point<std::chrono::system_clock> sim_starting_time;
 uint64_t sim_starting_time_microseconds;
@@ -57,6 +57,11 @@ uint32_t time_reference_t::get_elapsed_microseconds() {
 }
 
 
+void time_reference_t::add_elapsed_microseconds(uint64_t microseconds) {
+    elapsed_ms += microseconds;
+}
+
+
 uint64_t get_current_time_microseconds() {
     // Get the current time in microseconds since epoch
     auto const now = std::chrono::system_clock::now();
@@ -83,9 +88,9 @@ Robot::Robot(uint16_t _id, size_t _userdatasize) {
 void Robot::launch_user_step() {
     update_time();
     enable_stop_watches();
-    user_step();
+    //user_step();
+    pogo_main_loop_step(user_step);
     disable_stop_watches();
-    pogo_ticks++;
 }
 
 void Robot::update_time() {
@@ -132,8 +137,12 @@ int32_t pogobot_stopwatch_get_elapsed_microseconds(time_reference_t *stopwatch) 
     return stopwatch->get_elapsed_microseconds();
 }
 
-void pogobot_led_setColor(int r, int g, int b) {
-    glogger->debug("{} LED Color set to R:{} G:{} B:{}", log_current_robot(), r, g, b);
+void pogobot_led_setColor(const uint8_t r, const uint8_t g, const uint8_t b) {
+    glogger->debug("{} LED Color {} set to R:{} G:{} B:{}", log_current_robot(), 0, r, g, b);
+}
+
+void pogobot_led_setColors(const uint8_t r, const uint8_t g, const uint8_t b, uint8_t id) {
+    glogger->debug("{} LED Color {} set to R:{} G:{} B:{}", log_current_robot(), id, r, g, b);
 }
 
 void pogobot_motor_set(const char* motor, int speed) {
@@ -141,7 +150,11 @@ void pogobot_motor_set(const char* motor, int speed) {
 }
 
 void msleep(int milliseconds) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+    if (milliseconds <= 0) return;
+    for (auto* sw : current_robot->stop_watches) {
+        sw->add_elapsed_microseconds(static_cast<uint64_t>(milliseconds) * 1000);
+    }
 }
 
 // Helper function to convert va_list arguments to a string

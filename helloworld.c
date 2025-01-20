@@ -18,7 +18,16 @@ void user_init(void) {
     // Init timer
     pogobot_stopwatch_reset(&mydata->timer_it);
 
-    // TODO Set main loop frequency, message sending frequency, message processing frequency (+ specify function???)
+    // Set main loop frequency, message sending frequency, message processing frequency
+    main_loop_hz = 60;
+    send_msg_hz = 30;
+    process_msg_hz = 60;
+    // TODO Specify functions to send/transmit messages
+    msg_rx_fn = NULL;
+    msg_tx_fn = NULL;
+
+    // Set led index to show error codes
+    error_codes_led_idx = 3; // Default value, negative values to disable
 }
 
 
@@ -26,14 +35,15 @@ void user_step(void) {
     pogobot_led_setColor(0,0,255);
     pogobot_motor_set(motorL, motorFull);
     pogobot_motor_set(motorR, motorStop);
-    msleep(500);
+    msleep(5);
 
-    printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %lu   pogo_ticks: %d\n", pogobot_helper_getid(), pogobot_stopwatch_get_elapsed_microseconds(&mydata->timer_it), pogo_ticks);
+    //printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %lu   pogo_ticks: %d\n", pogobot_helper_getid(), pogobot_stopwatch_get_elapsed_microseconds(&mydata->timer_it), pogo_ticks);
+    printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %llu   pogo_ticks: %lu\n", pogobot_helper_getid(), current_time_milliseconds(), pogo_ticks);
 
     pogobot_led_setColor(255,0,0);
     pogobot_motor_set(motorL, motorStop);
     pogobot_motor_set(motorR, motorFull);
-    msleep(500);
+    msleep(5);
 
     mydata->data_foo[0] = 42;
 }

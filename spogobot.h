@@ -33,6 +33,7 @@ typedef struct time_reference_t {
     uint32_t get_elapsed_microseconds();
     void enable();
     void disable();
+    void add_elapsed_microseconds(uint64_t microseconds);
 #endif
 
     bool enabled;
@@ -44,9 +45,10 @@ typedef struct time_reference_t {
 
 void pogobot_init(void);
 uint16_t pogobot_helper_getid(void);
-void pogobot_stopwatch_reset( time_reference_t *stopwatch );
-int32_t pogobot_stopwatch_get_elapsed_microseconds( time_reference_t *stopwatch );
-void pogobot_led_setColor(int r, int g, int b);
+void pogobot_stopwatch_reset(time_reference_t *stopwatch);
+int32_t pogobot_stopwatch_get_elapsed_microseconds(time_reference_t *stopwatch);
+void pogobot_led_setColor(const uint8_t r, const uint8_t g, const uint8_t b);
+void pogobot_led_setColors(const uint8_t r, const uint8_t g, const uint8_t b, uint8_t id);
 void pogobot_motor_set(const char* motor, int speed);
 void msleep(int milliseconds);
 void pogosim_printf(const char* format, ...);
@@ -84,17 +86,26 @@ public:
 
     std::chrono::time_point<std::chrono::system_clock> current_time;
     uint64_t current_time_microseconds = 0LL;
+
     uint32_t pogo_ticks = 0;
+    uint8_t main_loop_hz = 60;
+    uint8_t send_msg_hz = 60;
+    uint8_t process_msg_hz = 60;
+    void (*msg_rx_fn)(void) = nullptr;
+    void (*msg_tx_fn)(void) = nullptr;
+    int8_t error_codes_led_idx = 3;
+    time_reference_t _global_timer;
+    time_reference_t timer_main_loop;
+    uint64_t _current_time_milliseconds = 0LL;
 
     uint16_t id;
     void* data = nullptr;
-    void (*user_init)(void);
-    void (*user_step)(void);
+    void (*user_init)(void) = nullptr;
+    void (*user_step)(void) = nullptr;
 
     std::set<time_reference_t*> stop_watches;
 
     void launch_user_step();
-
     void update_time();
     void register_stop_watch(time_reference_t* sw);
     void enable_stop_watches();
