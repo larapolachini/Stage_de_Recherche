@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstdarg>
 #include <sstream>
+#include <string>
 
 #include "spogobot.h"
 #include "pogosim.h"
@@ -12,8 +13,7 @@
 /************* GLOBALS *************/ // {{{1
 
 Robot* current_robot;
-std::vector<Robot> robots;
-std::shared_ptr<spdlog::logger> glogger;
+std::shared_ptr<spdlog::logger> glogger; // XXX Move
 //std::chrono::time_point<std::chrono::system_clock> sim_starting_time;
 uint64_t sim_starting_time_microseconds;
 
@@ -75,15 +75,85 @@ uint64_t get_current_time_microseconds() {
 
 /************* SIMULATED ROBOTS *************/ // {{{1
 
-Robot::Robot(uint16_t _id, size_t _userdatasize) {
-    id = _id;
+Robot::Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius, b2WorldId worldId)
+        : id(_id), radius(_radius) {
     data = malloc(_userdatasize);
+    create_body(worldId, x, y);
 }
 
 //Robot::~Robot() {
 //    free(data);
 //    data = nullptr;
 //}
+
+
+void Robot::create_body(b2WorldId worldId, float x, float y) {
+    // Create the body
+    b2BodyDef bodyDef = b2DefaultBodyDef();
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.position = {x / VISUALIZATION_SCALE, y / VISUALIZATION_SCALE};
+    bodyDef.linearDamping = 0.0f;
+    bodyDef.isBullet = true; // Enable bullet mode
+    bodyId = b2CreateBody(worldId, &bodyDef);
+
+    // Create the circle shape
+    b2Circle circle;
+    circle.center = {0.0f, 0.0f};
+    circle.radius = radius / VISUALIZATION_SCALE; // Scaled radius
+
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    shapeDef.density = 1.0f;
+    shapeDef.friction = 0.3f;
+    shapeDef.restitution = 10.8f; // Bounciness
+    shapeDef.enablePreSolveEvents = true; // Enable CCD
+    shapeId = b2CreateCircleShape(bodyId, &shapeDef, &circle);
+
+    // Assign initial velocity
+    b2Vec2 velocity = {0.0, 0.0}; // {(std::rand() % 200 - 100) / 20.0f, (std::rand() % 200 - 100) / 20.0f};
+    b2Body_SetLinearVelocity(bodyId, velocity);
+}
+
+void Robot::render(SDL_Renderer* renderer, b2WorldId worldId) const {
+    b2Vec2 position = b2Body_GetPosition(bodyId);
+
+    // Convert to screen coordinates
+    float screenX = position.x * VISUALIZATION_SCALE;
+    float screenY = position.y * VISUALIZATION_SCALE;
+
+    // Draw circle at the robot's position
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    for (int w = 0; w < 2 * radius; w++) {
+        for (int h = 0; h < 2 * radius; h++) {
+            int dx = radius - w;
+            int dy = radius - h;
+            if ((dx * dx + dy * dy) <= (radius * radius)) {
+                SDL_RenderDrawPoint(renderer, screenX + dx, screenY + dy);
+            }
+        }
+    }
+}
+
+void Robot::set_motor(const char* motor, int speed) {
+    // Update motors speed
+    if (strcmp(motor, motorL) == 0) {
+        left_motor_speed = speed;
+    } else if (strcmp(motor, motorR) == 0) {
+        right_motor_speed = speed;
+    }
+    glogger->debug("set motor: {} {}", left_motor_speed, right_motor_speed);
+
+    // XXX UPDATE !!
+    // Update linear velocity of the agent
+    b2Rot const rot = b2Body_GetRotation(bodyId);
+    float const v = 1.0f * (left_motor_speed / motorFull + right_motor_speed / motorFull) / 2.0f;
+    b2Vec2 const linear_velocity = {rot.c * v, rot.s * v};
+    //b2Vec2 const velocity = {left_motor_speed / VISUALIZATION_SCALE, right_motor_speed / VISUALIZATION_SCALE};
+    b2Body_SetLinearVelocity(bodyId, linear_velocity);
+    //float const angular_velocity = 1.0f / (motorFull * 0.5) * (right_motor_speed - left_motor_speed);
+    float const angular_velocity = 1.0f / (motorFull * 0.5) * (left_motor_speed - right_motor_speed);
+    b2Body_SetAngularVelocity(bodyId, angular_velocity);
+}
+
 
 void Robot::launch_user_step() {
     update_time();
@@ -147,6 +217,7 @@ void pogobot_led_setColors(const uint8_t r, const uint8_t g, const uint8_t b, ui
 
 void pogobot_motor_set(const char* motor, int speed) {
     glogger->debug("{} Motor {} set to speed {}", log_current_robot(), motor, speed);
+    current_robot->set_motor(motor, speed);
 }
 
 void msleep(int milliseconds) {

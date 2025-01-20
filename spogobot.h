@@ -71,23 +71,28 @@ void pogosim_printf(const char* format, ...);
 #include <spdlog/sinks/stdout_color_sinks.h> // For colored console output
 #include <spdlog/fmt/ostr.h> // Enables << operator for logging
 #include <chrono>
+#include <SDL2/SDL.h>
+#include <box2d/box2d.h>
 
+#include "render.h"
+#include "colormaps.h"
+
+// XXX Move ??
 // Declare a global logger (shared pointer)
 extern std::shared_ptr<spdlog::logger> glogger;
-
 void init_logger();
 std::string log_current_robot();
 
 
 class Robot {
 public:
-    Robot(uint16_t _id, size_t _userdatasize);
-    //~Robot();
+    Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius, b2WorldId worldId);
+    //virtual ~Robot();
 
     std::chrono::time_point<std::chrono::system_clock> current_time;
     uint64_t current_time_microseconds = 0LL;
 
-    uint32_t pogo_ticks = 0;
+    uint32_t pogobot_ticks = 0;
     uint8_t main_loop_hz = 60;
     uint8_t send_msg_hz = 60;
     uint8_t process_msg_hz = 60;
@@ -102,18 +107,31 @@ public:
     void* data = nullptr;
     void (*user_init)(void) = nullptr;
     void (*user_step)(void) = nullptr;
-
-    std::set<time_reference_t*> stop_watches;
-
     void launch_user_step();
+
+    // Time-related stuff
+    std::set<time_reference_t*> stop_watches;
     void update_time();
     void register_stop_watch(time_reference_t* sw);
     void enable_stop_watches();
     void disable_stop_watches();
+
+    // Physical information
+    b2BodyId bodyId;
+    b2ShapeId shapeId;
+    float radius = 5;
+    float left_motor_speed  = 0;
+    float right_motor_speed = 0;
+    void create_body(b2WorldId worldId, float x, float y);
+    void render(SDL_Renderer* renderer, b2WorldId worldId) const;
+    void set_motor(const char* motor, int speed);
+
+    // LEDs
+    std::vector<color_t> leds = std::vector<color_t>(4, {0, 0, 0});
+
 };
 
 extern Robot* current_robot;
-extern std::vector<Robot> robots;
 extern int UserdataSize;
 extern void* mydata;
 

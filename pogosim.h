@@ -30,7 +30,7 @@ void user_step(void);
 extern "C" {
 #endif
 
-extern uint32_t pogo_ticks;
+extern uint32_t pogobot_ticks;
 
 extern uint8_t main_loop_hz;
 extern uint8_t send_msg_hz;
@@ -47,7 +47,7 @@ typedef enum {
     error_code_t_last_entry
 } error_code_t ;
 
-void pogo_start(void (*user_init)(void), void (*user_step)(void));
+void pogobot_start(void (*user_init)(void), void (*user_step)(void));
 void pogo_main_loop_step(void (*user_step)(void));
 uint64_t current_time_milliseconds(void);
 void display_led_error_code(error_code_t const c);

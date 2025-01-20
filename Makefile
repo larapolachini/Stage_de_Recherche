@@ -25,7 +25,7 @@ SIM_CC = gcc
 SIM_CXX = g++
 SIM_CFLAGS = -Wall -MMD -MP -std=c11
 SIM_CXXFLAGS = -Wall -MMD -MP -O2 -std=c++20 `pkg-config --cflags spdlog` -pthread
-SIM_LDFLAGS = -lyaml-cpp `pkg-config --libs spdlog`
+SIM_LDFLAGS = -lyaml-cpp `pkg-config --libs spdlog` -lSDL2 -lbox2d
 SIM_TARGET = pogosim
 
 SIM_SRCS_CXX = $(wildcard *.cpp)
