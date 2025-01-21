@@ -1,0 +1,20 @@
+---
+
+seed: 0
+nBots: 200
+simulationTime: 100
+commRadius: 90
+msgSuccessRate: 1.0
+showComms: true
+arenaFileName: arenas/annulus.csv
+GUI: true
+
+#timeStep: 0.02  #0.01667
+#GUItimeStep: 0.001  #0.01667
+
+timeStep: 0.02  #0.01667
+GUItimeStep: 0.00001  #0.01667
+
+# MODELINE "{{{1
+# vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+# vim:foldmethod=marker
