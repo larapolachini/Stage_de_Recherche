@@ -20,7 +20,7 @@ class Simulation {
 
     uint16_t const window_width = 800;
     uint16_t const window_height = 600;
-    uint16_t const robot_radius = 7;
+    uint16_t const robot_radius = 10;
     uint16_t const sub_step_count = 4;
 
     float const wall_offset = 30.0f;

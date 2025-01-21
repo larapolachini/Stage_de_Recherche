@@ -127,7 +127,7 @@ public:
     void set_motor(const char* motor, int speed);
 
     // LEDs
-    std::vector<color_t> leds = std::vector<color_t>(4, {0, 0, 0});
+    std::vector<color_t> leds = std::vector<color_t>(5, {0, 0, 0});
 
 };
 

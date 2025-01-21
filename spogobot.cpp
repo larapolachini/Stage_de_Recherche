@@ -113,25 +113,92 @@ void Robot::create_body(b2WorldId worldId, float x, float y) {
     b2Body_SetLinearVelocity(bodyId, velocity);
 }
 
+
+//void Robot::render(SDL_Renderer* renderer, b2WorldId worldId) const {
+//    b2Vec2 position = b2Body_GetPosition(bodyId);
+//
+//    // Convert to screen coordinates
+//    float screenX = position.x * VISUALIZATION_SCALE;
+//    float screenY = position.y * VISUALIZATION_SCALE;
+//
+//    // Draw circle at the robot's position
+//    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+//    for (int w = 0; w < 2 * radius; w++) {
+//        for (int h = 0; h < 2 * radius; h++) {
+//            int dx = radius - w;
+//            int dy = radius - h;
+//            if ((dx * dx + dy * dy) <= (radius * radius)) {
+//                SDL_RenderDrawPoint(renderer, screenX + dx, screenY + dy);
+//            }
+//        }
+//    }
+//}
+
+
 void Robot::render(SDL_Renderer* renderer, b2WorldId worldId) const {
+    // Get robot's position in the physics world
     b2Vec2 position = b2Body_GetPosition(bodyId);
 
     // Convert to screen coordinates
     float screenX = position.x * VISUALIZATION_SCALE;
     float screenY = position.y * VISUALIZATION_SCALE;
 
-    // Draw circle at the robot's position
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    for (int w = 0; w < 2 * radius; w++) {
-        for (int h = 0; h < 2 * radius; h++) {
-            int dx = radius - w;
-            int dy = radius - h;
-            if ((dx * dx + dy * dy) <= (radius * radius)) {
-                SDL_RenderDrawPoint(renderer, screenX + dx, screenY + dy);
-            }
+    // Draw circle representing the robot's body
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Gray color for robot body
+    SDL_RenderDrawCircle(renderer, static_cast<int>(screenX), static_cast<int>(screenY), radius);
+
+    // Get the robot's orientation as a rotation (cosine/sine pair)
+    b2Rot rotation = b2Body_GetRotation(bodyId);
+    float cosAngle = rotation.c;
+    float sinAngle = rotation.s;
+
+    // Draw line indicating robot orientation with increased width
+    float orientationX = screenX + cosAngle * radius * 2.0; // Increase length of orientation line
+    float orientationY = screenY + sinAngle * radius * 2.0;
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 150); // Blue color for orientation line
+    for (int offset = -2; offset <= 2; ++offset) {
+        SDL_RenderDrawLine(renderer, screenX + offset, screenY, orientationX + offset, orientationY);
+        SDL_RenderDrawLine(renderer, screenX, screenY + offset, orientationX, orientationY + offset);
+    }
+
+    // Define relative positions for LEDs around the robot based on orientation
+    std::vector<b2Vec2> ledOffsets = {
+        {0, 0},                  // Above the robot center
+        {0, -radius / 2},              // Up
+        {radius / 2, 0},               // Right
+        {0, radius / 2},               // Down
+        {-radius / 2, 0}               // Left
+    };
+
+    // Rotate LED offsets based on robot orientation
+    std::vector<b2Vec2> rotatedLedOffsets;
+    for (const auto& offset : ledOffsets) {
+        float rotatedX = cosAngle * offset.x - sinAngle * offset.y;
+        float rotatedY = sinAngle * offset.x + cosAngle * offset.y;
+        rotatedLedOffsets.push_back({rotatedX, rotatedY});
+    }
+
+    // Draw each LED
+    for (size_t i = 0; i < leds.size() && i < rotatedLedOffsets.size(); ++i) {
+        const color_t& ledColor = leds[i]; // Get LED color
+
+        // Convert LED color to SDL color
+        SDL_SetRenderDrawColor(renderer, ledColor.r, ledColor.g, ledColor.b, 255);
+
+        // Calculate screen coordinates for the LED
+        float ledScreenX = screenX + rotatedLedOffsets[i].x * 2.0;
+        float ledScreenY = screenY + rotatedLedOffsets[i].y * 2.0;
+
+        // Draw LED as a small circle
+        if (i == 0) {
+            SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius - 2);
+        } else {
+            SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius / 2.5);
         }
     }
 }
+
+
 
 void Robot::set_motor(const char* motor, int speed) {
     // Update motors speed
@@ -209,10 +276,12 @@ int32_t pogobot_stopwatch_get_elapsed_microseconds(time_reference_t *stopwatch) 
 
 void pogobot_led_setColor(const uint8_t r, const uint8_t g, const uint8_t b) {
     glogger->debug("{} LED Color {} set to R:{} G:{} B:{}", log_current_robot(), 0, r, g, b);
+    current_robot->leds[0] = {.r=r, .g=g, .b=b};
 }
 
 void pogobot_led_setColors(const uint8_t r, const uint8_t g, const uint8_t b, uint8_t id) {
     glogger->debug("{} LED Color {} set to R:{} G:{} B:{}", log_current_robot(), id, r, g, b);
+    current_robot->leds[id] = {.r=r, .g=g, .b=b};
 }
 
 void pogobot_motor_set(const char* motor, int speed) {
