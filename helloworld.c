@@ -32,19 +32,19 @@ void user_init(void) {
 
 
 void user_step(void) {
-    pogobot_led_setColor(0,0,255);
-    pogobot_motor_set(motorL, motorFull);
-    //pogobot_motor_set(motorR, motorFull);
-    pogobot_motor_set(motorR, motorStop);
-    msleep(5);
 
     //printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %lu   pogobot_ticks: %d\n", pogobot_helper_getid(), pogobot_stopwatch_get_elapsed_microseconds(&mydata->timer_it), pogobot_ticks);
     printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %llu   pogobot_ticks: %lu\n", pogobot_helper_getid(), current_time_milliseconds(), pogobot_ticks);
 
-//    pogobot_led_setColor(255,0,0);
-//    pogobot_motor_set(motorL, motorStop);
-//    pogobot_motor_set(motorR, motorFull);
-//    msleep(5);
+    if ((uint32_t)(current_time_milliseconds() / 10000) % 2 == 0) {
+        pogobot_led_setColor(0,0,255);
+        pogobot_motor_set(motorL, motorFull);
+        pogobot_motor_set(motorR, motorStop);
+    } else {
+        pogobot_led_setColor(255,0,0);
+        pogobot_motor_set(motorL, motorStop);
+        pogobot_motor_set(motorR, motorFull);
+    }
 
     mydata->data_foo[0] = 42;
 }

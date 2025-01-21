@@ -1,7 +1,7 @@
 ---
 
 seed: 0
-nBots: 200
+nBots: 100
 simulationTime: 100
 commRadius: 90
 msgSuccessRate: 1.0
