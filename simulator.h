@@ -18,10 +18,10 @@ class Simulation {
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
 
-    uint16_t const window_width = 800;
-    uint16_t const window_height = 600;
-    uint16_t const robot_radius = 10;
-    uint16_t const sub_step_count = 4;
+    uint16_t window_width = 800;
+    uint16_t window_height = 600;
+    uint16_t robot_radius = 10;
+    uint16_t sub_step_count = 4;
 
     float const wall_offset = 30.0f;
     float const minX = wall_offset + robot_radius*2;
@@ -32,6 +32,7 @@ class Simulation {
     b2WorldId worldId;
     std::vector<Robot> robots;
     std::vector<Robot> membranes;
+    std::vector<b2Vec2> arena_points;
 
 public:
     Simulation(Configuration& _config);

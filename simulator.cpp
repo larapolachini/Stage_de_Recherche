@@ -53,14 +53,16 @@ void set_current_robot(Robot& robot) {
 }
 
 
+
+
 /************* SIMULATION *************/ // {{{1
 
 Simulation::Simulation(Configuration& _config)
         : config(_config) {
     init_box2d();
     init_SDL();
+    //create_walls();
     create_arena();
-    create_walls();
     create_robots();
     create_membranes();
 }
@@ -78,8 +80,54 @@ Simulation::~Simulation() {
 void Simulation::create_membranes() {
 }
 
-// TODO
+
+
 void Simulation::create_arena() {
+    std::string const csv_file = config.get("arena_file", "test.csv");
+
+    float const friction = 0.03f;
+    float const restitution = 10.8f; // Bounciness
+    float const WALL_THICKNESS = 10.0f / VISUALIZATION_SCALE; // Thickness of the wall in Box2D units
+
+    // Read points from the CSV file and scale to window dimensions
+    arena_points = read_poly_from_csv(csv_file, window_width, window_height);
+    if (arena_points.size() < 2) {
+        std::cerr << "Error: At least two points are required to create walls." << std::endl;
+        return;
+    }
+
+    // Define the static body for each wall segment
+    b2BodyDef wallBodyDef = b2DefaultBodyDef();
+    wallBodyDef.type = b2_staticBody;
+
+    for (size_t i = 0; i < arena_points.size() - 1; ++i) {
+        b2Vec2 p1 = arena_points[i];
+        b2Vec2 p2 = arena_points[i + 1];
+
+        // Calculate the center of the rectangle
+        b2Vec2 center = (p1 + p2) * 0.5f * (1.0f/VISUALIZATION_SCALE);
+
+        // Calculate the angle of the rectangle
+        float angle = atan2f(p2.y - p1.y, p2.x - p1.x);
+
+        // Calculate the length of the rectangle
+        float length = b2Distance(p1, p2) / VISUALIZATION_SCALE;
+
+        // Create the wall body
+        wallBodyDef.position = center;
+        wallBodyDef.rotation = b2MakeRot(angle);
+        b2BodyId wallBody = b2CreateBody(worldId, &wallBodyDef);
+
+        // Create the rectangular shape
+        b2Polygon wallShape = b2MakeBox(length / 2, WALL_THICKNESS / 2);
+        b2ShapeDef wallShapeDef = b2DefaultShapeDef();
+        wallShapeDef.friction = friction;
+        wallShapeDef.restitution = restitution;
+
+        b2CreatePolygonShape(wallBody, &wallShapeDef, &wallShape);
+    }
+
+    glogger->info("Walls created from CSV file: {}", csv_file);
 }
 
 void Simulation::create_walls() {
@@ -132,6 +180,7 @@ void Simulation::create_walls() {
     b2CreatePolygonShape(rightWall, &rightShapeDef, &rightShape);
 }
 
+
 void Simulation::init_box2d() {
     // Initialize Box2D world
     b2Vec2 gravity = {0.0f, 0.0f}; // No gravity for robots
@@ -142,6 +191,10 @@ void Simulation::init_box2d() {
 
 
 void Simulation::init_SDL() {
+    window_width = std::stoi(config.get("window_width", "800"));
+    window_height = std::stoi(config.get("window_height", "800"));
+    robot_radius = std::stoi(config.get("robot_radius", "10"));
+
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
@@ -177,9 +230,12 @@ void Simulation::create_robots() {
 
     std::srand(std::time(nullptr));
     for (size_t i = 0; i < nb_robots; ++i) {
-        float x = minX + std::rand() % static_cast<int>(maxX - minX);
-        float y = minY + std::rand() % static_cast<int>(maxY - minY);
-        robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);
+        auto const point = generate_random_point_within_polygon_safe(arena_points, robot_radius*3);
+        robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId);
+        //float x = minX + std::rand() % static_cast<int>(maxX - minX);
+        //float y = minY + std::rand() % static_cast<int>(maxY - minY);
+        //robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);
+        glogger->info("Creating robot at ({}, {})", point.x, point.y);
     }
     current_robot = &robots.front();
 
@@ -233,6 +289,7 @@ void Simulation::main_loop() {
         SDL_RenderClear(renderer);
 
         //renderWalls(renderer); // Render the walls
+        draw_polygon(renderer, arena_points);
         //membrane.render(renderer, worldId);
 
         for (auto const& robot : robots) {

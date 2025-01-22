@@ -114,27 +114,6 @@ void Robot::create_body(b2WorldId worldId, float x, float y) {
 }
 
 
-//void Robot::render(SDL_Renderer* renderer, b2WorldId worldId) const {
-//    b2Vec2 position = b2Body_GetPosition(bodyId);
-//
-//    // Convert to screen coordinates
-//    float screenX = position.x * VISUALIZATION_SCALE;
-//    float screenY = position.y * VISUALIZATION_SCALE;
-//
-//    // Draw circle at the robot's position
-//    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-//    for (int w = 0; w < 2 * radius; w++) {
-//        for (int h = 0; h < 2 * radius; h++) {
-//            int dx = radius - w;
-//            int dy = radius - h;
-//            if ((dx * dx + dy * dy) <= (radius * radius)) {
-//                SDL_RenderDrawPoint(renderer, screenX + dx, screenY + dy);
-//            }
-//        }
-//    }
-//}
-
-
 void Robot::render(SDL_Renderer* renderer, b2WorldId worldId) const {
     // Get robot's position in the physics world
     b2Vec2 position = b2Body_GetPosition(bodyId);
@@ -155,7 +134,7 @@ void Robot::render(SDL_Renderer* renderer, b2WorldId worldId) const {
     // Draw line indicating robot orientation with increased width
     float orientationX = screenX + cosAngle * radius * 2.0; // Increase length of orientation line
     float orientationY = screenY + sinAngle * radius * 2.0;
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 150); // Blue color for orientation line
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 150); // Blue/transparent color for orientation line
     for (int offset = -2; offset <= 2; ++offset) {
         SDL_RenderDrawLine(renderer, screenX + offset, screenY, orientationX + offset, orientationY);
         SDL_RenderDrawLine(renderer, screenX, screenY + offset, orientationX, orientationY + offset);
@@ -163,7 +142,7 @@ void Robot::render(SDL_Renderer* renderer, b2WorldId worldId) const {
 
     // Define relative positions for LEDs around the robot based on orientation
     std::vector<b2Vec2> ledOffsets = {
-        {0, 0},                  // Above the robot center
+        {0, 0},                        // Above the robot center
         {0, -radius / 2},              // Up
         {radius / 2, 0},               // Right
         {0, radius / 2},               // Down
@@ -209,7 +188,6 @@ void Robot::set_motor(const char* motor, int speed) {
     }
     glogger->debug("set motor: {} {}", left_motor_speed, right_motor_speed);
 
-    // XXX UPDATE !!
     // Update linear velocity of the agent
     b2Rot const rot = b2Body_GetRotation(bodyId);
     float const v = 1.0f * (left_motor_speed / motorFull + right_motor_speed / motorFull) / 2.0f;

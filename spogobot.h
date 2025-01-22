@@ -4,15 +4,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// TODO : version of the pogobot lib for pogosim
-
 // Create a macro to specify that we are using a simulator, and not real Pogobots
 #define SIMULATOR
 
 // Rename the main function from the robot code. The simulator uses a different main function.
 #define main robot_main
-
-// TODO define the entire pogobot API
 
 #define motorL "left"
 #define motorR "right"

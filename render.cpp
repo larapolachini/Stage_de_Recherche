@@ -1,5 +1,11 @@
 #include <SDL2/SDL.h>
+#include <box2d/box2d.h>
+#include <vector>
+#include <random>
+#include <iostream>
+
 #include "render.h"
+#include "spogobot.h"
 
 void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius) {
     for (int w = 0; w < radius * 2; w++) {
@@ -11,6 +17,219 @@ void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius) {
             }
         }
     }
+}
+
+
+// Helper function to read CSV and return vector of b2Vec2 points
+std::vector<b2Vec2> read_poly_from_csv(const std::string& filename, float window_width, float window_height) {
+    std::vector<b2Vec2> rawPoints;
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        glogger->error("Error: Unable to open file {}", filename);
+        return rawPoints;
+    }
+
+    float const width = (window_width - 2 * 30); // Width adjusted for 30-pixel offset
+    float const height = (window_height - 2 * 30); // Height adjusted for 30-pixel offset
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream ss(line);
+        std::string xStr, yStr;
+        if (std::getline(ss, xStr, ',') && std::getline(ss, yStr)) {
+            float x = std::stof(xStr);
+            float y = std::stof(yStr);
+            rawPoints.emplace_back(x, y);
+        }
+    }
+
+    file.close();
+
+    // If no points were read, return empty vector
+    if (rawPoints.empty()) {
+        glogger->error("Error: No points found in the file {}.", filename);
+        return rawPoints;
+    }
+
+    // Compute min and max for x and y
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::lowest();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::lowest();
+
+    for (const auto& point : rawPoints) {
+        minX = std::min(minX, point.x);
+        maxX = std::max(maxX, point.x);
+        minY = std::min(minY, point.y);
+        maxY = std::max(maxY, point.y);
+    }
+
+    // Normalize and scale points
+    std::vector<b2Vec2> normalizedPoints;
+    for (const auto& point : rawPoints) {
+        float normX = (point.x - minX) / (maxX - minX); // Min-max normalization for X
+        float normY = (point.y - minY) / (maxY - minY); // Min-max normalization for Y
+        //normalizedPoints.emplace_back(normX * width, normY * height); // Scale by width and height
+        normalizedPoints.emplace_back(normX * width, normY * height); // Scale by width and height
+    }
+
+    return normalizedPoints;
+}
+
+
+b2Vec2 generate_random_point_within_polygon(const std::vector<b2Vec2>& polygon) {
+    if (polygon.size() < 3) {
+        throw std::runtime_error("Polygon must have at least 3 points to define a valid area.");
+    }
+
+    // Calculate the bounding box of the polygon
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::lowest();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::lowest();
+
+    for (const auto& point : polygon) {
+        minX = std::min(minX, point.x);
+        maxX = std::max(maxX, point.x);
+        minY = std::min(minY, point.y);
+        maxY = std::max(maxY, point.y);
+    }
+
+    // Random number generator
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> disX(minX, maxX);
+    std::uniform_real_distribution<float> disY(minY, maxY);
+
+    // Generate random points until one is inside the polygon
+    while (true) {
+        float x = disX(gen);
+        float y = disY(gen);
+
+        if (is_point_within_polygon(polygon, x, y)) {
+            return b2Vec2(x, y);
+        }
+    }
+}
+
+bool is_point_within_polygon(const std::vector<b2Vec2>& polygon, float x, float y) {
+    int n = polygon.size();
+    if (n < 3) {
+        std::cerr << "Error: Polygon must have at least 3 points." << std::endl;
+        return false;
+    }
+
+    bool isInside = false;
+    for (int i = 0, j = n - 1; i < n; j = i++) {
+        float xi = polygon[i].x, yi = polygon[i].y;
+        float xj = polygon[j].x, yj = polygon[j].y;
+
+        // Check if point is within edge bounds
+        bool intersect = ((yi > y) != (yj > y)) &&
+                         (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+
+        if (intersect) {
+            isInside = !isInside;
+        }
+    }
+    return isInside;
+}
+
+std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float offset) {
+    std::vector<b2Vec2> offsetPolygon;
+
+    int n = polygon.size();
+    if (n < 3) {
+        throw std::runtime_error("Polygon must have at least 3 points to offset.");
+    }
+
+    for (int i = 0; i < n; ++i) {
+        // Get the previous, current, and next points
+        b2Vec2 prev = polygon[(i - 1 + n) % n];
+        b2Vec2 curr = polygon[i];
+        b2Vec2 next = polygon[(i + 1) % n];
+
+        // Calculate vectors for the current edge and the previous edge
+        b2Vec2 edge1 = curr - prev;
+        b2Vec2 edge2 = next - curr;
+
+        // Normalize and find perpendiculars
+        b2Vec2 norm1 = b2Vec2(-edge1.y, edge1.x);
+        b2Vec2 norm2 = b2Vec2(-edge2.y, edge2.x);
+
+        norm1 *= (offset / b2Distance(b2Vec2(0, 0), edge1));
+        norm2 *= (offset / b2Distance(b2Vec2(0, 0), edge2));
+
+        // Compute the inward offset point using normals
+        b2Vec2 offsetPoint = curr + 0.5f * (norm1 + norm2);
+        offsetPolygon.push_back(offsetPoint);
+    }
+
+    return offsetPolygon;
+}
+
+b2Vec2 generate_random_point_within_polygon_safe(const std::vector<b2Vec2>& polygon, float minDistance) {
+    if (polygon.size() < 3) {
+        throw std::runtime_error("Polygon must have at least 3 points to define a valid area.");
+    }
+
+    // Offset the polygon inward
+    std::vector<b2Vec2> innerPolygon = offset_polygon(polygon, minDistance);
+
+    // Calculate the bounding box of the inner polygon
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::lowest();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::lowest();
+
+    for (const auto& point : innerPolygon) {
+        minX = std::min(minX, point.x);
+        maxX = std::max(maxX, point.x);
+        minY = std::min(minY, point.y);
+        maxY = std::max(maxY, point.y);
+    }
+
+    // Random number generator
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> disX(minX, maxX);
+    std::uniform_real_distribution<float> disY(minY, maxY);
+
+    // Generate random points within the inner polygon
+    while (true) {
+        float x = disX(gen);
+        float y = disY(gen);
+
+        if (is_point_within_polygon(innerPolygon, x, y)) {
+            return b2Vec2(x, y);
+        }
+    }
+}
+
+void draw_polygon(SDL_Renderer* renderer, const std::vector<b2Vec2>& polygon) {
+    if (polygon.size() < 3) {
+        std::cerr << "Error: Polygon must have at least 3 points to be drawable." << std::endl;
+        return;
+    }
+
+    // Set the drawing color for the polygon
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red color with full opacity
+
+    // Draw lines between consecutive points
+    for (size_t i = 0; i < polygon.size() - 1; ++i) {
+        SDL_RenderDrawLine(renderer,
+                           static_cast<int>(polygon[i].x),
+                           static_cast<int>(polygon[i].y),
+                           static_cast<int>(polygon[i + 1].x),
+                           static_cast<int>(polygon[i + 1].y));
+    }
+
+    // Connect the last point to the first to close the polygon
+    SDL_RenderDrawLine(renderer,
+                       static_cast<int>(polygon.back().x),
+                       static_cast<int>(polygon.back().y),
+                       static_cast<int>(polygon.front().x),
+                       static_cast<int>(polygon.front().y));
 }
 
 // MODELINE "{{{1
