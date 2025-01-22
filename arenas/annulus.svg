@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg32"
+   sodipodi:docname="annulus2.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <sodipodi:namedview
+     id="namedview8"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="0.914906"
+     inkscape:cx="414.79671"
+     inkscape:cy="459.06355"
+     inkscape:window-width="2560"
+     inkscape:window-height="1423"
+     inkscape:window-x="0"
+     inkscape:window-y="17"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg32">
+    <inkscape:grid
+       type="xygrid"
+       id="grid114" />
+  </sodipodi:namedview>
+  <defs
+     id="defs26" />
+  <metadata
+     id="metadata29">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <path
+     d="m 171.80206,126.31734 c 0.61126,31.16376 -23.94368,60.23334 -54.77106,64.84124 -30.368033,5.74781 -62.890385,-13.20285 -72.841907,-42.471 -11.207553,-29.17826 2.10804,-64.97711 29.669247,-79.728598 26.95543,-15.83095 64.44771,-8.536304 83.50555,16.240868 9.297,11.547304 14.47478,26.29238 14.43817,41.11749 z"
+     style="fill:none;stroke:#000000;stroke-width:0.400001;stroke-linecap:round;stroke-linejoin:round;paint-order:markers fill stroke"
+     id="path15" />
+  <path
+     d="m 205.80944,126.37179 c 0.43733,38.16847 -23.30323,75.17614 -58.17939,90.69216 C 112.96952,233.45195 69.211639,227.16191 40.569187,201.6774 11.343129,176.86352 -0.97556448,134.408 10.424914,97.804798 20.934046,61.108913 54.276582,32.447311 92.135205,27.565767 c 37.900355,-5.775451 78.027615,12.773879 98.173745,45.393672 10.0873,15.863464 15.52865,34.613311 15.50049,53.412351 z"
+     style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-linejoin:round;paint-order:markers fill stroke"
+     id="path15-9" />
+</svg>
