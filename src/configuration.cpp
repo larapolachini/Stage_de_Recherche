@@ -33,6 +33,10 @@ std::string Configuration::get(const std::string& key, const std::string& defaul
     return default_value;
 }
 
+void Configuration::set(std::string const& key, std::string const& value) {
+    config_map[key] = value;
+}
+
 // Check if a key exists in the configuration
 bool Configuration::contains(const std::string& key) const {
     return config_map.find(key) != config_map.end();

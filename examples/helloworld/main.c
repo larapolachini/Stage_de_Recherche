@@ -13,7 +13,9 @@ REGISTER_USERDATA(USERDATA)
 
 
 void user_init(void) {
+#ifndef SIMULATOR
     printf("setup ok\n");
+#endif
 
     // Init timer
     pogobot_stopwatch_reset(&mydata->timer_it);
@@ -32,7 +34,7 @@ void user_init(void) {
 
 
 void user_step(void) {
-    if (pogobot_ticks % 10 == 0 && pogobot_helper_getid() == 0) {
+    if (pogobot_ticks % 1000 == 0 && pogobot_helper_getid() == 0) {
         //printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %lu   pogobot_ticks: %d\n", pogobot_helper_getid(), pogobot_stopwatch_get_elapsed_microseconds(&mydata->timer_it), pogobot_ticks);
         printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %llu   pogobot_ticks: %lu\n", pogobot_helper_getid(), current_time_milliseconds(), pogobot_ticks);
     }
@@ -53,7 +55,9 @@ void user_step(void) {
 
 int main(void) {
     pogobot_init();
+#ifndef SIMULATOR
     printf("init ok\n");
+#endif
 
     pogobot_start(user_init, user_step);
     return 0;

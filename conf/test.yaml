@@ -2,22 +2,21 @@
 
 window_width: 800
 window_height: 800
-arena_file: arenas/arena8.csv
+arena_file: arenas/annulus.csv
 
 seed: 0
-nBots: 200
+nBots: 300
 simulationTime: 100
 commRadius: 90
-msgSuccessRate: 1.0
+msgSuccessRate: 0.5
 showComms: true
-arenaFileName: arenas/annulus.csv
 GUI: true
 
 #timeStep: 0.02  #0.01667
 #GUItimeStep: 0.001  #0.01667
 
-timeStep: 0.02  #0.01667
-GUItimeStep: 0.01  #0.01667
+timeStep: 0.05  #0.01667
+GUISpeedUp: 0.1
 
 # MODELINE "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8

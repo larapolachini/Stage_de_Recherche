@@ -237,7 +237,7 @@ std::string log_current_robot() {
 }
 
 void pogobot_init() {
-    glogger->info("{} Pogobot initialized successfully.", log_current_robot());
+    glogger->debug("{} Pogobot initialized successfully.", log_current_robot());
 }
 
 uint16_t pogobot_helper_getid(void) {

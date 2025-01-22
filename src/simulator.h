@@ -17,6 +17,7 @@ class Simulation {
     // SDL Globals
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
+    bool enable_gui = true;
 
     uint16_t window_width = 800;
     uint16_t window_height = 600;
@@ -43,6 +44,7 @@ public:
     void create_arena();
     void create_walls();
     void init_box2d();
+    void init_config();
     void init_SDL();
     void main_loop();
 };

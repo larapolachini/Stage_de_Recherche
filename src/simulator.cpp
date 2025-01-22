@@ -52,6 +52,19 @@ void set_current_robot(Robot& robot) {
     // TODO
 }
 
+bool string_to_bool( std::string const& str) {
+    // Convert string to lowercase for case-insensitive comparison
+    std::string lowerStr = str;
+    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), ::tolower);
+
+    if (lowerStr == "true" || lowerStr == "1") {
+        return true;
+    } else if (lowerStr == "false" || lowerStr == "0") {
+        return false;
+    } else {
+        throw std::invalid_argument("Invalid string for boolean conversion: " + str);
+    }
+}
 
 
 
@@ -59,8 +72,10 @@ void set_current_robot(Robot& robot) {
 
 Simulation::Simulation(Configuration& _config)
         : config(_config) {
+    init_config();
     init_box2d();
-    init_SDL();
+    if (enable_gui)
+        init_SDL();
     //create_walls();
     create_arena();
     create_robots();
@@ -69,11 +84,13 @@ Simulation::Simulation(Configuration& _config)
 
 Simulation::~Simulation() {
     b2DestroyWorld(worldId);
-    if (renderer)
-        SDL_DestroyRenderer(renderer);
-    if (window)
-        SDL_DestroyWindow(window);
-    SDL_Quit();
+    if (enable_gui) {
+        if (renderer)
+            SDL_DestroyRenderer(renderer);
+        if (window)
+            SDL_DestroyWindow(window);
+        SDL_Quit();
+    }
 }
 
 // TODO
@@ -81,63 +98,12 @@ void Simulation::create_membranes() {
 }
 
 
-
-//void Simulation::create_arena() {
-//    std::string const csv_file = config.get("arena_file", "test.csv");
-//
-//    float const friction = 0.03f;
-//    float const restitution = 10.8f; // Bounciness
-//    float const WALL_THICKNESS = 50.0f / VISUALIZATION_SCALE; // Thickness of the wall in SDL units
-//
-//    // Read points from the CSV file and scale to window dimensions
-//    arena_points = read_poly_from_csv(csv_file, window_width, window_height);
-//    if (arena_points.size() < 2) {
-//        std::cerr << "Error: At least two points are required to create walls." << std::endl;
-//        return;
-//    }
-//    std::vector<b2Vec2> outer_polygon = offset_polygon(arena_points, -1.0 * WALL_THICKNESS);
-//
-//    // Define the static body for each wall segment
-//    b2BodyDef wallBodyDef = b2DefaultBodyDef();
-//    wallBodyDef.type = b2_staticBody;
-//
-//    for (size_t i = 0; i < outer_polygon.size() - 1; ++i) {
-//        b2Vec2 p1 = outer_polygon[i];
-//        b2Vec2 p2 = outer_polygon[i + 1];
-//
-//        // Calculate the center of the rectangle
-//        b2Vec2 center = (p1 + p2) * 0.5f * (1.0f/VISUALIZATION_SCALE);
-//
-//        // Calculate the angle of the rectangle
-//        float angle = atan2f(p2.y - p1.y, p2.x - p1.x);
-//
-//        // Calculate the length of the rectangle
-//        float length = b2Distance(p1, p2) / VISUALIZATION_SCALE;
-//
-//        // Create the wall body
-//        wallBodyDef.position = center;
-//        wallBodyDef.rotation = b2MakeRot(angle);
-//        b2BodyId wallBody = b2CreateBody(worldId, &wallBodyDef);
-//
-//        // Create the rectangular shape
-//        b2Polygon wallShape = b2MakeBox(length / 2, WALL_THICKNESS / 2);
-//        b2ShapeDef wallShapeDef = b2DefaultShapeDef();
-//        wallShapeDef.friction = friction;
-//        wallShapeDef.restitution = restitution;
-//
-//        b2CreatePolygonShape(wallBody, &wallShapeDef, &wallShape);
-//    }
-//
-//    glogger->info("Walls created from CSV file: {}", csv_file);
-//}
-
-
 void Simulation::create_arena() {
     std::string const csv_file = config.get("arena_file", "test.csv");
 
-    float const friction = 0.2f;
+    float const friction = 0.01f;
     float const restitution = 10.8f; // Bounciness
-    float const WALL_THICKNESS = 50.0f / VISUALIZATION_SCALE; // Thickness of the wall in SDL units
+    float const WALL_THICKNESS = 20.0f / VISUALIZATION_SCALE; // Thickness of the wall in SDL units
 
     // Read multiple polygons from the CSV file
     arena_polygons = read_poly_from_csv(csv_file, window_width, window_height);
@@ -159,9 +125,16 @@ void Simulation::create_arena() {
         b2BodyDef wallBodyDef = b2DefaultBodyDef();
         wallBodyDef.type = b2_staticBody;
 
-        for (size_t i = 0; i < outer_polygon.size() - 1; ++i) {
-            b2Vec2 p1 = outer_polygon[i];
-            b2Vec2 p2 = outer_polygon[i + 1];
+        b2Vec2 p1;
+        b2Vec2 p2;
+        for (size_t i = 0; i < outer_polygon.size(); ++i) {
+            if (i < outer_polygon.size() - 1) {
+                p1 = outer_polygon[i];
+                p2 = outer_polygon[i + 1];
+            } else {
+                p1 = outer_polygon[i];
+                p2 = outer_polygon[0];
+            }
 
             // Calculate the center of the rectangle
             b2Vec2 center = (p1 + p2) * 0.5f * (1.0f/VISUALIZATION_SCALE);
@@ -251,11 +224,15 @@ void Simulation::init_box2d() {
 }
 
 
-void Simulation::init_SDL() {
+void Simulation::init_config() {
     window_width = std::stoi(config.get("window_width", "800"));
     window_height = std::stoi(config.get("window_height", "800"));
     robot_radius = std::stoi(config.get("robot_radius", "10"));
+    enable_gui = string_to_bool(config.get("GUI", "true"));
+}
 
+
+void Simulation::init_SDL() {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
@@ -296,7 +273,7 @@ void Simulation::create_robots() {
         //float x = minX + std::rand() % static_cast<int>(maxX - minX);
         //float y = minY + std::rand() % static_cast<int>(maxY - minY);
         //robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);
-        glogger->info("Creating robot at ({}, {})", point.x, point.y);
+        glogger->debug("Creating robot at ({}, {})", point.x, point.y);
     }
     current_robot = &robots.front();
 
@@ -320,7 +297,8 @@ void Simulation::main_loop() {
     glogger->info("Launching the main simulation loop.");
 
     float const time_step_duration = std::stof(config.get("timeStep", "0.01667"));
-    float const GUI_time_step_duration = std::stof(config.get("GUItimeStep", "0.01667"));
+    //float const GUI_time_step_duration = std::stof(config.get("GUItimeStep", "0.01667"));
+    float const GUI_speed_up = std::stof(config.get("GUISpeedUp", "1.0"));
 
     //sim_starting_time = std::chrono::system_clock::now();
     sim_starting_time_microseconds = get_current_time_microseconds();
@@ -331,9 +309,11 @@ void Simulation::main_loop() {
     float t = 0.0f;
     while (running && t < simulation_time) {
         // Event handling
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = false;
+        if (enable_gui) {
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    running = false;
+                }
             }
         }
 
@@ -346,30 +326,33 @@ void Simulation::main_loop() {
         b2World_Step(worldId, time_step_duration, sub_step_count);
 
         // Render
-        SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Grey background
-        SDL_RenderClear(renderer);
+        if (enable_gui) {
+            SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Grey background
+            SDL_RenderClear(renderer);
 
-        //renderWalls(renderer); // Render the walls
-        for(auto const& poly : arena_polygons) {
-            draw_polygon(renderer, poly);
+            //renderWalls(renderer); // Render the walls
+            for(auto const& poly : arena_polygons) {
+                draw_polygon(renderer, poly);
+            }
+            //membrane.render(renderer, worldId);
+
+            for (auto const& robot : robots) {
+                robot.render(renderer, worldId);
+            }
+
+            SDL_RenderPresent(renderer);
+            //SDL_Delay(GUI_time_step_duration * 1000);
+            SDL_Delay(time_step_duration / GUI_speed_up);
         }
-        //membrane.render(renderer, worldId);
 
-        for (auto const& robot : robots) {
-            robot.render(renderer, worldId);
-        }
-
-        SDL_RenderPresent(renderer);
-        SDL_Delay(GUI_time_step_duration * 1000); // ~60 FPS
-        //SDL_Delay(128); // ~60 FPS
-
-        t += GUI_time_step_duration;
+        t += time_step_duration;
     }
 }
 
 
-bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose) {
+bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose, bool& gui) {
     verbose = false;
+    gui = true;
     config_file.clear();
 
     for (int i = 1; i < argc; ++i) {
@@ -382,6 +365,8 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
                 std::cerr << "Error: -c requires a configuration file argument." << std::endl;
                 return false;
             }
+        } else if (arg == "-g") {
+            gui = false;
         } else if (arg == "-v") {
             verbose = true;
         } else {
@@ -397,10 +382,11 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
 int main(int argc, char** argv) {
     std::string config_file;
     bool verbose = false;
+    bool gui = true;
 
     // Parse command-line arguments
-    if (!parse_arguments(argc, argv, config_file, verbose)) {
-        std::cerr << "Usage: " << argv[0] << " -c CONFIG_FILE [-v]" << std::endl;
+    if (!parse_arguments(argc, argv, config_file, verbose, gui)) {
+        std::cerr << "Usage: " << argv[0] << " -c CONFIG_FILE [-v] [-g]" << std::endl;
         return 1;
     }
 
@@ -411,6 +397,10 @@ int main(int argc, char** argv) {
     if (verbose) {
         glogger->info("Verbose mode enabled.");
         glogger->set_level(spdlog::level::debug);
+    }
+
+    if (gui) {
+        glogger->info("GUI enabled.");
     }
 
     Configuration config;
@@ -425,6 +415,8 @@ int main(int argc, char** argv) {
         // Display configuration
         if (verbose)
             glogger->debug(config.summary());
+
+        config.set("GUI", gui ? "true" : "false");
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

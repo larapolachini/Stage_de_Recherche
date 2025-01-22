@@ -9,6 +9,7 @@ private:
 public:
     void load(const std::string& file_name);
     std::string get(const std::string& key, const std::string& default_value = "") const;
+    void set(std::string const& key, std::string const& value);
     bool contains(const std::string& key) const;
     std::string summary() const;
 };
