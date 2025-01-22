@@ -251,13 +251,18 @@ b2Vec2 generate_random_point_within_polygon_safe(const std::vector<std::vector<b
     float maxX = std::numeric_limits<float>::lowest();
     float minY = std::numeric_limits<float>::max();
     float maxY = std::numeric_limits<float>::lowest();
-    std::vector<b2Vec2> innerPolygon0 = offset_polygon(polygons[0], -minDistance);
+    //std::vector<b2Vec2> innerPolygon0 = offset_polygon(polygons[0], -minDistance);
+    std::vector<b2Vec2> innerPolygon0 = polygons[0];
     for (const auto& point : innerPolygon0) {
         minX = std::min(minX, point.x);
         maxX = std::max(maxX, point.x);
         minY = std::min(minY, point.y);
         maxY = std::max(maxY, point.y);
     }
+    minX += minDistance;
+    minY += minDistance;
+    maxX -= minDistance;
+    maxY -= minDistance;
 
     // Random number generator
     std::random_device rd;

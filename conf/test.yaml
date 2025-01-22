@@ -2,7 +2,7 @@
 
 window_width: 800
 window_height: 800
-arena_file: arenas/annulus.csv
+arena_file: arenas/arena8.csv
 
 seed: 0
 nBots: 300
