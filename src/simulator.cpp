@@ -142,8 +142,8 @@ void Simulation::create_arena() {
     // Read multiple polygons from the CSV file
     arena_polygons = read_poly_from_csv(csv_file, window_width, window_height);
     if (arena_polygons.empty()) {
-        std::cerr << "Error: No polygons found in the file." << std::endl;
-        return;
+        glogger->error("Error: No polygons found in the arena file");
+        throw std::runtime_error("No polygons found in the arena file or unable to open arena file");
     }
 
     // Process each polygon

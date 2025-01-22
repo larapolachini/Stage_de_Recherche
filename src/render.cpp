@@ -80,8 +80,9 @@ std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename,
     std::vector<std::vector<b2Vec2>> polygons;
     std::ifstream file(filename);
     if (!file.is_open()) {
-        std::cerr << "Error: Unable to open file " << filename << std::endl;
-        return polygons;
+        glogger->error("Error: Unable to open file {}", filename);
+        throw std::runtime_error("Unable to open arena file");
+        //return polygons;
     }
 
     float const width = (window_width - 2 * 30);  // Adjusted width

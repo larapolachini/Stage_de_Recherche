@@ -68,7 +68,7 @@ uint64_t get_current_time_microseconds() {
     auto const duration = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
 
     // Convert
-    uint64_t const microseconds = static_cast<uint64_t const>(duration.count());
+    uint64_t microseconds = static_cast<uint64_t>(duration.count());
     return microseconds;
 }
 
@@ -114,7 +114,7 @@ void Robot::create_body(b2WorldId worldId, float x, float y) {
 }
 
 
-void Robot::render(SDL_Renderer* renderer, b2WorldId worldId) const {
+void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) const {
     // Get robot's position in the physics world
     b2Vec2 position = b2Body_GetPosition(bodyId);
 

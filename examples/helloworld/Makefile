@@ -2,7 +2,9 @@
 
 ##### Settings for the pogobot binary #####
 BUILD_DIR=./build
-POGO_SDK=pogobot-sdk
+POGO_SDK=../../pogobot-sdk
+POGOSIM_DIR=../../
+POGOSIM_INCLUDE_DIR=../../src
 
 POGO_SDK_TOOLS=$(POGO_SDK)/tools
 POGO_SDK_INCS=$(POGO_SDK)/includes
@@ -15,18 +17,21 @@ include $(POGO_SDK_TOOLS)/common.mak
 
 TTY?=/dev/ttyUSB0
 
-SRCS=$(wildcard *.c)
+SRCS=$(wildcard *.c) $(wildcard $(POGOSIM_INCLUDE_DIR)/*.c)
 OBJECTS=$(SRCS:.c=.o)
 #OBJECTS_BUILD = $(addprefix $(BUILD_DIR)/, $(OBJECTS))
-OBJECTS_BUILD = $(patsubst %.c,build/bin/%.o,$(SRCS))
+#OBJECTS_BUILD = $(patsubst %.c,build/bin/%.o,$(SRCS))
+OBJECTS_BUILD = $(patsubst %.c,build/bin/%.o,$(notdir $(SRCS)))
+DEP_FILES=$(patsubst %.c,build/bin/%.d,$(notdir $(SRCS)))
+
 
 ##### Compiler settings for the simulator #####
 SIM_CC = gcc
 SIM_CXX = g++
-SIM_CFLAGS = -Wall -MMD -MP -std=c11
-SIM_CXXFLAGS = -Wall -MMD -MP -O2 -std=c++20 `pkg-config --cflags spdlog` -pthread
-SIM_LDFLAGS = -lyaml-cpp `pkg-config --libs spdlog` -lSDL2 -lbox2d
-SIM_TARGET = pogosim
+SIM_CFLAGS = -Wall -MMD -MP -O2 -std=c11 -I$(POGOSIM_INCLUDE_DIR)
+SIM_CXXFLAGS = -Wall -MMD -MP -O2 -std=c++20 `pkg-config --cflags spdlog` -pthread -I$(POGOSIM_INCLUDE_DIR)
+SIM_LDFLAGS = -L$(POGOSIM_DIR)/build -Wl,--whole-archive -lpogosim -Wl,--no-whole-archive -lboost_system -lyaml-cpp `pkg-config --libs spdlog` -lSDL2 -lbox2d -lstdc++ -lfmt -lm 
+SIM_TARGET = helloworld
 
 SIM_SRCS_CXX = $(wildcard *.cpp)
 SIM_SRCS_C = $(wildcard *.c)
@@ -63,10 +68,10 @@ $(SIM_TARGET): $(SIM_OBJECTS)
 
 bin: directories $(BUILD_DIR)/bin/firmware.bin
 
-INCLUDES+=-I. -I$(POGO_SDK_INCS)
+INCLUDES+=-I. -I$(POGO_SDK_INCS) -I$(POGOSIM_INCLUDE_DIR)
 
 # pull in dependency info for *existing* .o files
--include $(OBJECTS_BUILD:.o=.d) ${SIM_OBJECTS:.o=.d}
+-include $(OBJECTS_BUILD:.o=.d) ${SIM_OBJECTS:.o=.d} $(DEP_FILES)
 
 $(BUILD_DIR)/bin/%.bin: $(BUILD_DIR)/bin/%.elf
 	$(OBJCOPY) -O binary $< $@
@@ -84,6 +89,9 @@ $(BUILD_DIR)/bin/firmware.elf: $(OBJECTS_BUILD)
 
 
 $(BUILD_DIR)/bin/%.o: %.c | $(BUILD_DIR)/bin
+	$(compile) -DREAL_ROBOT
+
+$(BUILD_DIR)/bin/%.o: $(POGOSIM_INCLUDE_DIR)/%.c | $(BUILD_DIR)/bin
 	$(compile) -DREAL_ROBOT
 
 clean:
