@@ -87,7 +87,7 @@ void Simulation::create_arena() {
 
     float const friction = 0.03f;
     float const restitution = 10.8f; // Bounciness
-    float const WALL_THICKNESS = 10.0f / VISUALIZATION_SCALE; // Thickness of the wall in Box2D units
+    float const WALL_THICKNESS = 50.0f / VISUALIZATION_SCALE; // Thickness of the wall in SDL units
 
     // Read points from the CSV file and scale to window dimensions
     arena_points = read_poly_from_csv(csv_file, window_width, window_height);
@@ -95,14 +95,15 @@ void Simulation::create_arena() {
         std::cerr << "Error: At least two points are required to create walls." << std::endl;
         return;
     }
+    std::vector<b2Vec2> outer_polygon = offset_polygon(arena_points, -1.0 * WALL_THICKNESS);
 
     // Define the static body for each wall segment
     b2BodyDef wallBodyDef = b2DefaultBodyDef();
     wallBodyDef.type = b2_staticBody;
 
-    for (size_t i = 0; i < arena_points.size() - 1; ++i) {
-        b2Vec2 p1 = arena_points[i];
-        b2Vec2 p2 = arena_points[i + 1];
+    for (size_t i = 0; i < outer_polygon.size() - 1; ++i) {
+        b2Vec2 p1 = outer_polygon[i];
+        b2Vec2 p2 = outer_polygon[i + 1];
 
         // Calculate the center of the rectangle
         b2Vec2 center = (p1 + p2) * 0.5f * (1.0f/VISUALIZATION_SCALE);
