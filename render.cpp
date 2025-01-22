@@ -20,35 +20,99 @@ void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius) {
 }
 
 
-// Helper function to read CSV and return vector of b2Vec2 points
-std::vector<b2Vec2> read_poly_from_csv(const std::string& filename, float window_width, float window_height) {
-    std::vector<b2Vec2> rawPoints;
+//// Helper function to read CSV and return vector of b2Vec2 points
+//std::vector<b2Vec2> read_poly_from_csv(const std::string& filename, float window_width, float window_height) {
+//    std::vector<b2Vec2> rawPoints;
+//    std::ifstream file(filename);
+//    if (!file.is_open()) {
+//        glogger->error("Error: Unable to open file {}", filename);
+//        return rawPoints;
+//    }
+//
+//    float const width = (window_width - 2 * 30); // Width adjusted for 30-pixel offset
+//    float const height = (window_height - 2 * 30); // Height adjusted for 30-pixel offset
+//
+//    std::string line;
+//    while (std::getline(file, line)) {
+//        std::istringstream ss(line);
+//        std::string xStr, yStr;
+//        if (std::getline(ss, xStr, ',') && std::getline(ss, yStr)) {
+//            float x = std::stof(xStr);
+//            float y = std::stof(yStr);
+//            rawPoints.emplace_back(x, y);
+//        }
+//    }
+//
+//    file.close();
+//
+//    // If no points were read, return empty vector
+//    if (rawPoints.empty()) {
+//        glogger->error("Error: No points found in the file {}.", filename);
+//        return rawPoints;
+//    }
+//
+//    // Compute min and max for x and y
+//    float minX = std::numeric_limits<float>::max();
+//    float maxX = std::numeric_limits<float>::lowest();
+//    float minY = std::numeric_limits<float>::max();
+//    float maxY = std::numeric_limits<float>::lowest();
+//
+//    for (const auto& point : rawPoints) {
+//        minX = std::min(minX, point.x);
+//        maxX = std::max(maxX, point.x);
+//        minY = std::min(minY, point.y);
+//        maxY = std::max(maxY, point.y);
+//    }
+//
+//    // Normalize and scale points
+//    std::vector<b2Vec2> normalizedPoints;
+//    for (const auto& point : rawPoints) {
+//        float normX = (point.x - minX) / (maxX - minX); // Min-max normalization for X
+//        float normY = (point.y - minY) / (maxY - minY); // Min-max normalization for Y
+//        //normalizedPoints.emplace_back(normX * width, normY * height); // Scale by width and height
+//        normalizedPoints.emplace_back(normX * width, normY * height); // Scale by width and height
+//    }
+//
+//    return normalizedPoints;
+//}
+
+std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename, float window_width, float window_height) {
+    std::vector<std::vector<b2Vec2>> polygons;
     std::ifstream file(filename);
     if (!file.is_open()) {
-        glogger->error("Error: Unable to open file {}", filename);
-        return rawPoints;
+        std::cerr << "Error: Unable to open file " << filename << std::endl;
+        return polygons;
     }
 
-    float const width = (window_width - 2 * 30); // Width adjusted for 30-pixel offset
-    float const height = (window_height - 2 * 30); // Height adjusted for 30-pixel offset
+    float const width = (window_width - 2 * 30);  // Adjusted width
+    float const height = (window_height - 2 * 30);  // Adjusted height
 
+    std::vector<b2Vec2> currentPolygon;
     std::string line;
+
     while (std::getline(file, line)) {
+        if (line.empty()) {
+            // Empty line indicates end of current polygon
+            if (!currentPolygon.empty()) {
+                polygons.push_back(currentPolygon);
+                currentPolygon.clear();
+            }
+            continue;
+        }
+
         std::istringstream ss(line);
         std::string xStr, yStr;
         if (std::getline(ss, xStr, ',') && std::getline(ss, yStr)) {
             float x = std::stof(xStr);
             float y = std::stof(yStr);
-            rawPoints.emplace_back(x, y);
+            currentPolygon.emplace_back(x, y);
         }
     }
-
     file.close();
 
-    // If no points were read, return empty vector
-    if (rawPoints.empty()) {
-        glogger->error("Error: No points found in the file {}.", filename);
-        return rawPoints;
+    // Add the last polygon if it exists
+    if (!currentPolygon.empty()) {
+        polygons.push_back(currentPolygon);
     }
 
     // Compute min and max for x and y
@@ -56,24 +120,30 @@ std::vector<b2Vec2> read_poly_from_csv(const std::string& filename, float window
     float maxX = std::numeric_limits<float>::lowest();
     float minY = std::numeric_limits<float>::max();
     float maxY = std::numeric_limits<float>::lowest();
-
-    for (const auto& point : rawPoints) {
-        minX = std::min(minX, point.x);
-        maxX = std::max(maxX, point.x);
-        minY = std::min(minY, point.y);
-        maxY = std::max(maxY, point.y);
+    for (auto const& poly : polygons) {
+        for (auto const& point : poly) {
+            minX = std::min(minX, point.x);
+            maxX = std::max(maxX, point.x);
+            minY = std::min(minY, point.y);
+            maxY = std::max(maxY, point.y);
+        }
     }
 
     // Normalize and scale points
+    std::vector<std::vector<b2Vec2>> normalized_polygons;
     std::vector<b2Vec2> normalizedPoints;
-    for (const auto& point : rawPoints) {
-        float normX = (point.x - minX) / (maxX - minX); // Min-max normalization for X
-        float normY = (point.y - minY) / (maxY - minY); // Min-max normalization for Y
-        //normalizedPoints.emplace_back(normX * width, normY * height); // Scale by width and height
-        normalizedPoints.emplace_back(normX * width, normY * height); // Scale by width and height
+    for (auto const& poly : polygons) {
+        std::vector<b2Vec2> currentPolygon;
+        for (const auto& point : poly) {
+            float normX = (point.x - minX) / (maxX - minX); // Min-max normalization for X
+            float normY = (point.y - minY) / (maxY - minY); // Min-max normalization for Y
+            //normalizedPoints.emplace_back(normX * width, normY * height); // Scale by width and height
+            currentPolygon.emplace_back(normX * width, normY * height); // Scale by width and height
+        }
+        normalized_polygons.push_back(currentPolygon);
     }
 
-    return normalizedPoints;
+    return normalized_polygons;
 }
 
 
@@ -168,21 +238,20 @@ std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float off
     return offsetPolygon;
 }
 
-b2Vec2 generate_random_point_within_polygon_safe(const std::vector<b2Vec2>& polygon, float minDistance) {
-    if (polygon.size() < 3) {
-        throw std::runtime_error("Polygon must have at least 3 points to define a valid area.");
+b2Vec2 generate_random_point_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance) {
+    for (auto const& poly : polygons) {
+        if (poly.size() < 3) {
+            throw std::runtime_error("Polygon must have at least 3 points to define a valid area.");
+        }
     }
 
-    // Offset the polygon inward
-    std::vector<b2Vec2> innerPolygon = offset_polygon(polygon, minDistance);
-
-    // Calculate the bounding box of the inner polygon
+    // Calculate the bounding box of the polygons
     float minX = std::numeric_limits<float>::max();
     float maxX = std::numeric_limits<float>::lowest();
     float minY = std::numeric_limits<float>::max();
     float maxY = std::numeric_limits<float>::lowest();
-
-    for (const auto& point : innerPolygon) {
+    std::vector<b2Vec2> innerPolygon0 = offset_polygon(polygons[0], -minDistance);
+    for (const auto& point : innerPolygon0) {
         minX = std::min(minX, point.x);
         maxX = std::max(maxX, point.x);
         minY = std::min(minY, point.y);
@@ -195,13 +264,21 @@ b2Vec2 generate_random_point_within_polygon_safe(const std::vector<b2Vec2>& poly
     std::uniform_real_distribution<float> disX(minX, maxX);
     std::uniform_real_distribution<float> disY(minY, maxY);
 
-    // Generate random points within the inner polygon
+    // Generate random points within the polygon
     while (true) {
         float x = disX(gen);
         float y = disY(gen);
 
-        if (is_point_within_polygon(innerPolygon, x, y)) {
-            return b2Vec2(x, y);
+        if (is_point_within_polygon(innerPolygon0, x, y)) {
+            bool within = true;
+            for (auto const& poly : std::span(polygons.begin() + 1, polygons.end())) {
+                if (is_point_within_polygon(poly, x, y)) {
+                    within = false;
+                    break;
+                }
+            }
+            if (within)
+                return b2Vec2(x, y);
         }
     }
 }

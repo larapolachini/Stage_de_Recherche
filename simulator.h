@@ -32,7 +32,7 @@ class Simulation {
     b2WorldId worldId;
     std::vector<Robot> robots;
     std::vector<Robot> membranes;
-    std::vector<b2Vec2> arena_points;
+    std::vector<std::vector<b2Vec2>> arena_polygons;
 
 public:
     Simulation(Configuration& _config);

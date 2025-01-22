@@ -82,54 +82,114 @@ void Simulation::create_membranes() {
 
 
 
+//void Simulation::create_arena() {
+//    std::string const csv_file = config.get("arena_file", "test.csv");
+//
+//    float const friction = 0.03f;
+//    float const restitution = 10.8f; // Bounciness
+//    float const WALL_THICKNESS = 50.0f / VISUALIZATION_SCALE; // Thickness of the wall in SDL units
+//
+//    // Read points from the CSV file and scale to window dimensions
+//    arena_points = read_poly_from_csv(csv_file, window_width, window_height);
+//    if (arena_points.size() < 2) {
+//        std::cerr << "Error: At least two points are required to create walls." << std::endl;
+//        return;
+//    }
+//    std::vector<b2Vec2> outer_polygon = offset_polygon(arena_points, -1.0 * WALL_THICKNESS);
+//
+//    // Define the static body for each wall segment
+//    b2BodyDef wallBodyDef = b2DefaultBodyDef();
+//    wallBodyDef.type = b2_staticBody;
+//
+//    for (size_t i = 0; i < outer_polygon.size() - 1; ++i) {
+//        b2Vec2 p1 = outer_polygon[i];
+//        b2Vec2 p2 = outer_polygon[i + 1];
+//
+//        // Calculate the center of the rectangle
+//        b2Vec2 center = (p1 + p2) * 0.5f * (1.0f/VISUALIZATION_SCALE);
+//
+//        // Calculate the angle of the rectangle
+//        float angle = atan2f(p2.y - p1.y, p2.x - p1.x);
+//
+//        // Calculate the length of the rectangle
+//        float length = b2Distance(p1, p2) / VISUALIZATION_SCALE;
+//
+//        // Create the wall body
+//        wallBodyDef.position = center;
+//        wallBodyDef.rotation = b2MakeRot(angle);
+//        b2BodyId wallBody = b2CreateBody(worldId, &wallBodyDef);
+//
+//        // Create the rectangular shape
+//        b2Polygon wallShape = b2MakeBox(length / 2, WALL_THICKNESS / 2);
+//        b2ShapeDef wallShapeDef = b2DefaultShapeDef();
+//        wallShapeDef.friction = friction;
+//        wallShapeDef.restitution = restitution;
+//
+//        b2CreatePolygonShape(wallBody, &wallShapeDef, &wallShape);
+//    }
+//
+//    glogger->info("Walls created from CSV file: {}", csv_file);
+//}
+
+
 void Simulation::create_arena() {
     std::string const csv_file = config.get("arena_file", "test.csv");
 
-    float const friction = 0.03f;
+    float const friction = 0.2f;
     float const restitution = 10.8f; // Bounciness
     float const WALL_THICKNESS = 50.0f / VISUALIZATION_SCALE; // Thickness of the wall in SDL units
 
-    // Read points from the CSV file and scale to window dimensions
-    arena_points = read_poly_from_csv(csv_file, window_width, window_height);
-    if (arena_points.size() < 2) {
-        std::cerr << "Error: At least two points are required to create walls." << std::endl;
+    // Read multiple polygons from the CSV file
+    arena_polygons = read_poly_from_csv(csv_file, window_width, window_height);
+    if (arena_polygons.empty()) {
+        std::cerr << "Error: No polygons found in the file." << std::endl;
         return;
     }
-    std::vector<b2Vec2> outer_polygon = offset_polygon(arena_points, -1.0 * WALL_THICKNESS);
 
-    // Define the static body for each wall segment
-    b2BodyDef wallBodyDef = b2DefaultBodyDef();
-    wallBodyDef.type = b2_staticBody;
+    // Process each polygon
+    for (const auto& polygon : arena_polygons) {
+        if (polygon.size() < 2) {
+            std::cerr << "Error: A polygon must have at least two points to create walls." << std::endl;
+            continue;
+        }
 
-    for (size_t i = 0; i < outer_polygon.size() - 1; ++i) {
-        b2Vec2 p1 = outer_polygon[i];
-        b2Vec2 p2 = outer_polygon[i + 1];
+        std::vector<b2Vec2> outer_polygon = offset_polygon(polygon, -1.0f * WALL_THICKNESS);
 
-        // Calculate the center of the rectangle
-        b2Vec2 center = (p1 + p2) * 0.5f * (1.0f/VISUALIZATION_SCALE);
+        // Define the static body for each wall segment
+        b2BodyDef wallBodyDef = b2DefaultBodyDef();
+        wallBodyDef.type = b2_staticBody;
 
-        // Calculate the angle of the rectangle
-        float angle = atan2f(p2.y - p1.y, p2.x - p1.x);
+        for (size_t i = 0; i < outer_polygon.size() - 1; ++i) {
+            b2Vec2 p1 = outer_polygon[i];
+            b2Vec2 p2 = outer_polygon[i + 1];
 
-        // Calculate the length of the rectangle
-        float length = b2Distance(p1, p2) / VISUALIZATION_SCALE;
+            // Calculate the center of the rectangle
+            b2Vec2 center = (p1 + p2) * 0.5f * (1.0f/VISUALIZATION_SCALE);
 
-        // Create the wall body
-        wallBodyDef.position = center;
-        wallBodyDef.rotation = b2MakeRot(angle);
-        b2BodyId wallBody = b2CreateBody(worldId, &wallBodyDef);
+            // Calculate the angle of the rectangle
+            float angle = atan2f(p2.y - p1.y, p2.x - p1.x);
 
-        // Create the rectangular shape
-        b2Polygon wallShape = b2MakeBox(length / 2, WALL_THICKNESS / 2);
-        b2ShapeDef wallShapeDef = b2DefaultShapeDef();
-        wallShapeDef.friction = friction;
-        wallShapeDef.restitution = restitution;
+            // Calculate the length of the rectangle
+            float length = b2Distance(p1, p2) / VISUALIZATION_SCALE;
 
-        b2CreatePolygonShape(wallBody, &wallShapeDef, &wallShape);
+            // Create the wall body
+            wallBodyDef.position = center;
+            wallBodyDef.rotation = b2MakeRot(angle);
+            b2BodyId wallBody = b2CreateBody(worldId, &wallBodyDef);
+
+            // Create the rectangular shape
+            b2Polygon wallShape = b2MakeBox(length / 2, WALL_THICKNESS / 2);
+            b2ShapeDef wallShapeDef = b2DefaultShapeDef();
+            wallShapeDef.friction = friction;
+            wallShapeDef.restitution = restitution;
+
+            b2CreatePolygonShape(wallBody, &wallShapeDef, &wallShape);
+        }
     }
 
-    glogger->info("Walls created from CSV file: {}", csv_file);
+    glogger->info("Arena walls created from CSV file: {}", csv_file);
 }
+
 
 void Simulation::create_walls() {
     float const WALL_THICKNESS = 30.0f / VISUALIZATION_SCALE; // Thickness of the wall in Box2D units (30 pixels)
@@ -231,7 +291,7 @@ void Simulation::create_robots() {
 
     std::srand(std::time(nullptr));
     for (size_t i = 0; i < nb_robots; ++i) {
-        auto const point = generate_random_point_within_polygon_safe(arena_points, robot_radius*3);
+        auto const point = generate_random_point_within_polygon_safe(arena_polygons, 5.0 * robot_radius);
         robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId);
         //float x = minX + std::rand() % static_cast<int>(maxX - minX);
         //float y = minY + std::rand() % static_cast<int>(maxY - minY);
@@ -290,7 +350,9 @@ void Simulation::main_loop() {
         SDL_RenderClear(renderer);
 
         //renderWalls(renderer); // Render the walls
-        draw_polygon(renderer, arena_points);
+        for(auto const& poly : arena_polygons) {
+            draw_polygon(renderer, poly);
+        }
         //membrane.render(renderer, worldId);
 
         for (auto const& robot : robots) {
