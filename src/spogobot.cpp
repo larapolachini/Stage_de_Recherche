@@ -13,16 +13,8 @@
 /************* GLOBALS *************/ // {{{1
 
 Robot* current_robot;
-std::shared_ptr<spdlog::logger> glogger; // XXX Move
 //std::chrono::time_point<std::chrono::system_clock> sim_starting_time;
 uint64_t sim_starting_time_microseconds;
-
-void init_logger() {
-    // Create a console logger with color support
-    glogger = spdlog::stdout_color_mt("console");
-    glogger->set_level(spdlog::level::info); // Set default log level
-    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v"); // Set log format
-}
 
 /************* time_reference_t *************/ // {{{1
 

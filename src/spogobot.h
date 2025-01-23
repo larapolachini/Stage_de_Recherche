@@ -63,20 +63,14 @@ void pogosim_printf(const char* format, ...);
 
 #include <vector>
 #include <set>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h> // For colored console output
-#include <spdlog/fmt/ostr.h> // Enables << operator for logging
 #include <chrono>
 #include <SDL2/SDL.h>
 #include <box2d/box2d.h>
 
+#include "utils.h"
 #include "render.h"
 #include "colormaps.h"
 
-// XXX Move ??
-// Declare a global logger (shared pointer)
-extern std::shared_ptr<spdlog::logger> glogger;
-void init_logger();
 std::string log_current_robot();
 
 

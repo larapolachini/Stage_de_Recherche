@@ -3,6 +3,17 @@
 #include <filesystem>
 #include <algorithm>
 
+#include "utils.h"
+
+std::shared_ptr<spdlog::logger> glogger;
+
+void init_logger() {
+    // Create a console logger with color support
+    glogger = spdlog::stdout_color_mt("console");
+    glogger->set_level(spdlog::level::info); // Set default log level
+    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v"); // Set log format
+}
+
 
 bool string_to_bool( std::string const& str) {
     // Convert string to lowercase for case-insensitive comparison
@@ -26,20 +37,20 @@ void ensure_directories_exist(const std::string& filename) {
 
         if (!directory.empty() && !std::filesystem::exists(directory)) {
             std::filesystem::create_directories(directory);
-            std::cout << "Created directories: " << directory << std::endl;
+            glogger->info("Created directories: {}", directory.string());
         }
     } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "Error creating directories for '" << filename << "': " << e.what() << std::endl;
+        glogger->error("Error creating directories for '{}': {}'", filename, e.what());
     }
 }
 
-void delete_files_with_extension(const std::string& path, const std::string& extension, bool recursive = false) {
+void delete_files_with_extension(const std::string& path, const std::string& extension, bool recursive) {
     try {
         std::filesystem::path dirPath(path);
 
         // Check if the path exists and is a directory
         if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
-            std::cerr << "Invalid directory: " << path << std::endl;
+            glogger->error("Invalid directory: {}", path);
             return;
         }
 
@@ -48,21 +59,21 @@ void delete_files_with_extension(const std::string& path, const std::string& ext
             for (const auto& entry : std::filesystem::recursive_directory_iterator(dirPath)) {
                 if (entry.is_regular_file() && entry.path().extension() == extension) {
                     std::filesystem::remove(entry.path());
-                    std::cout << "Deleted: " << entry.path() << std::endl;
+                    glogger->debug("Deleted: {}", entry.path().string());
                 }
             }
         } else {
             for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
                 if (entry.is_regular_file() && entry.path().extension() == extension) {
                     std::filesystem::remove(entry.path());
-                    std::cout << "Deleted: " << entry.path() << std::endl;
+                    glogger->debug("Deleted: {}", entry.path().string());
                 }
             }
         }
     } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "Filesystem error: " << e.what() << std::endl;
+        glogger->error("Filesystem error: {}", e.what());
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        glogger->error("Error: {}", e.what());
     }
 }
 

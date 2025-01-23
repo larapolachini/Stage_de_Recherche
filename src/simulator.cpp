@@ -5,6 +5,7 @@
 #include <yaml-cpp/yaml.h>
 #include <unordered_map>
 #include <spdlog/spdlog.h>
+#include <filesystem>
 
 #include <cmath>
 #include <vector>
@@ -420,8 +421,9 @@ void Simulation::delete_old_data() {
     bool const delete_old_files = string_to_bool(config.get("delete_old_files", "false"));
     if (delete_old_files) {
         std::string const frames_name = config.get("frames_name", "frames/f{:06.4f}.png");
-        std::filesystem::path filePath(filename);
+        std::filesystem::path filePath(frames_name);
         std::filesystem::path directory = filePath.parent_path();
+        glogger->info("Deleting old data files in directory: {}", directory.string());
         delete_files_with_extension(directory, ".png", false);
     }
 }

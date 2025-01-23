@@ -1,6 +1,14 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h> // For colored console output
+#include <spdlog/fmt/ostr.h> // Enables << operator for logging
+
+// Declare a global logger (shared pointer)
+extern std::shared_ptr<spdlog::logger> glogger;
+void init_logger();
+
 void ensure_directories_exist(const std::string& filename);
 void delete_files_with_extension(const std::string& path, const std::string& extension, bool recursive = false);
 bool string_to_bool( std::string const& str);
