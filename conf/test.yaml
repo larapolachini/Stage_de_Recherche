@@ -6,7 +6,7 @@ arena_file: arenas/arena8.csv
 
 seed: 0
 nBots: 300
-simulationTime: 100
+simulationTime: 100.0
 commRadius: 90
 msgSuccessRate: 0.5
 showComms: true
@@ -16,7 +16,10 @@ GUI: true
 #GUItimeStep: 0.001  #0.01667
 
 timeStep: 0.05  #0.01667
-GUISpeedUp: 0.1
+GUISpeedUp: 1.0
+
+save_video_period: 10.0
+frames_name: "frames/f{:06.4f}.png"
 
 # MODELINE "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8

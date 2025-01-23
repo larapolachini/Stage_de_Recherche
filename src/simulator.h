@@ -18,11 +18,15 @@ class Simulation {
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
     bool enable_gui = true;
+    bool paused = false;
+    bool running = true;
+    float t = 0.0f;
 
     uint16_t window_width = 800;
     uint16_t window_height = 600;
     uint16_t robot_radius = 10;
     uint16_t sub_step_count = 4;
+    double GUI_speed_up = 1.0;
 
     float const wall_offset = 30.0f;
     float const minX = wall_offset + robot_radius*2;
@@ -34,6 +38,8 @@ class Simulation {
     std::vector<Robot> robots;
     std::vector<Robot> membranes;
     std::vector<std::vector<b2Vec2>> arena_polygons;
+
+    float last_frame_saved_t = -1.0;
 
 public:
     Simulation(Configuration& _config);
@@ -47,6 +53,13 @@ public:
     void init_config();
     void init_SDL();
     void main_loop();
+    void handle_SDL_events();
+    void render_all();
+    void export_frames();
+
+    void speed_up();
+    void speed_down();
+    void pause();
 };
 
 

@@ -11,6 +11,7 @@
 #include <SDL2/SDL.h>
 #include <box2d/box2d.h>
 
+#include "utils.h"
 #include "simulator.h"
 #include "render.h"
 #include "spogobot.h"
@@ -51,21 +52,6 @@ void set_current_robot(Robot& robot) {
     // Update robot clock and handle time-keeping
     // TODO
 }
-
-bool string_to_bool( std::string const& str) {
-    // Convert string to lowercase for case-insensitive comparison
-    std::string lowerStr = str;
-    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), ::tolower);
-
-    if (lowerStr == "true" || lowerStr == "1") {
-        return true;
-    } else if (lowerStr == "false" || lowerStr == "0") {
-        return false;
-    } else {
-        throw std::invalid_argument("Invalid string for boolean conversion: " + str);
-    }
-}
-
 
 
 /************* SIMULATION *************/ // {{{1
@@ -229,6 +215,7 @@ void Simulation::init_config() {
     window_height = std::stoi(config.get("window_height", "800"));
     robot_radius = std::stoi(config.get("robot_radius", "10"));
     enable_gui = string_to_bool(config.get("GUI", "true"));
+    GUI_speed_up = std::stof(config.get("GUI_speed_up", "1.0"));
 }
 
 
@@ -292,30 +279,118 @@ void Simulation::create_robots() {
 }
 
 
+void Simulation::speed_up() {
+    GUI_speed_up *= 1.1;
+    glogger->info("Setting GUI speed up to {}", GUI_speed_up);
+}
+
+void Simulation::speed_down() {
+    GUI_speed_up *= 0.9;
+    glogger->info("Setting GUI speed up to {}", GUI_speed_up);
+}
+
+void Simulation::pause() {
+    paused = !paused;
+}
+
+void Simulation::handle_SDL_events() {
+    if (!enable_gui)
+        return;
+
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_QUIT) {
+            running = false;
+
+        } else if (event.type == SDL_KEYDOWN) {
+            switch (event.key.keysym.sym) {
+                case SDLK_F3:
+                    speed_down();
+                    break;
+                case SDLK_F4:
+                    speed_up();
+                    break;
+                case SDLK_ESCAPE:
+                    running = false;
+                    break;
+                case SDLK_SPACE:
+                    pause();
+                    break;
+                case SDLK_UP:
+                    // TODO
+                    std::cout << "UP arrow key pressed!" << std::endl;
+                    break;
+                case SDLK_DOWN:
+                    // TODO
+                    std::cout << "DOWN arrow key pressed!" << std::endl;
+                    break;
+                case SDLK_LEFT:
+                    // TODO
+                    std::cout << "LEFT arrow key pressed!" << std::endl;
+                    break;
+                case SDLK_RIGHT:
+                    // TODO
+                    std::cout << "RIGHT arrow key pressed!" << std::endl;
+                    break;
+            }
+        }
+    }
+}
+
+
+
+void Simulation::render_all() {
+    if (!enable_gui)
+        return;
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Grey background
+    SDL_RenderClear(renderer);
+
+    //renderWalls(renderer); // Render the walls
+    for(auto const& poly : arena_polygons) {
+        draw_polygon(renderer, poly);
+    }
+    //membrane.render(renderer, worldId);
+
+    for (auto const& robot : robots) {
+        robot.render(renderer, worldId);
+    }
+    //SDL_RenderPresent(renderer);
+}
+
+void Simulation::export_frames() {
+    if (!enable_gui)
+        return;
+
+    // If wanted, export to PNG
+    float const save_video_period = std::stof(config.get("save_video_period", "-1.0"));
+    std::string const frames_name = config.get("frames_name", "frames/f{:06.4f}.png");
+    if (save_video_period > 0.0 && frames_name.size()) {
+        //float const time_step_duration = std::stof(config.get("timeStep", "0.01667"));
+        if (t >= last_frame_saved_t + save_video_period) {
+            last_frame_saved_t = t;
+            std::string formatted_filename = std::vformat(frames_name, std::make_format_args(t));
+            save_window_to_png(renderer, window, formatted_filename);
+        }
+    }
+}
+
+
 void Simulation::main_loop() {
     float const simulation_time = std::stof(config.get("simulationTime", "100.0"));
     glogger->info("Launching the main simulation loop.");
 
     float const time_step_duration = std::stof(config.get("timeStep", "0.01667"));
     //float const GUI_time_step_duration = std::stof(config.get("GUItimeStep", "0.01667"));
-    float const GUI_speed_up = std::stof(config.get("GUISpeedUp", "1.0"));
 
     //sim_starting_time = std::chrono::system_clock::now();
     sim_starting_time_microseconds = get_current_time_microseconds();
 
     // Main loop for all robots
-    bool running = true;
-    SDL_Event event;
-    float t = 0.0f;
+    running = true;
+    t = 0.0f;
+    last_frame_saved_t = 0.0f - time_step_duration;
     while (running && t < simulation_time) {
-        // Event handling
-        if (enable_gui) {
-            while (SDL_PollEvent(&event)) {
-                if (event.type == SDL_QUIT) {
-                    running = false;
-                }
-            }
-        }
+        handle_SDL_events();
 
         for (auto& robot : robots) {
             set_current_robot(robot);
@@ -326,25 +401,14 @@ void Simulation::main_loop() {
         b2World_Step(worldId, time_step_duration, sub_step_count);
 
         // Render
+        render_all();
+        export_frames();
+        SDL_RenderPresent(renderer);
+
+        // Delay and update time
         if (enable_gui) {
-            SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Grey background
-            SDL_RenderClear(renderer);
-
-            //renderWalls(renderer); // Render the walls
-            for(auto const& poly : arena_polygons) {
-                draw_polygon(renderer, poly);
-            }
-            //membrane.render(renderer, worldId);
-
-            for (auto const& robot : robots) {
-                robot.render(renderer, worldId);
-            }
-
-            SDL_RenderPresent(renderer);
-            //SDL_Delay(GUI_time_step_duration * 1000);
             SDL_Delay(time_step_duration / GUI_speed_up);
         }
-
         t += time_step_duration;
     }
 }
@@ -402,6 +466,15 @@ int main(int argc, char** argv) {
     if (gui) {
         glogger->info("GUI enabled.");
     }
+
+    // TODO
+//    bool const delete_old_files = string_to_bool(config.get("delete_old_files", "false"));
+//    if (delete_old_files) {
+//        std::filesystem::path filePath(filename);
+//        std::filesystem::path directory = filePath.parent_path();
+//        delete_files_with_extension(directory, ".png", false);
+//    }
+
 
     Configuration config;
     try {

@@ -4,8 +4,17 @@
 #include <random>
 #include <iostream>
 
+#include "utils.h"
 #include "render.h"
 #include "spogobot.h"
+
+// Include STB image write
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+#pragma GCC diagnostic pop
+
 
 void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius) {
     for (int w = 0; w < radius * 2; w++) {
@@ -314,6 +323,39 @@ void draw_polygon(SDL_Renderer* renderer, const std::vector<b2Vec2>& polygon) {
                        static_cast<int>(polygon.front().x),
                        static_cast<int>(polygon.front().y));
 }
+
+
+void save_window_to_png(SDL_Renderer* renderer, SDL_Window* window, const std::string& filename) {
+    int width, height;
+    SDL_GetWindowSize(window, &width, &height);
+
+    ensure_directories_exist(filename);
+
+    std::vector<Uint8> pixels(width * height * 4); // RGBA format
+    if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA32, pixels.data(), width * 4) != 0) {
+        std::cerr << "Error reading pixels: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    // Flip the image vertically (SDL's origin is top-left, PNG's is bottom-left)
+    std::vector<Uint8> flippedPixels(width * height * 4);
+    for (int row = 0; row < height; ++row) {
+        std::copy_n(
+            &pixels[(height - row - 1) * width * 4], // Source row (flipped)
+            width * 4,                               // Row size
+            &flippedPixels[row * width * 4]          // Destination row
+        );
+    }
+
+    // Save to PNG using stb_image_write
+    if (!stbi_write_png(filename.c_str(), width, height, 4, pixels.data(), width * 4)) {
+    //if (!stbi_write_png(filename.c_str(), width, height, 4, flippedPixels.data(), width * 4)) {
+        glogger->warn("Error writing PNG file '{}'", filename);
+    } else {
+        glogger->debug("Saved window content to '{}'", filename);
+    }
+}
+
 
 // MODELINE "{{{1
 // vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8

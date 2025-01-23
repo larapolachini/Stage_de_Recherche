@@ -2,7 +2,11 @@
 #define RENDER_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <box2d/box2d.h>
+
+float const VISUALIZATION_SCALE = 100.0f; // 1 Box2D unit = 100 pixels
+
 
 void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius);
 
@@ -16,7 +20,7 @@ b2Vec2 generate_random_point_within_polygon_safe(const std::vector<std::vector<b
 bool is_point_within_polygon(const std::vector<b2Vec2>& polygon, float x, float y);
 void draw_polygon(SDL_Renderer* renderer, const std::vector<b2Vec2>& polygon);
 
-float const VISUALIZATION_SCALE = 100.0f; // 1 Box2D unit = 100 pixels
+void save_window_to_png(SDL_Renderer* renderer, SDL_Window* window, const std::string& filename);
 
 #endif // RENDER_H
 
