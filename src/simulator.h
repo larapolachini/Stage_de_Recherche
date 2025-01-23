@@ -56,6 +56,7 @@ public:
     void handle_SDL_events();
     void render_all();
     void export_frames();
+    void delete_old_data();
 
     void speed_up();
     void speed_down();

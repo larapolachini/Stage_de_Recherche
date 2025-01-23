@@ -376,6 +376,9 @@ void Simulation::export_frames() {
 
 
 void Simulation::main_loop() {
+    // Delete old data, if needed
+    delete_old_data();
+
     float const simulation_time = std::stof(config.get("simulationTime", "100.0"));
     glogger->info("Launching the main simulation loop.");
 
@@ -410,6 +413,16 @@ void Simulation::main_loop() {
             SDL_Delay(time_step_duration / GUI_speed_up);
         }
         t += time_step_duration;
+    }
+}
+
+void Simulation::delete_old_data() {
+    bool const delete_old_files = string_to_bool(config.get("delete_old_files", "false"));
+    if (delete_old_files) {
+        std::string const frames_name = config.get("frames_name", "frames/f{:06.4f}.png");
+        std::filesystem::path filePath(filename);
+        std::filesystem::path directory = filePath.parent_path();
+        delete_files_with_extension(directory, ".png", false);
     }
 }
 
@@ -466,15 +479,6 @@ int main(int argc, char** argv) {
     if (gui) {
         glogger->info("GUI enabled.");
     }
-
-    // TODO
-//    bool const delete_old_files = string_to_bool(config.get("delete_old_files", "false"));
-//    if (delete_old_files) {
-//        std::filesystem::path filePath(filename);
-//        std::filesystem::path directory = filePath.parent_path();
-//        delete_files_with_extension(directory, ".png", false);
-//    }
-
 
     Configuration config;
     try {
