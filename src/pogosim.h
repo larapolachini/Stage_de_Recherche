@@ -35,7 +35,7 @@ extern uint32_t pogobot_ticks;
 extern uint8_t main_loop_hz;
 extern uint8_t send_msg_hz;
 extern uint8_t process_msg_hz;
-extern void (*msg_rx_fn)(void);
+extern void (*msg_rx_fn)(message_t *);
 extern void (*msg_tx_fn)(void);
 extern int8_t error_codes_led_idx;
 extern time_reference_t _global_timer;

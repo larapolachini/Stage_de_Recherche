@@ -75,7 +75,6 @@ install(FILES
 
 
 ###### BUILD EXAMPLES ######
-###### BUILD EXAMPLES ######
 # Find all subdirectories in examples
 file(GLOB EXAMPLE_DIRS RELATIVE ${CMAKE_SOURCE_DIR}/examples ${CMAKE_SOURCE_DIR}/examples/*)
 

@@ -5,7 +5,7 @@
 uint8_t main_loop_hz = 60;
 uint8_t send_msg_hz = 30;
 uint8_t process_msg_hz = 60;
-void (*msg_rx_fn)(void) = NULL;
+void (*msg_rx_fn)(message_t *) = NULL;
 void (*msg_tx_fn)(void) = NULL;
 int8_t error_codes_led_idx = 3; // Default value, negative values to disable
 uint32_t pogobot_ticks = 0;
@@ -60,8 +60,8 @@ void pogo_main_loop_step(void (*user_step)(void)) {
     // TODO frequency !!!
     if (msg_tx_fn)
         msg_tx_fn();
-    if (msg_rx_fn)
-        msg_rx_fn();
+//    if (msg_rx_fn)
+//        msg_rx_fn(); // XXX TODO
 
     // Call user-specified step function
     user_step();
