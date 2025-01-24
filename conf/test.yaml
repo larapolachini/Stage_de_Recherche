@@ -19,8 +19,8 @@ GUI: true
 timeStep: 0.05  #0.01667
 GUISpeedUp: 1.0
 
-save_video_period: 1.0
-frames_name: "frames/f{:06.4f}.png"
+save_video_period: 3.0
+frames_name: "frames/f{:010.4f}.png"
 
 # MODELINE "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8

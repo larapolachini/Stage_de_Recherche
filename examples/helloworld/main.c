@@ -24,7 +24,7 @@ void user_init(void) {
     main_loop_hz = 60;
     send_msg_hz = 30;
     process_msg_hz = 60;
-    // TODO Specify functions to send/transmit messages
+    // Specify functions to send/transmit messages
     msg_rx_fn = NULL;
     msg_tx_fn = NULL;
 

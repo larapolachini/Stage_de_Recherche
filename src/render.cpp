@@ -337,15 +337,15 @@ void save_window_to_png(SDL_Renderer* renderer, SDL_Window* window, const std::s
         return;
     }
 
-    // Flip the image vertically (SDL's origin is top-left, PNG's is bottom-left)
-    std::vector<Uint8> flippedPixels(width * height * 4);
-    for (int row = 0; row < height; ++row) {
-        std::copy_n(
-            &pixels[(height - row - 1) * width * 4], // Source row (flipped)
-            width * 4,                               // Row size
-            &flippedPixels[row * width * 4]          // Destination row
-        );
-    }
+//    // Flip the image vertically (SDL's origin is top-left, PNG's is bottom-left)
+//    std::vector<Uint8> flippedPixels(width * height * 4);
+//    for (int row = 0; row < height; ++row) {
+//        std::copy_n(
+//            &pixels[(height - row - 1) * width * 4], // Source row (flipped)
+//            width * 4,                               // Row size
+//            &flippedPixels[row * width * 4]          // Destination row
+//        );
+//    }
 
     // Save to PNG using stb_image_write
     if (!stbi_write_png(filename.c_str(), width, height, 4, pixels.data(), width * 4)) {

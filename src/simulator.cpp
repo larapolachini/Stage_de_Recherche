@@ -61,8 +61,7 @@ Simulation::Simulation(Configuration& _config)
         : config(_config) {
     init_config();
     init_box2d();
-    if (enable_gui)
-        init_SDL();
+    init_SDL();
     //create_walls();
     create_arena();
     create_robots();
@@ -71,13 +70,11 @@ Simulation::Simulation(Configuration& _config)
 
 Simulation::~Simulation() {
     b2DestroyWorld(worldId);
-    if (enable_gui) {
-        if (renderer)
-            SDL_DestroyRenderer(renderer);
-        if (window)
-            SDL_DestroyWindow(window);
-        SDL_Quit();
-    }
+    if (renderer)
+        SDL_DestroyRenderer(renderer);
+    if (window)
+        SDL_DestroyWindow(window);
+    SDL_Quit();
 }
 
 // TODO
@@ -227,11 +224,19 @@ void Simulation::init_SDL() {
         throw std::runtime_error("Error while initializing SDL");
     }
 
-    window = SDL_CreateWindow("Swarm Robotics Simulator with Walls",
-                                          SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED,
-                                          window_width, window_height,
-                                          SDL_WINDOW_SHOWN);
+    if (enable_gui) {
+        window = SDL_CreateWindow("Swarm Robotics Simulator with Walls",
+                SDL_WINDOWPOS_CENTERED,
+                SDL_WINDOWPOS_CENTERED,
+                window_width, window_height,
+                SDL_WINDOW_SHOWN);
+    } else {
+        window = SDL_CreateWindow("Swarm Robotics Simulator with Walls",
+                SDL_WINDOWPOS_CENTERED,
+                SDL_WINDOWPOS_CENTERED,
+                window_width, window_height,
+                SDL_WINDOW_HIDDEN);
+    }
     if (!window) {
         SDL_Log("Failed to create window: %s", SDL_GetError());
         SDL_Quit();
@@ -341,8 +346,6 @@ void Simulation::handle_SDL_events() {
 
 
 void Simulation::render_all() {
-    if (!enable_gui)
-        return;
     SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Grey background
     SDL_RenderClear(renderer);
 
@@ -359,12 +362,9 @@ void Simulation::render_all() {
 }
 
 void Simulation::export_frames() {
-    if (!enable_gui)
-        return;
-
     // If wanted, export to PNG
     float const save_video_period = std::stof(config.get("save_video_period", "-1.0"));
-    std::string const frames_name = config.get("frames_name", "frames/f{:06.4f}.png");
+    std::string const frames_name = config.get("frames_name", "frames/f{:010.4f}.png");
     if (save_video_period > 0.0 && frames_name.size()) {
         //float const time_step_duration = std::stof(config.get("timeStep", "0.01667"));
         if (t >= last_frame_saved_t + save_video_period) {
