@@ -298,7 +298,7 @@ std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float off
 //    }
 //}
 
-std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance, int N) {
+std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance, unsigned int N) {
     for (const auto& poly : polygons) {
         if (poly.size() < 3) {
             throw std::runtime_error("Polygon must have at least 3 points to define a valid area.");
@@ -331,6 +331,7 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector
     std::vector<b2Vec2> points; // Store the generated points
 
     // Generate N random points
+    uint32_t attempts = 0;
     while (points.size() < N) {
         float x = disX(gen);
         float y = disY(gen);
@@ -360,7 +361,15 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector
             // If the point is valid, add it to the list
             if (valid) {
                 points.emplace_back(x, y);
+                attempts = 0;
+            } else {
+                attempts++;
             }
+        }
+
+        // If too many attempts are made, maybe the problem is impossible
+        if (attempts >= 1000) {
+            throw std::runtime_error("Impossible to create random points within polygon: number of points is too high.");
         }
     }
 

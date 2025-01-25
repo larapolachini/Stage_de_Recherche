@@ -260,19 +260,24 @@ void Simulation::create_robots() {
     if (!nb_robots)
         throw std::runtime_error("Number of robots is 0 (nBot=0 in configuration).");
 
-    auto const points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * robot_radius, nb_robots);
-
     std::srand(std::time(nullptr));
-    for (size_t i = 0; i < nb_robots; ++i) {
-        //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius); // XXX quick & dirty :-/
-        auto const point = points[i];
-        robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId);
-        //float x = minX + std::rand() % static_cast<int>(maxX - minX);
-        //float y = minY + std::rand() % static_cast<int>(maxY - minY);
-        //robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);
-        glogger->debug("Creating robot at ({}, {})", point.x, point.y);
+
+    try {
+        auto const points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * robot_radius, nb_robots);
+
+        for (size_t i = 0; i < nb_robots; ++i) {
+            //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius); // XXX quick & dirty :-/
+            auto const point = points[i];
+            robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId);
+            //float x = minX + std::rand() % static_cast<int>(maxX - minX);
+            //float y = minY + std::rand() % static_cast<int>(maxY - minY);
+            //robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);
+            glogger->debug("Creating robot at ({}, {})", point.x, point.y);
+        }
+        current_robot = &robots.front();
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Impossible to create robots (number may be too high for the provided arena): " + std::string(e.what()));
     }
-    current_robot = &robots.front();
 
     glogger->info("Initializing all robots...");
     // Launch main() on all robots
