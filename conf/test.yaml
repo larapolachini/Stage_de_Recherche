@@ -19,6 +19,10 @@ GUI: true
 timeStep: 0.05  #0.01667
 GUISpeedUp: 0.00000001
 
+initial_light_value: 32767
+photo_start_at: 1.0
+photo_start_duration: 1.0
+
 save_video_period: 3.0
 frames_name: "frames/f{:010.4f}.png"
 

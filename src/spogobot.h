@@ -1019,9 +1019,10 @@ void pogosim_printf(const char* format, ...);
 
 #ifdef __cplusplus
 }
+#endif
+
 // Define custom printf as the default in files including pogosim.h
 #define printf pogosim_printf
-#endif
 
 
 /************************* C++ Simulation stuffs ************************ {{{1 */

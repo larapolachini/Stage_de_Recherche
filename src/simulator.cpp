@@ -57,6 +57,8 @@ void set_current_robot(Robot& robot) {
 
 /************* SIMULATION *************/ // {{{1
 
+std::unique_ptr<Simulation> simulation;
+
 Simulation::Simulation(Configuration& _config)
         : config(_config) {
     init_config();
@@ -215,6 +217,9 @@ void Simulation::init_config() {
     robot_radius = std::stoi(config.get("robot_radius", "10"));
     enable_gui = string_to_bool(config.get("GUI", "true"));
     GUI_speed_up = std::stof(config.get("GUI_speed_up", "1.0"));
+    current_light_value = std::stoi(config.get("initial_light_value", "32767"));
+    photo_start_at = std::stof(config.get("photo_start_at", "1.0"));
+    photo_start_duration = std::stof(config.get("photo_start_duration", "1.0"));
 }
 
 
@@ -355,7 +360,9 @@ void Simulation::handle_SDL_events() {
 
 
 void Simulation::render_all() {
-    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Grey background
+    float scaled_background_level = 100 + ((200 - 100) * (float(current_light_value) - -32768) / (32768 - - 32768));
+    uint8_t background_level = static_cast<uint8_t>(std::round(scaled_background_level));
+    SDL_SetRenderDrawColor(renderer, background_level, background_level, background_level, 255); // Grey background
     SDL_RenderClear(renderer);
 
     //renderWalls(renderer); // Render the walls
@@ -381,6 +388,14 @@ void Simulation::export_frames() {
             std::string formatted_filename = std::vformat(frames_name, std::make_format_args(t));
             save_window_to_png(renderer, window, formatted_filename);
         }
+    }
+}
+
+void Simulation::photo_start() {
+    if (photo_start_at >= 0 && t >= photo_start_at && t < photo_start_at + photo_start_duration) {
+        current_light_value = 0;
+    } else {
+        current_light_value = std::stoi(config.get("initial_light_value", "32767"));
     }
 }
 
@@ -413,6 +428,9 @@ void Simulation::main_loop() {
         // Step the Box2D world
         b2World_Step(worldId, time_step_duration, sub_step_count);
 
+        // Photo start, if needed
+        photo_start();
+
         // Render
         render_all();
         export_frames();
@@ -435,6 +453,10 @@ void Simulation::delete_old_data() {
         glogger->info("Deleting old data files in directory: {}", directory.string());
         delete_files_with_extension(directory, ".png", false);
     }
+}
+
+uint16_t Simulation::get_current_light_value() const {
+    return current_light_value;
 }
 
 
@@ -512,10 +534,10 @@ int main(int argc, char** argv) {
     }
 
     // Create the simulation object
-    Simulation simulation = Simulation(config);
+    simulation = std::make_unique<Simulation>(config);
 
     // Launch simulation
-    simulation.main_loop();
+    simulation->main_loop();
     return 0;
 }
 

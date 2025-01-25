@@ -41,6 +41,10 @@ class Simulation {
 
     float last_frame_saved_t = -1.0;
 
+    int16_t current_light_value = std::numeric_limits<int16_t>::max();
+    float photo_start_at = -1.f;
+    float photo_start_duration = 1.f;
+
 public:
     Simulation(Configuration& _config);
     virtual ~Simulation();
@@ -61,8 +65,12 @@ public:
     void speed_up();
     void speed_down();
     void pause();
+    void photo_start();
+
+    uint16_t get_current_light_value() const;
 };
 
+extern std::unique_ptr<Simulation> simulation;
 
 #endif // SIMULATOR_H
 

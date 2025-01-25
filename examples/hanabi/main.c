@@ -123,7 +123,6 @@ typedef struct {
 REGISTER_USERDATA(USERDATA)
 
 void process_message(message_t* mr) {
-    return; // XXX
     // Elaborate robot messages only (avoid controllers messages). NB: this condition works only with long headers
     if (MSG_MODE_FULL_HEADER && mr->header._packet_type != ir_t_user) {
         printf("[I'm Pogobot %d] [RECV] This message is discarded because it didn't come from a Pogobot\n", mydata->my_pogobot_id);
@@ -161,7 +160,6 @@ void process_message(message_t* mr) {
 // * The iterator (age) corresponds to how many times the sender has changed color.
 // ********************************************************************************
 void send_message(void) {
-    return; // XXX
     uint16_t msg_id;
     uint8_t data[MSG_SIZE]; // message to send, containing uint8_t data
     message msg_from_neighbor;
@@ -204,7 +202,6 @@ void send_message(void) {
 
 
 void user_init(void) {
-    return; // XXX
     srand(pogobot_helper_getRandSeed()); // initialize the random number generator
     pogobot_infrared_set_power(INFRARED_POWER); // set the power level used to send all the next messages
 
@@ -221,11 +218,9 @@ void user_init(void) {
     main_loop_hz = 60;
     send_msg_hz = 30;
     process_msg_hz = 60;
-    // Specify functions to send/transmit messages
-    //msg_rx_fn = process_message;
-    //msg_tx_fn = send_message;
-    msg_rx_fn = NULL; // XXX
-    msg_tx_fn = NULL; // XXX
+    // No message sending/processing yet
+    msg_rx_fn = NULL;
+    msg_tx_fn = NULL;
 
     // Set led index to show error codes
     error_codes_led_idx = 3; // Default value, negative values to disable
@@ -253,7 +248,6 @@ void user_init(void) {
 
 
 void user_step(void) {
-    return; // XXX
 
     // ********************************************************************************
     // * Start-up phase for simultaneous start of the robots when the lights turn off
@@ -271,7 +265,12 @@ void user_step(void) {
         } else {
             return; // Quit function if experiment has not started
         }
+
     }
+
+//    // Specify functions to send/transmit messages
+//    msg_rx_fn = process_message;
+//    msg_tx_fn = send_message;
 
     // Experiment has started. Wait for some time
     if (current_time_milliseconds() - mydata->start_of_experiment_ms < BOOT_TIME * 1000)
@@ -281,21 +280,22 @@ void user_step(void) {
     // * Main loop
     // ********************************************************************************
     // A robot changes autonomously its state with a probability of 1/den_p_change_led_color
-    if (rand()%den_p_change_led_color <= 1) {
+    if (rand() % den_p_change_led_color <= 1) {
         uint8_t rgb_colors_choice = rand()%nb_rgb_colors;  // random index to choose the next led color
         if (rgb_colors_choice != mydata->rgb_colors_index) {
             mydata->age++;
             // pogobot_stopwatch_reset(&timeout_age_watch); // reset of the timer, for age timeout
 
             if (DEBUG_LEVEL == 1)
-                printf("[I'm Pogobot %d] [HANABI] Changing color from old color %s to new color %s because I'm lucky, age %d  *____*\n", mydata->my_pogobot_id, rgb_colors[mydata->rgb_colors_index].name, rgb_colors[rgb_colors_choice].name, mydata->age);
+                printf("[I'm Pogobot %d] [HANABI] Changing color from old color %s to new color %s because I'm lucky, age %d  *____*\n",
+                        mydata->my_pogobot_id, rgb_colors[mydata->rgb_colors_index].name, rgb_colors[rgb_colors_choice].name, mydata->age);
 
             mydata->rgb_colors_index = rgb_colors_choice;
             pogobot_led_setColor(rgb_colors[mydata->rgb_colors_index].r, rgb_colors[mydata->rgb_colors_index].g, rgb_colors[mydata->rgb_colors_index].b);
-        }
-        else {
+        } else {
             if (DEBUG_LEVEL == 1)
-                printf("[I'm Pogobot %d] [HANABI] NOT Changing color because old color %s = new color %s, age %d  ç____ç\n", mydata->my_pogobot_id, rgb_colors[mydata->rgb_colors_index].name, rgb_colors[rgb_colors_choice].name, mydata->age);
+                printf("[I'm Pogobot %d] [HANABI] NOT Changing color because old color %s = new color %s, age %d  ç____ç\n",
+                        mydata->my_pogobot_id, rgb_colors[mydata->rgb_colors_index].name, rgb_colors[rgb_colors_choice].name, mydata->age);
         }
     }
 

@@ -7,9 +7,15 @@
 
 #include <box2d/box2d.h>
 
+#include <random>
+
 // Declare a global logger (shared pointer)
 extern std::shared_ptr<spdlog::logger> glogger;
 void init_logger();
+
+// Random device and generator
+extern std::random_device rd;
+extern std::mt19937 rnd_gen;
 
 void ensure_directories_exist(const std::string& filename);
 void delete_files_with_extension(const std::string& path, const std::string& extension, bool recursive = false);

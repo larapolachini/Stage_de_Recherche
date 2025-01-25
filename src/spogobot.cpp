@@ -5,9 +5,11 @@
 #include <cstdarg>
 #include <sstream>
 #include <string>
+#include <cstdint>
 
 #include "spogobot.h"
 #include "pogosim.h"
+#include "simulator.h"
 
 
 /************* GLOBALS *************/ // {{{1
@@ -156,7 +158,12 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
         const color_t& ledColor = leds[i]; // Get LED color
 
         // Convert LED color to SDL color
-        SDL_SetRenderDrawColor(renderer, ledColor.r, ledColor.g, ledColor.b, 255);
+        //SDL_SetRenderDrawColor(renderer, ledColor.r / 25.0f * 255.0f, ledColor.g / 25.0f * 255.0f, ledColor.b / 25.0f * 255.0f, 255);
+        //SDL_SetRenderDrawColor(renderer, ledColor.r, ledColor.g, ledColor.b, 255);
+        SDL_SetRenderDrawColor(renderer,
+                ledColor.r > 25 ? 255 : static_cast<float>(ledColor.r) / 25.0f * 255.0f,
+                ledColor.g > 25 ? 255 : static_cast<float>(ledColor.g) / 25.0f * 255.0f,
+                ledColor.b > 25 ? 255 : static_cast<float>(ledColor.b) / 25.0f * 255.0f, 255);
 
         // Calculate screen coordinates for the LED
         float ledScreenX = screenX + rotatedLedOffsets[i].x * 2.0;
@@ -272,18 +279,24 @@ uint32_t pogobot_infrared_sendLongMessage_omniGen( uint8_t *message, uint16_t me
 }
 
 int16_t pogobot_helper_getRandSeed( void ) {
-    glogger->warn("Function 'pogobot_helper_getRandSeed' is not implemented yet!");
-    return 1;
+    // Define the distribution for int16_t range
+    std::uniform_int_distribution<int16_t> dis(std::numeric_limits<int16_t>::min(),
+                                               std::numeric_limits<int16_t>::max());
+
+    // Generate a random number of type int16_t
+    return dis(rnd_gen);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 int16_t pogobot_photosensors_read( uint8_t sensor_number ) {
-    glogger->warn("Function 'pogobot_photosensors_read' is not implemented yet!");
-    return 1;
+    return simulation->get_current_light_value();
 }
 
 void pogobot_infrared_set_power( uint8_t power ) {
-    glogger->warn("Function 'pogobot_infrared_set_power' is not implemented yet!");
+    // Do nothing ...
 }
+#pragma GCC diagnostic pop
 
 
 void msleep(int milliseconds) {

@@ -7,6 +7,10 @@
 
 std::shared_ptr<spdlog::logger> glogger;
 
+// Random device and generator
+std::random_device rd;
+std::mt19937 rnd_gen(rd());
+
 void init_logger() {
     // Create a console logger with color support
     glogger = spdlog::stdout_color_mt("console");
