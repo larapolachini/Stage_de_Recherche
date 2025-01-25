@@ -2,11 +2,11 @@
 
 window_width: 800
 window_height: 800
-arena_file: arenas/arena8.csv
+arena_file: arenas/disk.csv
 delete_old_files: true
 
 seed: 0
-nBots: 300
+nBots: 400
 simulationTime: 300.0
 commRadius: 90
 msgSuccessRate: 0.5

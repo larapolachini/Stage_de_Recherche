@@ -101,6 +101,7 @@ void Robot::create_body(b2WorldId worldId, float x, float y) {
     shapeId = b2CreateCircleShape(bodyId, &shapeDef, &circle);
 
     // Assign initial velocity
+    //b2Vec2 velocity = {0.0, 0.0}; // {(std::rand() % 200 - 100) / 20.0f, (std::rand() % 200 - 100) / 20.0f};
     b2Vec2 velocity = {0.0, 0.0}; // {(std::rand() % 200 - 100) / 20.0f, (std::rand() % 200 - 100) / 20.0f};
     b2Body_SetLinearVelocity(bodyId, velocity);
 }
@@ -258,6 +259,27 @@ void pogobot_motor_set ( motor_id motor, uint16_t value ) {
     glogger->debug("{} Motor {} set to speed {}", log_current_robot(), static_cast<uint8_t>(motor), value);
     current_robot->set_motor(motor, value);
 }
+
+
+uint32_t pogobot_infrared_sendLongMessage_omniGen( uint8_t *message, uint16_t message_size ) {
+    glogger->warn("Function 'pogobot_infrared_sendLongMessage_omniGen' is not implemented yet!");
+    return 1;
+}
+
+int16_t pogobot_helper_getRandSeed( void ) {
+    glogger->warn("Function 'pogobot_helper_getRandSeed' is not implemented yet!");
+    return 1;
+}
+
+int16_t pogobot_photosensors_read( uint8_t sensor_number ) {
+    glogger->warn("Function 'pogobot_photosensors_read' is not implemented yet!");
+    return 1;
+}
+
+void pogobot_infrared_set_power( uint8_t power ) {
+    glogger->warn("Function 'pogobot_infrared_set_power' is not implemented yet!");
+}
+
 
 void msleep(int milliseconds) {
     //std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
