@@ -45,6 +45,7 @@
 #define BOOT_TIME 5 // waiting time before the start of the experience in seconds
 #define LIGHT_THRESHOLD 10
 
+// Uncomment to have moving robots
 //#define MOVING_ROBOTS
 
 

@@ -2,13 +2,13 @@
 
 window_width: 800
 window_height: 800
-arena_file: arenas/triangle.csv
+arena_file: arenas/disk.csv
 delete_old_files: true
 
 seed: 0
 nBots: 300
 robot_radius: 10
-simulationTime: 3000.0
+simulationTime: 200.0
 commRadius: 70
 msgSuccessRate: 0.5
 showComms: true
@@ -24,7 +24,7 @@ initial_light_value: 32767
 photo_start_at: 1.0
 photo_start_duration: 1.0
 
-save_video_period: 3.0
+save_video_period: 0.5
 frames_name: "frames/f{:010.4f}.png"
 
 # MODELINE "{{{1
