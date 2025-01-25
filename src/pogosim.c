@@ -1,6 +1,7 @@
 
 #include "pogosim.h"
 #include "colormaps.h"
+#include <math.h>
 
 uint8_t main_loop_hz = 60;
 uint8_t send_msg_hz = 30;
@@ -63,11 +64,18 @@ void pogo_main_loop_step(void (*user_step)(void)) {
     }
     if (msg_rx_fn) {
         pogobot_infrared_update(); // infrared checks for received data. Then, messages are decoded and insered in a FIFO.
-        if (pogobot_infrared_message_available()) { // read FIFO buffer - any message(s)?
-            // Recover the next message inside the message queue and stock it in the "mr" message_t structure, then in the "msg_from_neighbor" structure.  
-            message_t mr;
-            pogobot_infrared_recover_next_message(&mr);
-            msg_rx_fn(&mr);
+        // Identify number of messages to handle, depending on the message processing frequency
+        uint8_t max_nb_msgs = 1;
+        if (process_msg_hz > main_loop_hz) {
+            max_nb_msgs = (uint8_t) roundf((float)process_msg_hz / (float)main_loop_hz);
+        }
+        for (uint8_t i = 0; i < max_nb_msgs; i++) {
+            if (pogobot_infrared_message_available()) { // read FIFO buffer - any message(s)?
+                // Recover the next message inside the message queue and stock it in the "mr" message_t structure, then in the "msg_from_neighbor" structure.  
+                message_t mr;
+                pogobot_infrared_recover_next_message(&mr);
+                msg_rx_fn(&mr);
+            }
         }
     }
 

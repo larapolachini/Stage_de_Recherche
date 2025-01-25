@@ -5,8 +5,6 @@
  * This file is licensed under the Expat License, sometimes known as the MIT License.
  * Please refer to file LICENCE for details.
  *
- * Nicolas Bredeche template code.
-
  * Alessia Loi 2023-12 hanabi code.
  *  - Start-up phase for simultaneous start of the robots when the lights turn off: at start, the upper led is red
  *    and stays on until the environmental light is lower than LIGHT_THRESHOLD; then, the upper led switches to white
@@ -20,7 +18,7 @@
  *    if the maximum age value is exceeded, or if a robot doesn't receive messages from aged neighbors and doesn't change its state autonoumosly.
  *
  * Leo Cazenille 2025-01.
- *  - adapt the hanabi code to be used in the pogosim simulator.
+ *  - adapted the hanabi code to be used in the pogosim simulator.
 
  * This algorithm shows the rapidity of the diffusion of information among the swarm and by which path it propagates.
  * One robot changes autonomously its color and increments its age, this causes a cascade of changes affecting the robots with lower age.
@@ -46,6 +44,8 @@
 
 #define BOOT_TIME 5 // waiting time before the start of the experience in seconds
 #define LIGHT_THRESHOLD 10
+
+//#define MOVING_ROBOTS
 
 
 // ********************************************************************************
@@ -98,14 +98,18 @@ void send_message(void);
 // * main
 // ********************************************************************************
 
-uint16_t const den_p_send_per_step = 1; // probability to send a message per step (1/den_p_send_per_step)
+// XXX remove and put into lib
+uint16_t const den_p_send_per_step = 5; // probability to send a message per step (1/den_p_send_per_step)
+
 rgb_color const rgb_colors[] = {red, green, blue, magenta, yellow, cyan, orange, purple, light_pink, mint_green}; // 10 hanabi colors
 uint8_t const nb_rgb_colors = sizeof(rgb_colors) / sizeof(rgb_colors[0]);
-uint16_t const den_p_change_led_color = 3000; // probability to change led color independently (1/den_p_change_led_color) (p=3000 for 15 robots; p=20000 for 72 robots)
+uint16_t const den_p_change_led_color = 20000; // probability to change led color independently (1/den_p_change_led_color) (p=3000 for 15 robots; p=20000 for 72 robots)
 
 
 typedef struct {
+    // XXX remove and put into lib
     uint64_t start_of_experiment_ms;
+    // XXX remove and put into lib
     bool started;
 
     // time_reference_t timeout_age_watch; // timer for age timeout
@@ -116,19 +120,23 @@ typedef struct {
     uint16_t age; // number of times this robot has changed color from the start of the algorithm, from 0 to max 65535 (16 bits unsigned)
     //uint8_t led1_status;
 
+    // XXX remove and put into lib
     uint16_t nb_msg_sent_all; // total number of unique messages sent
+    // XXX remove and put into lib
     uint16_t counter_rcvd_msgs;
+
     uint8_t rgb_colors_index; // index of the rgb_colors array
 } USERDATA;
 REGISTER_USERDATA(USERDATA)
 
+
 void process_message(message_t* mr) {
+    // XXX remove and put into lib
     // Elaborate robot messages only (avoid controllers messages). NB: this condition works only with long headers
     if (MSG_MODE_FULL_HEADER && mr->header._packet_type != ir_t_user) {
         printf("[I'm Pogobot %d] [RECV] This message is discarded because it didn't come from a Pogobot\n", mydata->my_pogobot_id);
         return;
     }
-
 
     // Read the received message and stock it in the msg_from_neighbor structure
     message msg_from_neighbor;
@@ -164,40 +172,43 @@ void send_message(void) {
     uint8_t data[MSG_SIZE]; // message to send, containing uint8_t data
     message msg_from_neighbor;
 
-    if (rand() % den_p_send_per_step <= 1) {
-        msg_id = mydata->nb_msg_sent_all;
-
-        // Composing a new message to send
-        msg_from_neighbor.msg_values.sender_id = mydata->my_pogobot_id;
-        msg_from_neighbor.msg_values.msg_id = msg_id;
-        msg_from_neighbor.msg_values.age = mydata->age;
-        msg_from_neighbor.msg_values.rgb_colors_index = mydata->rgb_colors_index; // value from 0 to nb_rgb_colors-1
-
-        // Convert the message into an uint8_t pointer
-        for ( uint16_t i = 0; i != MSG_SIZE; i++ )
-            data[i] = msg_from_neighbor.msg_array[i];
-
-        if (SEND_MODE_ALLDIRECTION == true) {
-            if (MSG_MODE_FULL_HEADER == true)
-                pogobot_infrared_sendLongMessage_omniGen((uint8_t *)(data), MSG_SIZE);
-            else
-                pogobot_infrared_sendShortMessage_omni((uint8_t *)(data), MSG_SIZE);
-        }
-        else {
-            for (uint16_t i  = 0; i < 4 ; i++) // i is one of the 4 possible directions
-            {
-                if (MSG_MODE_FULL_HEADER == true)
-                    pogobot_infrared_sendLongMessage_uniSpe(i, (uint8_t *)(data), MSG_SIZE);
-                else
-                    pogobot_infrared_sendShortMessage_uni(i, (uint8_t *)(data), MSG_SIZE);
-            }
-        }
-
-        if (DEBUG_LEVEL == 3)
-            printf("[I'm Pogobot %d] [SEND] Sent message msg_id=%d.\n", mydata->my_pogobot_id, msg_id);
-
-        mydata->nb_msg_sent_all = mydata->nb_msg_sent_all + 1;
+    // XXX remove and put into lib
+    if (rand() % den_p_send_per_step > 1) {
+        return;
     }
+
+    msg_id = mydata->nb_msg_sent_all;
+
+    // Composing a new message to send
+    msg_from_neighbor.msg_values.sender_id = mydata->my_pogobot_id;
+    msg_from_neighbor.msg_values.msg_id = msg_id;
+    msg_from_neighbor.msg_values.age = mydata->age;
+    msg_from_neighbor.msg_values.rgb_colors_index = mydata->rgb_colors_index; // value from 0 to nb_rgb_colors-1
+
+    // Convert the message into an uint8_t pointer
+    for ( uint16_t i = 0; i != MSG_SIZE; i++ )
+        data[i] = msg_from_neighbor.msg_array[i];
+
+    if (SEND_MODE_ALLDIRECTION == true) {
+        if (MSG_MODE_FULL_HEADER == true)
+            pogobot_infrared_sendLongMessage_omniGen((uint8_t *)(data), MSG_SIZE);
+        else
+            pogobot_infrared_sendShortMessage_omni((uint8_t *)(data), MSG_SIZE);
+    } else {
+        for (uint16_t i  = 0; i < 4 ; i++) // i is one of the 4 possible directions
+        {
+            if (MSG_MODE_FULL_HEADER == true)
+                pogobot_infrared_sendLongMessage_uniSpe(i, (uint8_t *)(data), MSG_SIZE);
+            else
+                pogobot_infrared_sendShortMessage_uni(i, (uint8_t *)(data), MSG_SIZE);
+        }
+    }
+
+    if (DEBUG_LEVEL == 3)
+        printf("[I'm Pogobot %d] [SEND] Sent message msg_id=%d.\n", mydata->my_pogobot_id, msg_id);
+
+    // XXX remove and put into lib
+    mydata->nb_msg_sent_all = mydata->nb_msg_sent_all + 1;
 }
 
 
@@ -217,7 +228,7 @@ void user_init(void) {
     // Set main loop frequency, message sending frequency, message processing frequency
     main_loop_hz = 60;
     send_msg_hz = 30;
-    process_msg_hz = 60;
+    process_msg_hz = 180;
     // No message sending/processing yet
     msg_rx_fn = NULL;
     msg_tx_fn = NULL;
@@ -249,6 +260,7 @@ void user_init(void) {
 
 void user_step(void) {
 
+    // XXX remove and put into lib
     // ********************************************************************************
     // * Start-up phase for simultaneous start of the robots when the lights turn off
     // ********************************************************************************
@@ -265,14 +277,14 @@ void user_step(void) {
         } else {
             return; // Quit function if experiment has not started
         }
-
     }
 
     // XXX
     // Specify functions to send/transmit messages
-    //msg_rx_fn = process_message;
-    //msg_tx_fn = send_message;
+    msg_rx_fn = process_message;
+    msg_tx_fn = send_message;
 
+    // XXX remove and put into lib
     // Experiment has started. Wait for some time
     if (current_time_milliseconds() - mydata->start_of_experiment_ms < BOOT_TIME * 1000)
         return; // Wait
@@ -305,7 +317,19 @@ void user_step(void) {
     // * Robots do not move in this experience.
     // ********************************************************************************
 
+#ifdef MOVING_ROBOTS
+    if ((uint32_t)(current_time_milliseconds() / 10000) % 2 == 0) {
+        //pogobot_led_setColor(0,0,255);
+        pogobot_motor_set(motorL, motorFull);
+        pogobot_motor_set(motorR, motorStop);
+    } else {
+        //pogobot_led_setColor(255,0,0);
+        pogobot_motor_set(motorL, motorStop);
+        pogobot_motor_set(motorR, motorFull);
+    }
+#else
     // ... NOTHING TO DO ...
+#endif
 
 }
 

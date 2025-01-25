@@ -33,6 +33,8 @@ struct Robot;
 
 /************************* POGOLIB API ************************ {{{1 */
 
+#define IR_RX_COUNT 4
+
 
 /**
  * ## Global API
@@ -1032,6 +1034,7 @@ void pogosim_printf(const char* format, ...);
 
 #include <vector>
 #include <set>
+#include <queue>
 #include <chrono>
 #include <SDL2/SDL.h>
 #include <box2d/box2d.h>
@@ -1091,6 +1094,9 @@ public:
 
     // Neighbors
     std::vector<Robot*> neighbors;
+    std::queue<message_t> messages;
+    void send_to_neighbors(short_message_t *const message);
+    void send_to_neighbors(message_t *const message);
 };
 
 extern Robot* current_robot;

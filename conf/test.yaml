@@ -2,14 +2,14 @@
 
 window_width: 800
 window_height: 800
-arena_file: arenas/disk.csv
+arena_file: arenas/triangle.csv
 delete_old_files: true
 
 seed: 0
-nBots: 100
+nBots: 300
 robot_radius: 10
-simulationTime: 300.0
-commRadius: 90
+simulationTime: 3000.0
+commRadius: 70
 msgSuccessRate: 0.5
 showComms: true
 GUI: true

@@ -18,6 +18,8 @@ Robot* current_robot;
 //std::chrono::time_point<std::chrono::system_clock> sim_starting_time;
 uint64_t sim_starting_time_microseconds;
 
+uint8_t const _selected_power = 1;
+
 /************* time_reference_t *************/ // {{{1
 
 void time_reference_t::reset() {
@@ -238,6 +240,30 @@ b2Vec2 Robot::get_position() const {
 }
 
 
+void Robot::send_to_neighbors(short_message_t *const message) {
+    // Reconstruct a long message from the short message
+    message_t m; 
+    m.header._packet_type = message->header._packet_type;
+    m.header._emitting_power_list = 0; // power all to 0 shouldn't emit something
+    m.header._sender_id = 0xFF; 
+    m.header._sender_ir_index = 0xF; // index not possible
+    m.header._receiver_ir_index = 0;
+    m.header.payload_length = message->header.payload_length;
+    memcpy( m.payload, message->payload, m.header.payload_length);
+
+    send_to_neighbors(&m);
+}
+
+void Robot::send_to_neighbors(message_t *const message) {
+    for (Robot* robot : neighbors) {
+        //glogger->debug("MESSAGE !! {} -> {}", message->header._sender_id, robot->id);
+        if (robot->messages.size() < 100) { // XXX Maxsize should be an option
+            robot->messages.push(*message);
+        }
+    }
+}
+
+
 
 /************* SIMULATED POGOLIB *************/ // {{{1
 
@@ -255,25 +281,31 @@ void pogobot_init() {
 }
 
 
-/** 
+/**
  * ## Infrared communication API Functions
  */
+
 
 void pogobot_infrared_ll_init( void ) {
     // Do nothing ...
 }
 
 void pogobot_infrared_update( void ) {
-    glogger->warn("Function 'pogobot_infrared_update' is not implemented yet!");
+    // Do nothing ...
 }
 
 int pogobot_infrared_message_available( void ) {
-    glogger->warn("Function 'pogobot_infrared_message_available' is not implemented yet!");
-    return 0;
+    return current_robot->messages.size() > 0;
 }
 
 void pogobot_infrared_recover_next_message( message_t *mes ) {
-    glogger->warn("Function 'pogobot_infrared_recover_next_message' is not implemented yet!");
+    if (!pogobot_infrared_message_available()) {
+        glogger->warn("The function 'pogobot_infrared_recover_next_message( message_t *mes )' should *only* be called if 'pogobot_infrared_message_available()' returns >0.. Ignoring.");
+        return;
+    }
+    message_t m = current_robot->messages.front();
+    current_robot->messages.pop();
+    memcpy(mes, &m, sizeof(message_t));
 }
 
 void pogobot_infrared_clear_message_queue( void ) {
@@ -286,46 +318,93 @@ void pogobot_infrared_set_power( uint8_t power ) {
 }
 
 uint32_t pogobot_infrared_sendRawLongMessage( message_t *const message ) {
-    glogger->warn("Function 'pogobot_infrared_sendRawLongMessage' is not implemented yet!");
+    if ( message->header.payload_length > MAX_PAYLOAD_SIZE_BYTES ) {
+        return 1;
+    }
+
+    message->header._packet_type = ir_t_user; // User packets have type 16.
+    message->header._sender_id = pogobot_helper_getid();
+    message->header._receiver_ir_index = 0;
+
+    // Rmq from original pogolib:
+    // TODO: this currently emits packet via several IR at the same time (or
+    // does it?). What this should to is emit packet several times, via one IR
+    // at a time, with field _emitting_power_list reflecting which TX is used.
+    // This will be necessary later to have robots detect each other and their
+    // relative orientations.
+
+    current_robot->send_to_neighbors(message);
     return 0;
 }
 
 uint32_t pogobot_infrared_sendRawShortMessage( ir_direction dir, short_message_t *const message ) {
-    glogger->warn("Function 'pogobot_infrared_sendRawShortMessage' is not implemented yet!");
+    if ( message->header.payload_length > MAX_PAYLOAD_SIZE_BYTES ) {
+        return 1;
+    }
+
+    message->header._packet_type = ir_t_short; // User packets have type 3.
+
+    current_robot->send_to_neighbors(message);
     return 0;
 }
 
 uint32_t pogobot_infrared_sendLongMessage_uniSpe( ir_direction dir, uint8_t *message, uint16_t message_size ) {
-    glogger->warn("Function 'pogobot_infrared_sendLongMessage_uniSpe' is not implemented yet!");
-    return 0;
+    message_t m;
+    m.header._emitting_power_list =
+        _selected_power << ( pogobot_infrared_emitter_width_bits * dir );
+    m.header.payload_length = message_size;
+    m.header._sender_ir_index = dir;
+    memcpy( m.payload, message, message_size );
+    return pogobot_infrared_sendRawLongMessage( &m );
 }
 
 uint32_t pogobot_infrared_sendLongMessage_omniGen( uint8_t *message, uint16_t message_size ) {
-    glogger->warn("Function 'pogobot_infrared_sendLongMessage_omniGen' is not implemented yet!");
-    return 0;
+    message_t m;
+    m.header._emitting_power_list =
+        pogobot_infrared_emitting_power_list(_selected_power, _selected_power, _selected_power, _selected_power);
+    m.header.payload_length = message_size;
+    m.header._sender_ir_index = ir_all;
+    memcpy( m.payload, message, message_size );
+    return pogobot_infrared_sendRawLongMessage( &m );
 }
 
 uint32_t pogobot_infrared_sendLongMessage_omniSpe( uint8_t *message, uint16_t message_size ) {
-    glogger->warn("Function 'pogobot_infrared_sendLongMessage_omniSpe' is not implemented yet!");
-    return 0;
+    int i = 0;
+    int error = 0;
+    message_t m;
+    m.header.payload_length = message_size;
+    memcpy( m.payload, message, message_size );
+
+    for ( i = 0; i < IR_RX_COUNT; i++ ) {
+        m.header._emitting_power_list =
+            _selected_power << ( pogobot_infrared_emitter_width_bits * i );
+        m.header._sender_ir_index = i;
+        error += pogobot_infrared_sendRawLongMessage( &m );
+    }
+
+    return error;
 }
 
 uint32_t pogobot_infrared_sendShortMessage_uni( ir_direction dir, uint8_t *message, uint16_t message_size ) {
-    glogger->warn("Function 'pogobot_infrared_sendShortMessage_uni' is not implemented yet!");
-    return 0;
+    short_message_t m;
+    m.header.payload_length = message_size;
+    memcpy( m.payload, message, message_size );
+    return pogobot_infrared_sendRawShortMessage( dir, &m );
 }
 
 uint32_t pogobot_infrared_sendShortMessage_omni( uint8_t *message, uint16_t message_size ) {
-    glogger->warn("Function 'pogobot_infrared_sendShortMessage_omni' is not implemented yet!");
-    return 0;
+    short_message_t m;
+    m.header.payload_length = message_size;
+    memcpy( m.payload, message, message_size );
+    return pogobot_infrared_sendRawShortMessage( ir_all, &m );
 }
 
 void pogobot_infrared_reset_receiver_error_counter( void ) {
-    glogger->warn("Function 'pogobot_infrared_reset_receiver_error_counter' is not implemented yet!");
+    // Do nothing ...
 }
 
 
-/** 
+/**
  * ## RGB LED API
  */
 
@@ -340,7 +419,7 @@ void pogobot_led_setColors(const uint8_t r, const uint8_t g, const uint8_t b, ui
 }
 
 
-/** 
+/**
  * ## Photosensors API Values
  */
 
@@ -350,7 +429,7 @@ int16_t pogobot_photosensors_read( uint8_t sensor_number ) {
 
 
 /**
- * ## IMU API 
+ * ## IMU API
  */
 
 void pogobot_imu_read( float *acc, float *gyro ) {
@@ -365,7 +444,7 @@ float pogobot_imu_readTemp( void ) {
 
 
 /**
- * ## Battery API 
+ * ## Battery API
  */
 int16_t pogobot_battery_voltage_read( void ) {
     glogger->warn("Function 'pogobot_battery_voltage_read' is not implemented yet!");
