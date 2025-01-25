@@ -248,19 +248,68 @@ std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float off
     return offsetPolygon;
 }
 
-b2Vec2 generate_random_point_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance) {
-    for (auto const& poly : polygons) {
+//b2Vec2 generate_random_point_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance) {
+//    for (auto const& poly : polygons) {
+//        if (poly.size() < 3) {
+//            throw std::runtime_error("Polygon must have at least 3 points to define a valid area.");
+//        }
+//    }
+//
+//    // Calculate the bounding box of the polygons
+//    float minX = std::numeric_limits<float>::max();
+//    float maxX = std::numeric_limits<float>::lowest();
+//    float minY = std::numeric_limits<float>::max();
+//    float maxY = std::numeric_limits<float>::lowest();
+//    //std::vector<b2Vec2> innerPolygon0 = offset_polygon(polygons[0], -minDistance);
+//    std::vector<b2Vec2> innerPolygon0 = polygons[0];
+//    for (const auto& point : innerPolygon0) {
+//        minX = std::min(minX, point.x);
+//        maxX = std::max(maxX, point.x);
+//        minY = std::min(minY, point.y);
+//        maxY = std::max(maxY, point.y);
+//    }
+//    minX += minDistance;
+//    minY += minDistance;
+//    maxX -= minDistance;
+//    maxY -= minDistance;
+//
+//    // Random number generator
+//    std::random_device rd;
+//    std::mt19937 gen(rd());
+//    std::uniform_real_distribution<float> disX(minX, maxX);
+//    std::uniform_real_distribution<float> disY(minY, maxY);
+//
+//    // Generate random points within the polygon
+//    while (true) {
+//        float x = disX(gen);
+//        float y = disY(gen);
+//
+//        if (is_point_within_polygon(innerPolygon0, x, y)) {
+//            bool within = true;
+//            for (auto const& poly : std::span(polygons.begin() + 1, polygons.end())) {
+//                if (is_point_within_polygon(poly, x, y)) {
+//                    within = false;
+//                    break;
+//                }
+//            }
+//            if (within)
+//                return b2Vec2(x, y);
+//        }
+//    }
+//}
+
+std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance, int N) {
+    for (const auto& poly : polygons) {
         if (poly.size() < 3) {
             throw std::runtime_error("Polygon must have at least 3 points to define a valid area.");
         }
     }
 
-    // Calculate the bounding box of the polygons
+    // Calculate the bounding box of the primary polygon
     float minX = std::numeric_limits<float>::max();
     float maxX = std::numeric_limits<float>::lowest();
     float minY = std::numeric_limits<float>::max();
     float maxY = std::numeric_limits<float>::lowest();
-    //std::vector<b2Vec2> innerPolygon0 = offset_polygon(polygons[0], -minDistance);
     std::vector<b2Vec2> innerPolygon0 = polygons[0];
     for (const auto& point : innerPolygon0) {
         minX = std::min(minX, point.x);
@@ -279,23 +328,43 @@ b2Vec2 generate_random_point_within_polygon_safe(const std::vector<std::vector<b
     std::uniform_real_distribution<float> disX(minX, maxX);
     std::uniform_real_distribution<float> disY(minY, maxY);
 
-    // Generate random points within the polygon
-    while (true) {
+    std::vector<b2Vec2> points; // Store the generated points
+
+    // Generate N random points
+    while (points.size() < N) {
         float x = disX(gen);
         float y = disY(gen);
 
+        // Check if the point is within the main polygon and outside exclusion polygons
         if (is_point_within_polygon(innerPolygon0, x, y)) {
-            bool within = true;
-            for (auto const& poly : std::span(polygons.begin() + 1, polygons.end())) {
+            bool valid = true;
+
+            // Ensure the point is outside all other polygons
+            for (const auto& poly : std::span(polygons.begin() + 1, polygons.end())) {
                 if (is_point_within_polygon(poly, x, y)) {
-                    within = false;
+                    valid = false;
                     break;
                 }
             }
-            if (within)
-                return b2Vec2(x, y);
+
+            // Ensure the point does not overlap with any existing point
+            if (valid) {
+                for (const auto& existingPoint : points) {
+                    if (euclidean_distance(existingPoint, b2Vec2(x, y)) < 2 * minDistance) {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+
+            // If the point is valid, add it to the list
+            if (valid) {
+                points.emplace_back(x, y);
+            }
         }
     }
+
+    return points;
 }
 
 void draw_polygon(SDL_Renderer* renderer, const std::vector<b2Vec2>& polygon) {

@@ -85,9 +85,10 @@ void Simulation::create_membranes() {
 void Simulation::create_arena() {
     std::string const csv_file = config.get("arena_file", "test.csv");
 
-    float const friction = 0.01f;
-    float const restitution = 10.8f; // Bounciness
-    float const WALL_THICKNESS = 20.0f / VISUALIZATION_SCALE; // Thickness of the wall in SDL units
+    float const friction = 0.05f;
+    float const restitution = 1.8f; // Bounciness
+    float const WALL_THICKNESS = 1.0f / VISUALIZATION_SCALE; // Thickness of the wall in SDL units
+             // Careful! Values higher than 1.0 / VISUALIZATION_SCALE results in robots outside arena
 
     // Read multiple polygons from the CSV file
     arena_polygons = read_poly_from_csv(csv_file, window_width, window_height);
@@ -259,9 +260,12 @@ void Simulation::create_robots() {
     if (!nb_robots)
         throw std::runtime_error("Number of robots is 0 (nBot=0 in configuration).");
 
+    auto const points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * robot_radius, nb_robots);
+
     std::srand(std::time(nullptr));
     for (size_t i = 0; i < nb_robots; ++i) {
-        auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius); // XXX quick & dirty :-/
+        //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius); // XXX quick & dirty :-/
+        auto const point = points[i];
         robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId);
         //float x = minX + std::rand() % static_cast<int>(maxX - minX);
         //float y = minY + std::rand() % static_cast<int>(maxY - minY);

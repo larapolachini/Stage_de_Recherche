@@ -84,8 +84,9 @@ void Robot::create_body(b2WorldId worldId, float x, float y) {
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
     bodyDef.position = {x / VISUALIZATION_SCALE, y / VISUALIZATION_SCALE};
-    bodyDef.linearDamping = 0.0f;
-    bodyDef.isBullet = true; // Enable bullet mode
+    bodyDef.linearDamping = 1000.0f;
+    bodyDef.angularDamping = 1000.0f;
+    bodyDef.isBullet = false; // Enable bullet mode
     bodyId = b2CreateBody(worldId, &bodyDef);
 
     // Create the circle shape
@@ -94,15 +95,15 @@ void Robot::create_body(b2WorldId worldId, float x, float y) {
     circle.radius = radius / VISUALIZATION_SCALE; // Scaled radius
 
     b2ShapeDef shapeDef = b2DefaultShapeDef();
-    shapeDef.density = 1.0f;
+    shapeDef.density = 10.0f;
     shapeDef.friction = 0.3f;
-    shapeDef.restitution = 10.8f; // Bounciness
+    shapeDef.restitution = 0.5f; // Bounciness
     shapeDef.enablePreSolveEvents = true; // Enable CCD
     shapeId = b2CreateCircleShape(bodyId, &shapeDef, &circle);
 
     // Assign initial velocity
     //b2Vec2 velocity = {0.0, 0.0}; // {(std::rand() % 200 - 100) / 20.0f, (std::rand() % 200 - 100) / 20.0f};
-    b2Vec2 velocity = {0.0, 0.0}; // {(std::rand() % 200 - 100) / 20.0f, (std::rand() % 200 - 100) / 20.0f};
+    b2Vec2 velocity = {1.0, 1.0}; // {(std::rand() % 200 - 100) / 20.0f, (std::rand() % 200 - 100) / 20.0f};
     b2Body_SetLinearVelocity(bodyId, velocity);
 }
 
@@ -180,6 +181,10 @@ void Robot::set_motor(motor_id motor, int speed) {
         right_motor_speed = speed;
     }
     glogger->debug("set motor: {} {}", left_motor_speed, right_motor_speed);
+
+    // No damping
+    b2Body_SetLinearDamping(bodyId, 0.0);
+    b2Body_SetAngularDamping(bodyId, 0.0);
 
     // Update linear velocity of the agent
     b2Rot const rot = b2Body_GetRotation(bodyId);

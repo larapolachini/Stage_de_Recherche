@@ -6,7 +6,7 @@ arena_file: arenas/disk.csv
 delete_old_files: true
 
 seed: 0
-nBots: 400
+nBots: 500
 simulationTime: 300.0
 commRadius: 90
 msgSuccessRate: 0.5
@@ -17,7 +17,7 @@ GUI: true
 #GUItimeStep: 0.001  #0.01667
 
 timeStep: 0.05  #0.01667
-GUISpeedUp: 1.0
+GUISpeedUp: 0.00000001
 
 save_video_period: 3.0
 frames_name: "frames/f{:010.4f}.png"

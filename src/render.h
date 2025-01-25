@@ -16,7 +16,8 @@ std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename,
 std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float offset);
 b2Vec2 generate_random_point_within_polygon(const std::vector<b2Vec2>& polygon);
 //b2Vec2 generate_random_point_within_polygon_safe(const std::vector<b2Vec2>& polygon, float minDistance);
-b2Vec2 generate_random_point_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance);
+//b2Vec2 generate_random_point_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance);
+std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance, int N);
 bool is_point_within_polygon(const std::vector<b2Vec2>& polygon, float x, float y);
 void draw_polygon(SDL_Renderer* renderer, const std::vector<b2Vec2>& polygon);
 

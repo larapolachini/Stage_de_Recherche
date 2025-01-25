@@ -77,6 +77,10 @@ void delete_files_with_extension(const std::string& path, const std::string& ext
     }
 }
 
+float euclidean_distance(const b2Vec2& a, const b2Vec2& b) {
+    return std::sqrt((a.x - b.x) * (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+}
+
 // MODELINE "{{{1
 // vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
 // vim:foldmethod=marker
