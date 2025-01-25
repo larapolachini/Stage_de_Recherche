@@ -171,23 +171,23 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
 
 
 
-void Robot::set_motor(const char* motor, int speed) {
+void Robot::set_motor(motor_id motor, int speed) {
     // Update motors speed
-    if (strcmp(motor, motorL) == 0) {
+    if (motor == motorL) {
         left_motor_speed = speed;
-    } else if (strcmp(motor, motorR) == 0) {
+    } else if (motor == motorR) {
         right_motor_speed = speed;
     }
     glogger->debug("set motor: {} {}", left_motor_speed, right_motor_speed);
 
     // Update linear velocity of the agent
     b2Rot const rot = b2Body_GetRotation(bodyId);
-    float const v = 1.0f * (left_motor_speed / motorFull + right_motor_speed / motorFull) / 2.0f;
+    float const v = 1.0f * (left_motor_speed / static_cast<float>(motorFull) + right_motor_speed / static_cast<float>(motorFull)) / 2.0f;
     b2Vec2 const linear_velocity = {rot.c * v, rot.s * v};
     //b2Vec2 const velocity = {left_motor_speed / VISUALIZATION_SCALE, right_motor_speed / VISUALIZATION_SCALE};
     b2Body_SetLinearVelocity(bodyId, linear_velocity);
     //float const angular_velocity = 1.0f / (motorFull * 0.5) * (right_motor_speed - left_motor_speed);
-    float const angular_velocity = 1.0f / (motorFull * 0.5) * (left_motor_speed - right_motor_speed);
+    float const angular_velocity = 1.0f / (static_cast<float>(motorFull) * 0.5) * (left_motor_speed - right_motor_speed);
     b2Body_SetAngularVelocity(bodyId, angular_velocity);
 }
 
@@ -254,9 +254,9 @@ void pogobot_led_setColors(const uint8_t r, const uint8_t g, const uint8_t b, ui
     current_robot->leds[id] = {.r=r, .g=g, .b=b};
 }
 
-void pogobot_motor_set(const char* motor, int speed) {
-    glogger->debug("{} Motor {} set to speed {}", log_current_robot(), motor, speed);
-    current_robot->set_motor(motor, speed);
+void pogobot_motor_set ( motor_id motor, uint16_t value ) {
+    glogger->debug("{} Motor {} set to speed {}", log_current_robot(), static_cast<uint8_t>(motor), value);
+    current_robot->set_motor(motor, value);
 }
 
 void msleep(int milliseconds) {

@@ -36,7 +36,8 @@ void user_init(void) {
 void user_step(void) {
     if (pogobot_ticks % 1000 == 0 && pogobot_helper_getid() == 0) {
         //printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %lu   pogobot_ticks: %d\n", pogobot_helper_getid(), pogobot_stopwatch_get_elapsed_microseconds(&mydata->timer_it), pogobot_ticks);
-        printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %llu   pogobot_ticks: %lu\n", pogobot_helper_getid(), current_time_milliseconds(), pogobot_ticks);
+        printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %llu   pogobot_ticks: %lu\n",
+                pogobot_helper_getid(), (long long unsigned int) current_time_milliseconds(), (long unsigned int) pogobot_ticks);
     }
 
     if ((uint32_t)(current_time_milliseconds() / 10000) % 2 == 0) {
