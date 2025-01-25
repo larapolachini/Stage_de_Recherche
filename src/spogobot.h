@@ -1084,10 +1084,13 @@ public:
     void create_body(b2WorldId worldId, float x, float y);
     void render(SDL_Renderer* renderer, b2WorldId worldId) const;
     void set_motor(motor_id motor, int speed);
+    b2Vec2 get_position() const;
 
     // LEDs
     std::vector<color_t> leds = std::vector<color_t>(5, {0, 0, 0});
 
+    // Neighbors
+    std::vector<Robot*> neighbors;
 };
 
 extern Robot* current_robot;

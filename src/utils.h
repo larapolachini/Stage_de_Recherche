@@ -21,8 +21,6 @@ void ensure_directories_exist(const std::string& filename);
 void delete_files_with_extension(const std::string& path, const std::string& extension, bool recursive = false);
 bool string_to_bool( std::string const& str);
 
-float euclidean_distance(const b2Vec2& a, const b2Vec2& b);
-
 #endif // UTILS_H
 
 // MODELINE "{{{1

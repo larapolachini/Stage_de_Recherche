@@ -6,7 +6,8 @@ arena_file: arenas/disk.csv
 delete_old_files: true
 
 seed: 0
-nBots: 500
+nBots: 100
+robot_radius: 10
 simulationTime: 300.0
 commRadius: 90
 msgSuccessRate: 0.5

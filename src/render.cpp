@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "utils.h"
+#include "distances.h"
 #include "render.h"
 #include "spogobot.h"
 

@@ -233,6 +233,9 @@ void Robot::disable_stop_watches() {
     }
 }
 
+b2Vec2 Robot::get_position() const {
+    return b2Body_GetPosition(bodyId);
+}
 
 
 

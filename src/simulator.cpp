@@ -15,6 +15,7 @@
 #include "utils.h"
 #include "simulator.h"
 #include "render.h"
+#include "distances.h"
 #include "spogobot.h"
 #undef main         // We defined main() as robot_main() in pogobot.h
 
@@ -220,6 +221,7 @@ void Simulation::init_config() {
     current_light_value = std::stoi(config.get("initial_light_value", "32767"));
     photo_start_at = std::stof(config.get("photo_start_at", "1.0"));
     photo_start_duration = std::stof(config.get("photo_start_duration", "1.0"));
+    comm_radius = std::stof(config.get("commRadius", "90"));
 }
 
 
@@ -358,6 +360,11 @@ void Simulation::handle_SDL_events() {
 }
 
 
+void Simulation::compute_neighbors() {
+    find_neighbors(robots, comm_radius / VISUALIZATION_SCALE);
+    //glogger->debug("Robot 0 has {} neighbors.", robots[0].neighbors.size());
+}
+
 
 void Simulation::render_all() {
     float scaled_background_level = 100 + ((200 - 100) * (float(current_light_value) - -32768) / (32768 - - 32768));
@@ -430,6 +437,9 @@ void Simulation::main_loop() {
 
         // Photo start, if needed
         photo_start();
+
+        // Compute neighbors
+        compute_neighbors();
 
         // Render
         render_all();
