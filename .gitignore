@@ -56,6 +56,14 @@ build/
 **/build/
 libs/
 tests/
+frames/
+*.gif
+pogobot-sdk
+TODO
+
+# Example binaries
+examples/helloworld/helloworld
+examples/hanabi/hanabi
 
 # Apptainer
 *.sif
