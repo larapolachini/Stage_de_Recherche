@@ -268,9 +268,9 @@ void user_step(void) {
 
     }
 
-//    // Specify functions to send/transmit messages
-//    msg_rx_fn = process_message;
-//    msg_tx_fn = send_message;
+    // Specify functions to send/transmit messages
+    msg_rx_fn = process_message;
+    msg_tx_fn = send_message;
 
     // Experiment has started. Wait for some time
     if (current_time_milliseconds() - mydata->start_of_experiment_ms < BOOT_TIME * 1000)

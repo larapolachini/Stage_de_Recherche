@@ -233,7 +233,13 @@ void Robot::disable_stop_watches() {
     }
 }
 
+
+
+
 /************* SIMULATED POGOLIB *************/ // {{{1
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 std::string log_current_robot() {
     std::ostringstream oss;
@@ -245,17 +251,80 @@ void pogobot_init() {
     glogger->debug("{} Pogobot initialized successfully.", log_current_robot());
 }
 
-uint16_t pogobot_helper_getid(void) {
-    return current_robot->id;
+
+/** 
+ * ## Infrared communication API Functions
+ */
+
+void pogobot_infrared_ll_init( void ) {
+    // Do nothing ...
 }
 
-void pogobot_stopwatch_reset(time_reference_t *stopwatch) {
-    stopwatch->reset();
+void pogobot_infrared_update( void ) {
+    glogger->warn("Function 'pogobot_infrared_update' is not implemented yet!");
 }
 
-int32_t pogobot_stopwatch_get_elapsed_microseconds(time_reference_t *stopwatch) {
-    return stopwatch->get_elapsed_microseconds();
+int pogobot_infrared_message_available( void ) {
+    glogger->warn("Function 'pogobot_infrared_message_available' is not implemented yet!");
+    return 0;
 }
+
+void pogobot_infrared_recover_next_message( message_t *mes ) {
+    glogger->warn("Function 'pogobot_infrared_recover_next_message' is not implemented yet!");
+}
+
+void pogobot_infrared_clear_message_queue( void ) {
+    glogger->warn("Function 'pogobot_infrared_clear_message_queue' is not implemented yet!");
+}
+
+
+void pogobot_infrared_set_power( uint8_t power ) {
+    // Do nothing ...
+}
+
+uint32_t pogobot_infrared_sendRawLongMessage( message_t *const message ) {
+    glogger->warn("Function 'pogobot_infrared_sendRawLongMessage' is not implemented yet!");
+    return 0;
+}
+
+uint32_t pogobot_infrared_sendRawShortMessage( ir_direction dir, short_message_t *const message ) {
+    glogger->warn("Function 'pogobot_infrared_sendRawShortMessage' is not implemented yet!");
+    return 0;
+}
+
+uint32_t pogobot_infrared_sendLongMessage_uniSpe( ir_direction dir, uint8_t *message, uint16_t message_size ) {
+    glogger->warn("Function 'pogobot_infrared_sendLongMessage_uniSpe' is not implemented yet!");
+    return 0;
+}
+
+uint32_t pogobot_infrared_sendLongMessage_omniGen( uint8_t *message, uint16_t message_size ) {
+    glogger->warn("Function 'pogobot_infrared_sendLongMessage_omniGen' is not implemented yet!");
+    return 0;
+}
+
+uint32_t pogobot_infrared_sendLongMessage_omniSpe( uint8_t *message, uint16_t message_size ) {
+    glogger->warn("Function 'pogobot_infrared_sendLongMessage_omniSpe' is not implemented yet!");
+    return 0;
+}
+
+uint32_t pogobot_infrared_sendShortMessage_uni( ir_direction dir, uint8_t *message, uint16_t message_size ) {
+    glogger->warn("Function 'pogobot_infrared_sendShortMessage_uni' is not implemented yet!");
+    return 0;
+}
+
+uint32_t pogobot_infrared_sendShortMessage_omni( uint8_t *message, uint16_t message_size ) {
+    glogger->warn("Function 'pogobot_infrared_sendShortMessage_omni' is not implemented yet!");
+    return 0;
+}
+
+void pogobot_infrared_reset_receiver_error_counter( void ) {
+    glogger->warn("Function 'pogobot_infrared_reset_receiver_error_counter' is not implemented yet!");
+}
+
+
+/** 
+ * ## RGB LED API
+ */
 
 void pogobot_led_setColor(const uint8_t r, const uint8_t g, const uint8_t b) {
     glogger->debug("{} LED Color {} set to R:{} G:{} B:{}", log_current_robot(), 0, r, g, b);
@@ -267,15 +336,91 @@ void pogobot_led_setColors(const uint8_t r, const uint8_t g, const uint8_t b, ui
     current_robot->leds[id] = {.r=r, .g=g, .b=b};
 }
 
+
+/** 
+ * ## Photosensors API Values
+ */
+
+int16_t pogobot_photosensors_read( uint8_t sensor_number ) {
+    return simulation->get_current_light_value();
+}
+
+
+/**
+ * ## IMU API 
+ */
+
+void pogobot_imu_read( float *acc, float *gyro ) {
+    glogger->warn("Function 'pogobot_imu_read' is not implemented yet!");
+}
+
+float pogobot_imu_readTemp( void ) {
+    glogger->warn("Function 'pogobot_imu_readTemp' is not implemented yet!");
+    return 0.0f;
+}
+
+
+
+/**
+ * ## Battery API 
+ */
+int16_t pogobot_battery_voltage_read( void ) {
+    glogger->warn("Function 'pogobot_battery_voltage_read' is not implemented yet!");
+    return 0;
+}
+
+
+
+/**
+ * ## Motors API Values
+ */
+void pogobot_motor_power_set( motor_id motor, uint16_t value ) {
+    glogger->warn("Function 'pogobot_motor_power_set' is not implemented yet!");
+}
+
+
 void pogobot_motor_set ( motor_id motor, uint16_t value ) {
     glogger->debug("{} Motor {} set to speed {}", log_current_robot(), static_cast<uint8_t>(motor), value);
     current_robot->set_motor(motor, value);
 }
 
+uint32_t pogobot_motor_dir_current_status( void ) {
+    glogger->warn("Function 'pogobot_motor_dir_current_status' is not implemented yet!");
+    return 0;
+}
 
-uint32_t pogobot_infrared_sendLongMessage_omniGen( uint8_t *message, uint16_t message_size ) {
-    glogger->warn("Function 'pogobot_infrared_sendLongMessage_omniGen' is not implemented yet!");
-    return 1;
+int8_t pogobot_motor_dir_mem_get( uint8_t *p_directions ) {
+    glogger->warn("Function 'pogobot_motor_dir_mem_get' is not implemented yet!");
+    return 0;
+}
+
+int8_t pogobot_motor_dir_mem_set( uint8_t *p_directions) {
+    glogger->warn("Function 'pogobot_motor_dir_mem_set' is not implemented yet!");
+    return 0;
+}
+
+void pogobot_motor_dir_set( motor_id motor, uint8_t value ) {
+    glogger->warn("Function 'pogobot_motor_dir_set' is not implemented yet!");
+}
+
+uint8_t pogobot_motor_power_mem_get( uint16_t *p_powers ) {
+    glogger->warn("Function 'pogobot_motor_power_mem_get' is not implemented yet!");
+    return 0;
+}
+
+uint8_t pogobot_motor_power_mem_set( uint16_t *p_powers ) {
+    glogger->warn("Function 'pogobot_motor_power_mem_set' is not implemented yet!");
+    return 0;
+}
+
+
+
+/**
+ * ## Helper API
+ */
+
+uint16_t pogobot_helper_getid(void) {
+    return current_robot->id;
 }
 
 int16_t pogobot_helper_getRandSeed( void ) {
@@ -287,17 +432,65 @@ int16_t pogobot_helper_getRandSeed( void ) {
     return dis(rnd_gen);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-int16_t pogobot_photosensors_read( uint8_t sensor_number ) {
-    return simulation->get_current_light_value();
+void pogobot_helper_print_version( void ) {
+    glogger->warn("Function 'pogobot_helper_print_version' is not implemented yet!");
 }
 
-void pogobot_infrared_set_power( uint8_t power ) {
-    // Do nothing ...
+
+
+/**
+ * ## Time API
+ */
+
+void pli_timer_sleep_stopwatch_init( void ) {
+    glogger->warn("Function 'pli_timer_sleep_stopwatch_init' is not implemented yet!");
 }
+
+
+void pogobot_stopwatch_reset(time_reference_t *stopwatch) {
+    stopwatch->reset();
+}
+
+int32_t pogobot_stopwatch_lap( time_reference_t *stopwatch ) {
+    glogger->warn("Function 'pogobot_stopwatch_lap' is not implemented yet!");
+    return 0;
+}
+
+
+int32_t pogobot_stopwatch_get_elapsed_microseconds(time_reference_t *stopwatch) {
+    return stopwatch->get_elapsed_microseconds();
+}
+
+void pogobot_stopwatch_offset_origin_microseconds( time_reference_t *stopwatch, int32_t microseconds_offset ) {
+    glogger->warn("Function 'pogobot_stopwatch_offset_origin_microseconds' is not implemented yet!");
+}
+
+void pogobot_timer_init( time_reference_t *timer, int32_t microseconds_to_go ) {
+    glogger->warn("Function 'pogobot_timer_init' is not implemented yet!");
+}
+
+int32_t pogobot_timer_get_remaining_microseconds( time_reference_t *timer ) {
+    glogger->warn("Function 'pogobot_timer_get_remaining_microseconds' is not implemented yet!");
+    return 0;
+}
+
+bool pogobot_timer_has_expired( time_reference_t *timer ) {
+    glogger->warn("Function 'pogobot_timer_has_expired' is not implemented yet!");
+    return false;
+}
+
+void pogobot_timer_wait_for_expiry( time_reference_t *timer ) {
+    glogger->warn("Function 'pogobot_timer_wait_for_expiry' is not implemented yet!");
+}
+
+void pogobot_timer_offset_origin_microseconds( time_reference_t *timer, int32_t microseconds_offset ) {
+    glogger->warn("Function 'pogobot_timer_offset_origin_microseconds' is not implemented yet!");
+}
+
 #pragma GCC diagnostic pop
 
+
+/************* General API *************/ // {{{1
 
 void msleep(int milliseconds) {
     //std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));

@@ -58,10 +58,18 @@ void pogo_main_loop_step(void (*user_step)(void)) {
 
     // Messages I/O (send & receive)
     // TODO frequency !!!
-    if (msg_tx_fn)
+    if (msg_tx_fn) {
         msg_tx_fn();
-//    if (msg_rx_fn)
-//        msg_rx_fn(); // XXX TODO
+    }
+    if (msg_rx_fn) {
+        pogobot_infrared_update(); // infrared checks for received data. Then, messages are decoded and insered in a FIFO.
+        if (pogobot_infrared_message_available()) { // read FIFO buffer - any message(s)?
+            // Recover the next message inside the message queue and stock it in the "mr" message_t structure, then in the "msg_from_neighbor" structure.  
+            message_t mr;
+            pogobot_infrared_recover_next_message(&mr);
+            msg_rx_fn(&mr);
+        }
+    }
 
     // Call user-specified step function
     user_step();
