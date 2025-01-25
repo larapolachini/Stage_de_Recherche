@@ -260,7 +260,6 @@ void user_init(void) {
 
 
 void user_step(void) {
-
     // XXX remove and put into lib
     // ********************************************************************************
     // * Start-up phase for simultaneous start of the robots when the lights turn off
@@ -287,8 +286,10 @@ void user_step(void) {
 
     // XXX remove and put into lib
     // Experiment has started. Wait for some time
-    if (current_time_milliseconds() - mydata->start_of_experiment_ms < BOOT_TIME * 1000)
+    if (current_time_milliseconds() - mydata->start_of_experiment_ms < BOOT_TIME * 1000) {
+        pogobot_led_setColor(white.r, white.g, white.b); // set boot led color to white
         return; // Wait
+    }
 
     // ********************************************************************************
     // * Main loop
@@ -315,20 +316,20 @@ void user_step(void) {
 
     // ********************************************************************************
     // * Motility
-    // * Robots do not move in this experience.
     // ********************************************************************************
 
 #ifdef MOVING_ROBOTS
     if ((uint32_t)(current_time_milliseconds() / 10000) % 2 == 0) {
-        //pogobot_led_setColor(0,0,255);
+        pogobot_led_setColors(blue.r, blue.g, blue.b, 1);
         pogobot_motor_set(motorL, motorFull);
         pogobot_motor_set(motorR, motorStop);
     } else {
-        //pogobot_led_setColor(255,0,0);
+        pogobot_led_setColors(red.r, red.g, red.b, 1);
         pogobot_motor_set(motorL, motorStop);
         pogobot_motor_set(motorR, motorFull);
     }
 #else
+    // * Robots do not move in this experience.
     // ... NOTHING TO DO ...
 #endif
 
