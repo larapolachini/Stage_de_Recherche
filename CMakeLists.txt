@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(pogosim VERSION 1.0.0 LANGUAGES CXX C)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules" ${CMAKE_MODULE_PATH})
+
 # Set C++ and C standards
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -10,6 +12,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Find required packages
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(SDL2 REQUIRED)
+find_package(SDL2_gfx REQUIRED)
 #find_package(Box2D REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(spdlog REQUIRED)
@@ -30,6 +33,7 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${Boost_INCLUDE_DIRS}
         ${SDL2_INCLUDE_DIRS}
+        ${SDL2_gfx_INCLUDE_DIRS}
         #        ${BOX2D_INCLUDE_DIRS}
         ${YAML_CPP_INCLUDE_DIR}
         ${spdlog_INCLUDE_DIRS}
