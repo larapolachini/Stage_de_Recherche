@@ -418,11 +418,13 @@ void Simulation::main_loop() {
     float const simulation_time = std::stof(config.get("simulationTime", "100.0"));
     glogger->info("Launching the main simulation loop.");
 
+    float const save_video_period = std::stof(config.get("save_video_period", "-1.0"));
     float const time_step_duration = std::stof(config.get("timeStep", "0.01667"));
     //float const GUI_time_step_duration = std::stof(config.get("GUItimeStep", "0.01667"));
 
     //sim_starting_time = std::chrono::system_clock::now();
     sim_starting_time_microseconds = get_current_time_microseconds();
+
 
     // Main loop for all robots
     running = true;
@@ -445,15 +447,22 @@ void Simulation::main_loop() {
         // Compute neighbors
         compute_neighbors();
 
-        // Render
-        render_all();
-        export_frames();
-        SDL_RenderPresent(renderer);
-
-        // Delay and update time
         if (enable_gui) {
+            // Render
+            render_all();
+            export_frames();
+            SDL_RenderPresent(renderer);
+
+            // Delay and update time
             SDL_Delay(time_step_duration / GUI_speed_up);
+        } else {
+            if (save_video_period > 0.0 && t >= last_frame_saved_t + save_video_period) {
+                render_all();
+                export_frames();
+            }
         }
+
+        // Update global time
         t += time_step_duration;
     }
 }
