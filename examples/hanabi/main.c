@@ -230,9 +230,9 @@ void user_init(void) {
     main_loop_hz = 60;
     send_msg_hz = 30;
     process_msg_hz = 180;
-    // No message sending/processing yet
-    msg_rx_fn = NULL;
-    msg_tx_fn = NULL;
+    // Specify functions to send/transmit messages
+    msg_rx_fn = process_message;
+    msg_tx_fn = send_message;
 
     // Set led index to show error codes
     error_codes_led_idx = 3; // Default value, negative values to disable
@@ -278,11 +278,6 @@ void user_step(void) {
             return; // Quit function if experiment has not started
         }
     }
-
-    // XXX
-    // Specify functions to send/transmit messages
-    msg_rx_fn = process_message;
-    msg_tx_fn = send_message;
 
     // XXX remove and put into lib
     // Experiment has started. Wait for some time

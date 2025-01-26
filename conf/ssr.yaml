@@ -1,0 +1,33 @@
+---
+
+window_width: 800
+window_height: 800
+arena_file: arenas/disk.csv
+delete_old_files: true
+
+seed: 0
+nBots: 50
+robot_radius: 20
+simulationTime: 50000.0
+commRadius: 200
+msgSuccessRate: 0.5
+showComms: true
+GUI: true
+
+#timeStep: 0.02  #0.01667
+#GUItimeStep: 0.001  #0.01667
+
+#timeStep: 0.05  #0.01667
+timeStep: 100.0  #0.01667
+GUISpeedUp: 0.000001
+
+initial_light_value: 32767
+photo_start_at: 1.0
+photo_start_duration: 1.0
+
+save_video_period: 0.5
+frames_name: "frames/f{:010.4f}.png"
+
+# MODELINE "{{{1
+# vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+# vim:foldmethod=marker

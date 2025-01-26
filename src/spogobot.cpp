@@ -113,6 +113,18 @@ void Robot::create_body(b2WorldId worldId, float x, float y) {
 }
 
 
+// Inline function to calculate the normalized color values
+inline uint8_t adjust_color(uint8_t const value) {
+    if (value == 0) {
+        return 0; // Use 0 for value 0
+    } else if (value <= 25) {
+        // Map values from 1-25 to 100-210
+        return static_cast<uint8_t>(100 + (static_cast<float>(value - 1) / 24.0f * 110.0f));
+    } else {
+        return 210; // Use 210 for values > 25
+    }
+}
+
 void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) const {
     // Get robot's position in the physics world
     b2Vec2 position = b2Body_GetPosition(bodyId);
@@ -161,9 +173,9 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
     // Draw each LED
     for (size_t i = 0; i < leds.size() && i < rotatedLedOffsets.size(); ++i) {
         color_t const& ledColor = leds[i]; // Get LED color
-        uint8_t const r = ledColor.r > 25 ? 230 : static_cast<float>(ledColor.r) / 25.0f * 210.0f;
-        uint8_t const g = ledColor.g > 25 ? 230 : static_cast<float>(ledColor.g) / 25.0f * 210.0f;
-        uint8_t const b = ledColor.b > 25 ? 230 : static_cast<float>(ledColor.b) / 25.0f * 210.0f;
+        uint8_t const r = adjust_color(ledColor.r);
+        uint8_t const g = adjust_color(ledColor.g);
+        uint8_t const b = adjust_color(ledColor.b);
 
         //// Convert LED color to SDL color
         ////SDL_SetRenderDrawColor(renderer, ledColor.r / 25.0f * 255.0f, ledColor.g / 25.0f * 255.0f, ledColor.b / 25.0f * 255.0f, 255);
