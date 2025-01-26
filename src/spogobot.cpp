@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <cstdint>
+#include "SDL2_gfxPrimitives.h"
 
 #include "spogobot.h"
 #include "pogosim.h"
@@ -121,8 +122,9 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
     float screenY = position.y * VISUALIZATION_SCALE;
 
     // Draw circle representing the robot's body
-    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Gray color for robot body
-    SDL_RenderDrawCircle(renderer, static_cast<int>(screenX), static_cast<int>(screenY), radius);
+//    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Gray color for robot body
+//    SDL_RenderDrawCircle(renderer, static_cast<int>(screenX), static_cast<int>(screenY), radius);
+    circleRGBA(renderer, screenX, screenY, radius, 0, 0, 0, 255);
 
     // Get the robot's orientation as a rotation (cosine/sine pair)
     b2Rot rotation = b2Body_GetRotation(bodyId);
@@ -130,13 +132,14 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
     float sinAngle = rotation.s;
 
     // Draw line indicating robot orientation with increased width
-    float orientationX = screenX + cosAngle * radius * 2.0; // Increase length of orientation line
-    float orientationY = screenY + sinAngle * radius * 2.0;
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 150); // Blue/transparent color for orientation line
-    for (int offset = -2; offset <= 2; ++offset) {
-        SDL_RenderDrawLine(renderer, screenX + offset, screenY, orientationX + offset, orientationY);
-        SDL_RenderDrawLine(renderer, screenX, screenY + offset, orientationX, orientationY + offset);
-    }
+    float const orientationX = screenX + cosAngle * radius * 2.0; // Increase length of orientation line
+    float const orientationY = screenY + sinAngle * radius * 2.0;
+//    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 150); // Blue/transparent color for orientation line
+//    for (int offset = -2; offset <= 2; ++offset) {
+//        SDL_RenderDrawLine(renderer, screenX + offset, screenY, orientationX + offset, orientationY);
+//        SDL_RenderDrawLine(renderer, screenX, screenY + offset, orientationX, orientationY + offset);
+//    }
+    thickLineRGBA(renderer, screenX, screenY, orientationX, orientationY, 4, 0, 0, 255, 150);
 
     // Define relative positions for LEDs around the robot based on orientation
     std::vector<b2Vec2> ledOffsets = {
@@ -157,15 +160,18 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
 
     // Draw each LED
     for (size_t i = 0; i < leds.size() && i < rotatedLedOffsets.size(); ++i) {
-        const color_t& ledColor = leds[i]; // Get LED color
+        color_t const& ledColor = leds[i]; // Get LED color
+        uint8_t const r = ledColor.r > 25 ? 230 : static_cast<float>(ledColor.r) / 25.0f * 210.0f;
+        uint8_t const g = ledColor.g > 25 ? 230 : static_cast<float>(ledColor.g) / 25.0f * 210.0f;
+        uint8_t const b = ledColor.b > 25 ? 230 : static_cast<float>(ledColor.b) / 25.0f * 210.0f;
 
-        // Convert LED color to SDL color
-        //SDL_SetRenderDrawColor(renderer, ledColor.r / 25.0f * 255.0f, ledColor.g / 25.0f * 255.0f, ledColor.b / 25.0f * 255.0f, 255);
-        //SDL_SetRenderDrawColor(renderer, ledColor.r, ledColor.g, ledColor.b, 255);
-        SDL_SetRenderDrawColor(renderer,
-                ledColor.r > 25 ? 255 : static_cast<float>(ledColor.r) / 25.0f * 255.0f,
-                ledColor.g > 25 ? 255 : static_cast<float>(ledColor.g) / 25.0f * 255.0f,
-                ledColor.b > 25 ? 255 : static_cast<float>(ledColor.b) / 25.0f * 255.0f, 255);
+        //// Convert LED color to SDL color
+        ////SDL_SetRenderDrawColor(renderer, ledColor.r / 25.0f * 255.0f, ledColor.g / 25.0f * 255.0f, ledColor.b / 25.0f * 255.0f, 255);
+        ////SDL_SetRenderDrawColor(renderer, ledColor.r, ledColor.g, ledColor.b, 255);
+        //SDL_SetRenderDrawColor(renderer,
+        //        ledColor.r > 25 ? 230 : static_cast<float>(ledColor.r) / 25.0f * 210.0f,
+        //        ledColor.g > 25 ? 230 : static_cast<float>(ledColor.g) / 25.0f * 210.0f,
+        //        ledColor.b > 25 ? 230 : static_cast<float>(ledColor.b) / 25.0f * 210.0f, 255);
 
         // Calculate screen coordinates for the LED
         float ledScreenX = screenX + rotatedLedOffsets[i].x * 2.0;
@@ -173,9 +179,11 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
 
         // Draw LED as a small circle
         if (i == 0) {
-            SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius - 2);
+            //SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius - 2);
+            filledCircleRGBA(renderer, ledScreenX, ledScreenY, radius - 2, r, g, b, 255);
         } else {
-            SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius / 2.5);
+            //SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius / 2.5);
+            filledCircleRGBA(renderer, ledScreenX, ledScreenY, radius / 2.5, r, g, b, 255);
         }
     }
 }

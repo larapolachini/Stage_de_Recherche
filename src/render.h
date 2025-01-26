@@ -8,8 +8,6 @@
 float const VISUALIZATION_SCALE = 100.0f; // 1 Box2D unit = 100 pixels
 
 
-void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius);
-
 //std::vector<b2Vec2> read_poly_from_csv(const std::string& filename, float window_width, float window_height);
 std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename, float window_width, float window_height);
 

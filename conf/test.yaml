@@ -2,13 +2,13 @@
 
 window_width: 800
 window_height: 800
-arena_file: arenas/disk.csv
+arena_file: arenas/annulus.csv
 delete_old_files: true
 
 seed: 0
 nBots: 300
 robot_radius: 10
-simulationTime: 200.0
+simulationTime: 8000.0
 commRadius: 70
 msgSuccessRate: 0.5
 showComms: true

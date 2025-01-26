@@ -17,18 +17,6 @@
 #pragma GCC diagnostic pop
 
 
-void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius) {
-    for (int w = 0; w < radius * 2; w++) {
-        for (int h = 0; h < radius * 2; h++) {
-            int dx = radius - w; // Horizontal offset
-            int dy = radius - h; // Vertical offset
-            if ((dx * dx + dy * dy) <= (radius * radius)) {
-                SDL_RenderDrawPoint(renderer, x + dx, y + dy);
-            }
-        }
-    }
-}
-
 
 //// Helper function to read CSV and return vector of b2Vec2 points
 //std::vector<b2Vec2> read_poly_from_csv(const std::string& filename, float window_width, float window_height) {
