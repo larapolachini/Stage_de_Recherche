@@ -68,3 +68,6 @@ examples/hanabi/hanabi
 # Apptainer
 *.sif
 *.simg
+
+# Valgrind
+callgrind.*
