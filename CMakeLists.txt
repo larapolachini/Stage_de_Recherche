@@ -52,7 +52,7 @@ target_link_libraries(${PROJECT_NAME}
 # Set compile options
 target_compile_options(${PROJECT_NAME}
     PRIVATE
-        $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -Wunused-parameter -O2>
+        $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -Wunused-parameter -O3 -msse4.1 -mpclmul>
         $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra>
         $<$<CXX_COMPILER_ID:MSVC>:/W4>
 )

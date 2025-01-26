@@ -8,14 +8,7 @@
 #include "distances.h"
 #include "render.h"
 #include "spogobot.h"
-
-// Include STB image write
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-#pragma GCC diagnostic pop
-
+#include "fpng.h"
 
 
 //// Helper function to read CSV and return vector of b2Vec2 points
@@ -414,9 +407,8 @@ void save_window_to_png(SDL_Renderer* renderer, SDL_Window* window, const std::s
 //        );
 //    }
 
-    // Save to PNG using stb_image_write
-    if (!stbi_write_png(filename.c_str(), width, height, 4, pixels.data(), width * 4)) {
-    //if (!stbi_write_png(filename.c_str(), width, height, 4, flippedPixels.data(), width * 4)) {
+    // Save to PNG
+    if (!fpng::fpng_encode_image_to_file(filename.c_str(), pixels.data(), width, height, 4)) {
         glogger->warn("Error writing PNG file '{}'", filename);
     } else {
         glogger->debug("Saved window content to '{}'", filename);

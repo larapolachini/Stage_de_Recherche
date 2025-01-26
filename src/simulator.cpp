@@ -11,6 +11,7 @@
 #include <vector>
 #include <SDL2/SDL.h>
 #include <box2d/box2d.h>
+#include "fpng.h"
 
 #include "utils.h"
 #include "simulator.h"
@@ -258,6 +259,9 @@ void Simulation::init_SDL() {
         SDL_Quit();
         throw std::runtime_error("Error while initializing SDL");
     }
+
+    // Init fpng
+    fpng::fpng_init();
 }
 
 
