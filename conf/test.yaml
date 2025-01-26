@@ -8,7 +8,7 @@ delete_old_files: true
 seed: 0
 nBots: 300
 robot_radius: 10
-simulationTime: 50.0
+simulationTime: 500.0
 commRadius: 70
 msgSuccessRate: 0.5
 showComms: true

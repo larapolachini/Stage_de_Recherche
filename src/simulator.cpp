@@ -320,9 +320,6 @@ void Simulation::pause() {
 }
 
 void Simulation::handle_SDL_events() {
-    if (!enable_gui)
-        return;
-
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) {
@@ -433,6 +430,7 @@ void Simulation::main_loop() {
     while (running && t < simulation_time) {
         handle_SDL_events();
 
+        // Launch user code
         for (auto& robot : robots) {
             set_current_robot(robot);
             robot.launch_user_step();
