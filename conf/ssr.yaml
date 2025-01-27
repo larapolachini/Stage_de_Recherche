@@ -18,8 +18,8 @@ GUI: true
 #GUItimeStep: 0.001  #0.01667
 
 #timeStep: 0.05  #0.01667
-timeStep: 100.0  #0.01667
-GUISpeedUp: 0.000001
+timeStep: 0.1  #0.01667
+GUI_speed_up: 0.001
 
 initial_light_value: 32767
 photo_start_at: 1.0

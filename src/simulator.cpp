@@ -431,6 +431,15 @@ void Simulation::main_loop() {
     while (running && t < simulation_time) {
         handle_SDL_events();
 
+        // Check if the simulation is paused
+        if (enable_gui && paused) {
+            render_all();
+            SDL_RenderPresent(renderer);
+            // Delay
+            SDL_Delay(time_step_duration / GUI_speed_up);
+            continue;
+        }
+
         // Launch user code
         for (auto& robot : robots) {
             set_current_robot(robot);
@@ -462,7 +471,7 @@ void Simulation::main_loop() {
             export_frames();
             SDL_RenderPresent(renderer);
 
-            // Delay and update time
+            // Delay
             SDL_Delay(time_step_duration / GUI_speed_up);
         } else {
             if (save_video_period > 0.0 && t >= last_frame_saved_t + save_video_period) {
