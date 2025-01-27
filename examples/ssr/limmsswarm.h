@@ -6,7 +6,9 @@
 
 #define MAXN 20 // 20
 #define RB_SIZE 8   // Ring buffer size. Choose a power of two for faster code
-#define PROB_MSG_SENT 50
+#define PERCENT_MSG_SENT 50
+#define MAIN_LOOP_HZ 60
+#define MAX_NB_MSGS_PROCESSED_PER_TICK 100
 
 #define ENABLE_AVG_AVG_LAMBDA
 //#define ENABLE_INIT_REMOVE_SUM_S

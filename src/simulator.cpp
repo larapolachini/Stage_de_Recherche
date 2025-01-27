@@ -270,6 +270,7 @@ void Simulation::init_SDL() {
 
 void Simulation::create_robots() {
     uint32_t const nb_robots = std::stoi(config.get("nBots", "100"));
+    float const msg_success_rate = std::stof(config.get("msgSuccessRate", "0.50"));
     glogger->info("Creating {} robots", nb_robots);
     if (!nb_robots)
         throw std::runtime_error("Number of robots is 0 (nBot=0 in configuration).");
@@ -280,7 +281,7 @@ void Simulation::create_robots() {
         for (size_t i = 0; i < nb_robots; ++i) {
             //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius); // XXX quick & dirty :-/
             auto const point = points[i];
-            robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId);
+            robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId, msg_success_rate);
             //float x = minX + std::rand() % static_cast<int>(maxX - minX);
             //float y = minY + std::rand() % static_cast<int>(maxY - minY);
             //robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);

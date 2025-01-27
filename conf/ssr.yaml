@@ -1,16 +1,17 @@
 ---
 
-window_width: 800
-window_height: 800
-arena_file: arenas/disk.csv
+window_width: 700
+window_height: 700
+arena_file: arenas/annulus.csv
+#arena_file: arenas/disk.csv
 delete_old_files: true
 
 seed: 0
-nBots: 50
-robot_radius: 20
-simulationTime: 50000.0
-commRadius: 150
-msgSuccessRate: 0.5
+nBots: 25
+robot_radius: 35
+simulationTime: 30.0
+commRadius: 170
+msgSuccessRate: 1.0
 showComms: true
 GUI: true
 
@@ -18,8 +19,8 @@ GUI: true
 #GUItimeStep: 0.001  #0.01667
 
 #timeStep: 0.05  #0.01667
-timeStep: 0.1  #0.01667
-GUI_speed_up: 0.001
+timeStep: 0.01  #0.01667
+GUI_speed_up: 0.01
 
 initial_light_value: 32767
 photo_start_at: 1.0

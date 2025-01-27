@@ -72,8 +72,8 @@ uint64_t get_current_time_microseconds() {
 
 /************* SIMULATED ROBOTS *************/ // {{{1
 
-Robot::Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius, b2WorldId worldId)
-        : id(_id), radius(_radius) {
+Robot::Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius, b2WorldId worldId, float _msg_success_rate)
+        : id(_id), radius(_radius), msg_success_rate(_msg_success_rate) {
     data = malloc(_userdatasize);
     create_body(worldId, x, y);
 }
@@ -275,9 +275,13 @@ void Robot::send_to_neighbors(short_message_t *const message) {
 }
 
 void Robot::send_to_neighbors(message_t *const message) {
+    // Define a uniform real distribution between 0.0 and 1.0
+    std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+
     for (Robot* robot : neighbors) {
-        //glogger->debug("MESSAGE !! {} -> {}", message->header._sender_id, robot->id);
-        if (robot->messages.size() < 100) { // XXX Maxsize should be an option
+        float const prob = dis(rnd_gen);
+        //glogger->debug("MESSAGE !! with prob {} / {}: {} -> {}", prob, msg_success_rate, message->header._sender_id, robot->id);
+        if (prob <= msg_success_rate && robot->messages.size() < 100) { // XXX Maxsize should be an option
             robot->messages.push(*message);
         }
     }

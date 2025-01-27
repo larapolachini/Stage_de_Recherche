@@ -1048,12 +1048,20 @@ std::string log_current_robot();
 
 class Robot {
 public:
-    Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius, b2WorldId worldId);
+    Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius, b2WorldId worldId, float _msg_success_rate=0.5);
     //virtual ~Robot();
+
+    // Base info
+    uint16_t id;
+    void* data = nullptr;
+    void (*user_init)(void) = nullptr;
+    void (*user_step)(void) = nullptr;
+    void launch_user_step();
 
     std::chrono::time_point<std::chrono::system_clock> current_time;
     uint64_t current_time_microseconds = 0LL;
 
+    // C-code accessible values
     uint32_t pogobot_ticks = 0;
     uint8_t main_loop_hz = 60;
     uint8_t max_nb_processed_msg_per_tick = 3;
@@ -1063,16 +1071,9 @@ public:
     time_reference_t _global_timer;
     time_reference_t timer_main_loop;
     uint32_t _current_time_milliseconds = 0;
-
     uint8_t percent_msgs_sent_per_ticks = 20;
     uint32_t nb_msgs_sent = 0;
     uint32_t nb_msgs_recv = 0;
-
-    uint16_t id;
-    void* data = nullptr;
-    void (*user_init)(void) = nullptr;
-    void (*user_step)(void) = nullptr;
-    void launch_user_step();
 
     // Time-related stuff
     std::set<time_reference_t*> stop_watches;
@@ -1100,6 +1101,10 @@ public:
     std::queue<message_t> messages;
     void send_to_neighbors(short_message_t *const message);
     void send_to_neighbors(message_t *const message);
+
+    // Messages
+    float msg_success_rate = 0.5;
+
 };
 
 extern Robot* current_robot;

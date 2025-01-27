@@ -23,7 +23,7 @@ uint32_t const main_loop_delay = 30; // 20; // 100; // 500; // 50; // ms
 uint8_t const wait_for_min_nb_neighbors = 1; // = 1;
 
 fp_t const initial_s_max_val = 1.f;
-fp_t const inv_tau = 15.f; // Originally 10.f
+fp_t const inv_tau = 10.f; // Originally 10.f
 
 fp_t const diffusion_convergence_threshold = 0.1;
 uint16_t const diffusion_min_nb_points = 3;
@@ -32,13 +32,13 @@ fp_t const diffusion_min_abs_s = 0.e-05f;
 uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; //0;
 uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 15;
 uint32_t const µs_randow_walk                       = kiloticks_to_µs * 0; // 30;
-uint32_t const µs_handshake                         = kiloticks_to_µs * 93; // 30;
-uint32_t const µs_diffusion                         = kiloticks_to_µs * 3100; // 1550; // 1860 // 930; // 465; // 6510;
-uint32_t const µs_diffusion_it                      = kiloticks_to_µs * 93;
-uint32_t const µs_diffusion_burnin                  = kiloticks_to_µs * 465; // 1240;
-uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 620; // 1860;
+uint32_t const µs_handshake                         = kiloticks_to_µs * 310; // 30;
+uint32_t const µs_diffusion                         = kiloticks_to_µs * 6200; // 1550; // 1860 // 930; // 465; // 6510;
+uint32_t const µs_diffusion_it                      = kiloticks_to_µs * 186; // 93;
+uint32_t const µs_diffusion_burnin                  = kiloticks_to_µs * 1240; // 1240;
+uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 1240; // 1860;
 uint32_t const µs_collective_avg_lambda_it          = kiloticks_to_µs * 93;
-uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 620; // 1860;
+uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 1240; // 1860;
 uint32_t const µs_collective_avg_avg_lambda_it      = kiloticks_to_µs * 93;
 uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
 uint32_t µs_iteration = 0; // Set in ``setup()``
@@ -212,9 +212,9 @@ void setup(void) {
 #endif
 
     // Set main loop frequency, message sending frequency, message processing frequency
-    main_loop_hz = 60;
-    max_nb_processed_msg_per_tick = 5;
-    percent_msgs_sent_per_ticks = 20;
+    main_loop_hz = MAIN_LOOP_HZ;
+    max_nb_processed_msg_per_tick = MAX_NB_MSGS_PROCESSED_PER_TICK;
+    percent_msgs_sent_per_ticks = PERCENT_MSG_SENT;
     // Specify functions to send/transmit messages
     msg_rx_fn = process_message;
     msg_tx_fn = send_message;
@@ -986,17 +986,12 @@ void iteration(void) {
 }
 
 bool send_message(void) {
-    if(!mydata->enable_message_sending)
+    if(!mydata->enable_message_sending) {
         // Not allowed to send messages!
         return false;
+    }
     // Random delay
     //msleep(rand() % max_delay_send_message);
-
-    // Probability of sending the message
-    int const c = rand() % 100;
-    if(c >= PROB_MSG_SENT) {
-        return false;
-    }
 
     // Send message
     switch(mydata->current_behavior) {
