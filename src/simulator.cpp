@@ -74,6 +74,8 @@ Simulation::Simulation(Configuration& _config)
 }
 
 Simulation::~Simulation() {
+    FC_FreeFont(font);
+    TTF_Quit();
     b2DestroyWorld(worldId);
     if (renderer)
         SDL_DestroyRenderer(renderer);
@@ -265,6 +267,10 @@ void Simulation::init_SDL() {
 
     // Init fpng
     fpng::fpng_init();
+
+    // Init fonts
+    font = FC_CreateFont();
+    FC_LoadFont(font, renderer, "fonts/helvetica.ttf", 20, FC_MakeColor(0,0,0,255), TTF_STYLE_NORMAL);  
 }
 
 
@@ -385,6 +391,14 @@ void Simulation::render_all() {
         robot.render(renderer, worldId);
     }
     //SDL_RenderPresent(renderer);
+
+    // Get the window size
+    int windowWidth, windowHeight;
+    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+
+    // Render the current time
+    std::string formatted_time = std::vformat("{:.4f}s", std::make_format_args(t));
+    FC_Draw(font, renderer, windowWidth - 120, 10, "t=%s", formatted_time.c_str()); 
 }
 
 void Simulation::export_frames() {

@@ -13,6 +13,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_gfx REQUIRED)
+find_package(SDL2_ttf REQUIRED)
 #find_package(Box2D REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(spdlog REQUIRED)
@@ -34,6 +35,7 @@ target_include_directories(${PROJECT_NAME}
         ${Boost_INCLUDE_DIRS}
         ${SDL2_INCLUDE_DIRS}
         ${SDL2_gfx_INCLUDE_DIRS}
+        ${SDL2_ttf_INCLUDE_DIRS}
         #        ${BOX2D_INCLUDE_DIRS}
         ${YAML_CPP_INCLUDE_DIR}
         ${spdlog_INCLUDE_DIRS}

@@ -4,6 +4,7 @@
 //#include "spogobot.h"
 #include "pogosim.h"
 #include "configuration.h"
+#include "SDL_FontCache.h"
 
 extern "C" int robot_main(void);
 
@@ -45,6 +46,9 @@ class Simulation {
     int16_t current_light_value = std::numeric_limits<int16_t>::max();
     float photo_start_at = -1.f;
     float photo_start_duration = 1.f;
+
+    // Fonts
+    FC_Font* font;
 
 public:
     Simulation(Configuration& _config);
