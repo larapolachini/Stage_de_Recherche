@@ -212,9 +212,9 @@ void setup(void) {
 #endif
 
     // Set main loop frequency, message sending frequency, message processing frequency
-    main_loop_hz = 20;
-    send_msg_hz = 30;
-    process_msg_hz = 200;
+    main_loop_hz = 60;
+    send_msg_hz = 60;
+    process_msg_hz = 60;
     // Specify functions to send/transmit messages
     msg_rx_fn = process_message;
     msg_tx_fn = send_message;

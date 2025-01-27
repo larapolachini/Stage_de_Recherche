@@ -10,7 +10,7 @@ void (*msg_rx_fn)(message_t *) = NULL;
 void (*msg_tx_fn)(void) = NULL;
 int8_t error_codes_led_idx = 3; // Default value, negative values to disable
 uint32_t pogobot_ticks = 0;
-uint64_t _current_time_milliseconds = 0LL;
+uint32_t _current_time_milliseconds = 0LL;
 time_reference_t _global_timer;
 time_reference_t timer_main_loop;
 
@@ -30,7 +30,7 @@ void pogobot_start(void (*user_init)(void), void (*user_step)(void)) {
 }
 #endif
 
-uint64_t current_time_milliseconds(void) {
+uint32_t current_time_milliseconds(void) {
     _current_time_milliseconds += pogobot_stopwatch_get_elapsed_microseconds(&_global_timer) / 1000;
     pogobot_stopwatch_reset(&_global_timer);
     return _current_time_milliseconds;

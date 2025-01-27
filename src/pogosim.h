@@ -40,7 +40,7 @@ extern void (*msg_tx_fn)(void);
 extern int8_t error_codes_led_idx;
 extern time_reference_t _global_timer;
 extern time_reference_t timer_main_loop;
-extern uint64_t _current_time_milliseconds;
+extern uint32_t _current_time_milliseconds;
 
 typedef enum {
     ERROR_TIME_OVERFLOW,
@@ -49,7 +49,7 @@ typedef enum {
 
 void pogobot_start(void (*user_init)(void), void (*user_step)(void));
 void pogo_main_loop_step(void (*user_step)(void));
-uint64_t current_time_milliseconds(void);
+uint32_t current_time_milliseconds(void);
 void display_led_error_code(error_code_t const c);
 
 #ifdef __cplusplus

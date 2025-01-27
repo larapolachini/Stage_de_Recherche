@@ -9,7 +9,7 @@ seed: 0
 nBots: 50
 robot_radius: 20
 simulationTime: 50000.0
-commRadius: 200
+commRadius: 150
 msgSuccessRate: 0.5
 showComms: true
 GUI: true

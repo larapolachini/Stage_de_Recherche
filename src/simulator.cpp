@@ -416,7 +416,7 @@ void Simulation::main_loop() {
     glogger->info("Launching the main simulation loop.");
 
     float const save_video_period = std::stof(config.get("save_video_period", "-1.0"));
-    float const time_step_duration = std::stof(config.get("timeStep", "0.01667"));
+    float time_step_duration = std::stof(config.get("timeStep", "0.01667"));
     //float const GUI_time_step_duration = std::stof(config.get("GUItimeStep", "0.01667"));
 
     //sim_starting_time = std::chrono::system_clock::now();
@@ -433,8 +433,19 @@ void Simulation::main_loop() {
         // Launch user code
         for (auto& robot : robots) {
             set_current_robot(robot);
-            robot.launch_user_step();
+            // Check if the robot has waited enough time
+            if (t * 1000.0f >= _current_time_milliseconds) {
+                robot.launch_user_step();
+            }
+            // Check if dt is enough to simulate the main loop frequency of this robot
+            float const main_loop_period = 1.0f / main_loop_hz;
+            if (time_step_duration > main_loop_period) {
+                glogger->warn("Time step duration dt={} is not enough to simulate a main loop frequency of {}. Adjusting to {}", time_step_duration, main_loop_hz, main_loop_period);
+                time_step_duration = main_loop_period;
+            }
         }
+        // XXX
+        glogger->debug("Global: t={}  Robot0: t={}", t, robots[0]._current_time_milliseconds);
 
         // Step the Box2D world
         b2World_Step(worldId, time_step_duration, sub_step_count);
@@ -462,6 +473,9 @@ void Simulation::main_loop() {
 
         // Update global time
         t += time_step_duration;
+
+        // XXX
+        //glogger->info("Global time: {}", t);
     }
 }
 

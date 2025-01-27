@@ -209,7 +209,7 @@ void Robot::set_motor(motor_id motor, int speed) {
     } else if (motor == motorR) {
         right_motor_speed = speed;
     }
-    glogger->debug("set motor: {} {}", left_motor_speed, right_motor_speed);
+    //glogger->debug("set motor: {} {}", left_motor_speed, right_motor_speed);
 
     // No damping
     b2Body_SetLinearDamping(bodyId, 0.0);
@@ -596,6 +596,7 @@ void pogobot_timer_offset_origin_microseconds( time_reference_t *timer, int32_t 
 
 void msleep(int milliseconds) {
     //std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+    glogger->debug("{} Sleeping for {} ms", log_current_robot(), milliseconds);
     if (milliseconds <= 0) return;
     for (auto* sw : current_robot->stop_watches) {
         sw->add_elapsed_microseconds(static_cast<uint64_t>(milliseconds) * 1000);

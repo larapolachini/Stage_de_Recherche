@@ -8,7 +8,7 @@ delete_old_files: true
 seed: 0
 nBots: 300
 robot_radius: 10
-simulationTime: 500.0
+simulationTime: 50.0
 commRadius: 70
 msgSuccessRate: 0.5
 showComms: true
@@ -17,14 +17,14 @@ GUI: true
 #timeStep: 0.02  #0.01667
 #GUItimeStep: 0.001  #0.01667
 
-timeStep: 0.05  #0.01667
+timeStep: 0.5  #0.01667
 GUISpeedUp: 1.0
 
 initial_light_value: 32767
 photo_start_at: 1.0
 photo_start_duration: 1.0
 
-save_video_period: 0.5
+save_video_period: 1.0
 frames_name: "frames/f{:010.4f}.png"
 
 # MODELINE "{{{1

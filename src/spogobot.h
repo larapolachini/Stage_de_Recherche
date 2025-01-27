@@ -1063,7 +1063,7 @@ public:
     int8_t error_codes_led_idx = 3;
     time_reference_t _global_timer;
     time_reference_t timer_main_loop;
-    uint64_t _current_time_milliseconds = 0LL;
+    uint32_t _current_time_milliseconds = 0;
 
     uint16_t id;
     void* data = nullptr;
