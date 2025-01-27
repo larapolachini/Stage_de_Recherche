@@ -9,14 +9,9 @@
 #include "util.h"
 #include "colors.h"
 #include "limmsswarm.h"
+#include "dispersion.h"
 
 REGISTER_USERDATA(USERDATA)
-
-#ifdef SIMULATOR
-#define printf0(fmt, ...) if (pogobot_helper_getid() == 0) { printf(fmt, ##__VA_ARGS__ ); }
-#else
-#define printf0(fmt, ...) printf(fmt, ##__VA_ARGS__ )
-#endif
 
 uint32_t const main_loop_delay = 30; // 20; // 100; // 500; // 50; // ms
 //uint32_t const max_delay_send_message = 5; // ms
@@ -29,17 +24,17 @@ fp_t const diffusion_convergence_threshold = 0.1;
 uint16_t const diffusion_min_nb_points = 3;
 fp_t const diffusion_min_abs_s = 0.e-05f;
 
-uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; //0;
-uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 15;
-uint32_t const µs_randow_walk                       = kiloticks_to_µs * 0; // 30;
-uint32_t const µs_handshake                         = kiloticks_to_µs * 310; // 30;
-uint32_t const µs_diffusion                         = kiloticks_to_µs * 6200; // 1550; // 1860 // 930; // 465; // 6510;
-uint32_t const µs_diffusion_it                      = kiloticks_to_µs * 186; // 93;
-uint32_t const µs_diffusion_burnin                  = kiloticks_to_µs * 1240; // 1240;
-uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 1240; // 1860;
-uint32_t const µs_collective_avg_lambda_it          = kiloticks_to_µs * 93;
-uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 1240; // 1860;
-uint32_t const µs_collective_avg_avg_lambda_it      = kiloticks_to_µs * 93;
+uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 12400; //0;
+uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 1550;
+uint32_t const µs_randow_walk                       = kiloticks_to_µs * 6200; // 30;
+uint32_t const µs_handshake                         = kiloticks_to_µs * 1240; // 30;
+uint32_t const µs_diffusion                         = kiloticks_to_µs * 15345; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
+uint32_t const µs_diffusion_it                      = kiloticks_to_µs * 465; // 93;
+uint32_t const µs_diffusion_burnin                  = kiloticks_to_µs * 3022; // 1240;
+uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 7440; // 1860;
+uint32_t const µs_collective_avg_lambda_it          = kiloticks_to_µs * 310;
+uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 7440; // 1860;
+uint32_t const µs_collective_avg_avg_lambda_it      = kiloticks_to_µs * 310;
 uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
 uint32_t µs_iteration = 0; // Set in ``setup()``
 
@@ -219,6 +214,9 @@ void setup(void) {
     msg_rx_fn = process_message;
     msg_tx_fn = send_message;
 
+    // Set led index to show error codes
+    error_codes_led_idx = 3; // Default value, negative values to disable
+
     pogobot_led_setColors(3, 3, 3, 0);
     init_ticks();
     printf0("\ninit ok\n");
@@ -226,16 +224,29 @@ void setup(void) {
 
 
 void behav_random_walk(void) {
-    if(mydata->behavior_start_µs % µs_random_walk_choice == 0) { // XXX
-        int r = rand() % 3;
+    if(pogoticks - mydata->behavior_start_µs > µs_random_walk_choice) {
+        mydata->behavior_start_µs = pogoticks;
+        int r = rand() % 30;
         if(r==0) {
             set_motion(FORWARD);
         } else if(r==1) {
             set_motion(LEFT);
         } else if(r==2) {
             set_motion(RIGHT);
+        } else {
+            set_motion(STOP);
         }
     }
+
+//    if ((uint32_t)(current_time_milliseconds() / (µs_random_walk_choice / 1000)) % 2 == 0) {
+//        pogobot_led_setColors(0, 0, 255, 4);
+//        pogobot_motor_set(motorL, motorFull / 2);
+//        pogobot_motor_set(motorR, motorStop);
+//    } else {
+//        pogobot_led_setColors(255, 0, 0, 4);
+//        pogobot_motor_set(motorL, motorStop);
+//        pogobot_motor_set(motorR, motorFull / 2);
+//    }
 }
 
 
@@ -855,6 +866,7 @@ void iteration(void) {
 #else
             mydata->enable_message_sending = false;
 #endif
+            start_dispersion();
             printf0("Initial random walk\n");
             pogobot_led_setColors(0, 0, 0, 0);
         }
@@ -888,6 +900,7 @@ void iteration(void) {
 #else
             mydata->enable_message_sending = false;
 #endif
+            start_dispersion();
             printf0("  it=%d RANDOM_WALK\n", mydata->current_it);
         }
         set_behavior(RANDOM_WALK);
@@ -966,6 +979,7 @@ void iteration(void) {
 
     if(mydata->current_behavior == RANDOM_WALK || mydata->current_behavior == INIT_RANDOM_WALK) {
         behav_random_walk();
+        //behav_dispersion();
 #ifdef ENABLE_HANDSHAKES
     } else if(mydata->current_behavior == HANDSHAKE) {
         behav_handshake();

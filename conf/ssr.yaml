@@ -1,18 +1,18 @@
 ---
 
-window_width: 700
-window_height: 700
+window_width: 670
+window_height: 670
 arena_file: arenas/annulus.csv
 #arena_file: arenas/disk.csv
 delete_old_files: true
 
 seed: 0
 nBots: 25
-robot_radius: 35
-simulationTime: 30.0
+robot_radius: 30
+simulationTime: 180.0
 commRadius: 170
-msgSuccessRate: 1.0
-showComms: true
+msgSuccessRate: 0.7
+showComms: false
 GUI: true
 
 #timeStep: 0.02  #0.01667

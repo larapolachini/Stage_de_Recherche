@@ -2,7 +2,7 @@
 #ifndef LIMMSSWARM_H_
 #define LIMMSSWARM_H_
 
-#define DISABLE_MOTION
+//#define DISABLE_MOTION
 
 #define MAXN 20 // 20
 #define RB_SIZE 8   // Ring buffer size. Choose a power of two for faster code
@@ -58,6 +58,13 @@ typedef double fp_t;
 #include "pogosim.h"
 
 extern fp_t const initial_s_max_val;
+
+#ifdef SIMULATOR
+#define printf0(fmt, ...) if (pogobot_helper_getid() == 0) { printf(fmt, ##__VA_ARGS__ ); }
+#else
+#define printf0(fmt, ...) printf(fmt, ##__VA_ARGS__ )
+#endif
+
 
 
 // Behaviors
