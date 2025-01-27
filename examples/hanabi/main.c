@@ -34,8 +34,9 @@
 
 #define INFRARED_POWER 2 // 1,2,3
 
-#define FQCY 60 // control update frequency. 30Hz | 60 Hz | 90 Hz | etc.
-//#define MAX_NB_OF_MSG 3 // max. number of messages per step which this robot can record // 3
+#define FQCY 60             // control update frequency. 30Hz | 60 Hz | 90 Hz | etc.
+#define MAX_NB_OF_MSG 3     // max. number of messages per step which this robot can record // 3
+#define PERCENT_MSG_SENT 50 // Percent of messages sent per tick
 
 #define SEND_MODE_ALLDIRECTION true // true: all direction at once; false: 4x one-direction
 #define MSG_MODE_FULL_HEADER true // true: full header; false: short header
@@ -207,9 +208,9 @@ void user_init(void) {
 //    pogobot_stopwatch_reset(&mydata->timer_it);
 
     // Set main loop frequency, message sending frequency, message processing frequency
-    main_loop_hz = 60;
-    max_nb_processed_msg_per_tick = 3;
-    percent_msgs_sent_per_ticks = 20;
+    main_loop_hz = FQCY;
+    max_nb_processed_msg_per_tick = MAX_NB_OF_MSG;
+    percent_msgs_sent_per_ticks = PERCENT_MSG_SENT;
     // Specify functions to send/transmit messages
     msg_rx_fn = process_message;
     msg_tx_fn = send_message;
