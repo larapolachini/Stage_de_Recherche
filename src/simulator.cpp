@@ -25,35 +25,36 @@
 void set_current_robot(Robot& robot) {
     // Store values of previous robot
     if (current_robot != nullptr) {
-        current_robot->pogobot_ticks        = pogobot_ticks;
-        current_robot->main_loop_hz         = main_loop_hz;
-        current_robot->send_msg_hz          = send_msg_hz;
-        current_robot->process_msg_hz       = process_msg_hz;
-        current_robot->msg_rx_fn            = msg_rx_fn;
-        current_robot->msg_tx_fn            = msg_tx_fn;
-        current_robot->error_codes_led_idx  = error_codes_led_idx;
-        current_robot->_global_timer        = _global_timer;
-        current_robot->timer_main_loop      = timer_main_loop;
-        current_robot->_current_time_milliseconds = _current_time_milliseconds;
+        current_robot->pogobot_ticks                 = pogobot_ticks;
+        current_robot->main_loop_hz                  = main_loop_hz;
+        current_robot->max_nb_processed_msg_per_tick = max_nb_processed_msg_per_tick;
+        current_robot->msg_rx_fn                     = msg_rx_fn;
+        current_robot->msg_tx_fn                     = msg_tx_fn;
+        current_robot->error_codes_led_idx           = error_codes_led_idx;
+        current_robot->_global_timer                 = _global_timer;
+        current_robot->timer_main_loop               = timer_main_loop;
+        current_robot->_current_time_milliseconds    = _current_time_milliseconds;
+        current_robot->percent_msgs_sent_per_ticks   = percent_msgs_sent_per_ticks;
+        current_robot->nb_msgs_sent                  = nb_msgs_sent;
+        current_robot->nb_msgs_recv                  = nb_msgs_recv;
     }
 
     current_robot = &robot;
     mydata = robot.data;
 
     // Update robot values
-    pogobot_ticks       = robot.pogobot_ticks;
-    main_loop_hz        = robot.main_loop_hz;
-    send_msg_hz         = robot.send_msg_hz;
-    process_msg_hz      = robot.process_msg_hz;
-    msg_rx_fn           = robot.msg_rx_fn;
-    msg_tx_fn           = robot.msg_tx_fn;
-    error_codes_led_idx = robot.error_codes_led_idx;
-    _global_timer       = robot._global_timer;
-    timer_main_loop     = robot.timer_main_loop;
-    _current_time_milliseconds = robot._current_time_milliseconds;
-
-    // Update robot clock and handle time-keeping
-    // TODO
+    pogobot_ticks                 = robot.pogobot_ticks;
+    main_loop_hz                  = robot.main_loop_hz;
+    max_nb_processed_msg_per_tick = robot.max_nb_processed_msg_per_tick;
+    msg_rx_fn                     = robot.msg_rx_fn;
+    msg_tx_fn                     = robot.msg_tx_fn;
+    error_codes_led_idx           = robot.error_codes_led_idx;
+    _global_timer                 = robot._global_timer;
+    timer_main_loop               = robot.timer_main_loop;
+    _current_time_milliseconds    = robot._current_time_milliseconds;
+    percent_msgs_sent_per_ticks   = robot.percent_msgs_sent_per_ticks;
+    nb_msgs_sent                  = robot.nb_msgs_sent;
+    nb_msgs_recv                  = robot.nb_msgs_recv;
 }
 
 
@@ -223,6 +224,8 @@ void Simulation::init_config() {
     photo_start_at = std::stof(config.get("photo_start_at", "1.0"));
     photo_start_duration = std::stof(config.get("photo_start_duration", "1.0"));
     comm_radius = std::stof(config.get("commRadius", "90"));
+
+    std::srand(std::time(nullptr));
 }
 
 
@@ -270,8 +273,6 @@ void Simulation::create_robots() {
     glogger->info("Creating {} robots", nb_robots);
     if (!nb_robots)
         throw std::runtime_error("Number of robots is 0 (nBot=0 in configuration).");
-
-    std::srand(std::time(nullptr));
 
     try {
         auto const points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * robot_radius, nb_robots);
@@ -444,8 +445,7 @@ void Simulation::main_loop() {
                 time_step_duration = main_loop_period;
             }
         }
-        // XXX
-        glogger->debug("Global: t={}  Robot0: t={}", t, robots[0]._current_time_milliseconds);
+        //glogger->debug("Global: t={}  Robot0: t={}", t, robots[0]._current_time_milliseconds);
 
         // Step the Box2D world
         b2World_Step(worldId, time_step_duration, sub_step_count);
@@ -473,9 +473,6 @@ void Simulation::main_loop() {
 
         // Update global time
         t += time_step_duration;
-
-        // XXX
-        //glogger->info("Global time: {}", t);
     }
 }
 

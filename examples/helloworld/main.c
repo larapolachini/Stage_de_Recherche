@@ -22,8 +22,7 @@ void user_init(void) {
 
     // Set main loop frequency, message sending frequency, message processing frequency
     main_loop_hz = 60;
-    send_msg_hz = 30;
-    process_msg_hz = 60;
+    max_nb_processed_msg_per_tick = 3;
     // Specify functions to send/transmit messages
     msg_rx_fn = NULL;
     msg_tx_fn = NULL;

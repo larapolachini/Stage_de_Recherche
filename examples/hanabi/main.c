@@ -92,15 +92,12 @@ rgb_color const mint_green =  {.name = "mint_green", .r = 6,  .g = 25, .b = 6};
 rgb_color const white =       {.name = "white",      .r = 25, .g = 25, .b = 25};
 
 void process_message(message_t* mr);
-void send_message(void);
+bool send_message(void);
 
 
 // ********************************************************************************
 // * main
 // ********************************************************************************
-
-// XXX remove and put into lib
-uint16_t const den_p_send_per_step = 5; // probability to send a message per step (1/den_p_send_per_step)
 
 rgb_color const rgb_colors[] = {red, green, blue, magenta, yellow, cyan, orange, purple, light_pink, mint_green}; // 10 hanabi colors
 uint8_t const nb_rgb_colors = sizeof(rgb_colors) / sizeof(rgb_colors[0]);
@@ -113,18 +110,9 @@ typedef struct {
     // XXX remove and put into lib
     bool started;
 
-    // time_reference_t timeout_age_watch; // timer for age timeout
-    // uint16_t timeout_age_s; // waiting time in seconds for an age change before setting the age to 0
-    // uint32_t seconds; // counter for age timeout
-
     uint16_t my_pogobot_id;
     uint16_t age; // number of times this robot has changed color from the start of the algorithm, from 0 to max 65535 (16 bits unsigned)
     //uint8_t led1_status;
-
-    // XXX remove and put into lib
-    uint16_t nb_msg_sent_all; // total number of unique messages sent
-    // XXX remove and put into lib
-    uint16_t counter_rcvd_msgs;
 
     uint8_t rgb_colors_index; // index of the rgb_colors array
 } USERDATA;
@@ -158,8 +146,6 @@ void process_message(message_t* mr) {
         if (DEBUG_LEVEL == 1)
             printf("[I'm Pogobot %d] [HANABI] NOT Changing color, not incrementing age %d  ç____ç\n", mydata->my_pogobot_id, mydata->age);
     }
-
-    mydata->counter_rcvd_msgs++;
 }
 
 
@@ -168,17 +154,12 @@ void process_message(message_t* mr) {
 // * Each robot transmits 2 information to the neighbors: a color and an iterator.
 // * The iterator (age) corresponds to how many times the sender has changed color.
 // ********************************************************************************
-void send_message(void) {
+bool send_message(void) {
     uint16_t msg_id;
     uint8_t data[MSG_SIZE]; // message to send, containing uint8_t data
     message msg_from_neighbor;
 
-    // XXX remove and put into lib
-    if (rand() % den_p_send_per_step > 1) {
-        return;
-    }
-
-    msg_id = mydata->nb_msg_sent_all;
+    msg_id = nb_msgs_sent;
 
     // Composing a new message to send
     msg_from_neighbor.msg_values.sender_id = mydata->my_pogobot_id;
@@ -208,8 +189,7 @@ void send_message(void) {
     if (DEBUG_LEVEL == 3)
         printf("[I'm Pogobot %d] [SEND] Sent message msg_id=%d.\n", mydata->my_pogobot_id, msg_id);
 
-    // XXX remove and put into lib
-    mydata->nb_msg_sent_all = mydata->nb_msg_sent_all + 1;
+    return true;
 }
 
 
@@ -228,8 +208,8 @@ void user_init(void) {
 
     // Set main loop frequency, message sending frequency, message processing frequency
     main_loop_hz = 60;
-    send_msg_hz = 30;
-    process_msg_hz = 180;
+    max_nb_processed_msg_per_tick = 3;
+    percent_msgs_sent_per_ticks = 20;
     // Specify functions to send/transmit messages
     msg_rx_fn = process_message;
     msg_tx_fn = send_message;

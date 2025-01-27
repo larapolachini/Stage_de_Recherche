@@ -1056,14 +1056,17 @@ public:
 
     uint32_t pogobot_ticks = 0;
     uint8_t main_loop_hz = 60;
-    uint8_t send_msg_hz = 60;
-    uint8_t process_msg_hz = 60;
+    uint8_t max_nb_processed_msg_per_tick = 3;
     void (*msg_rx_fn)(message_t*) = nullptr;
-    void (*msg_tx_fn)(void) = nullptr;
+    bool (*msg_tx_fn)(void) = nullptr;
     int8_t error_codes_led_idx = 3;
     time_reference_t _global_timer;
     time_reference_t timer_main_loop;
     uint32_t _current_time_milliseconds = 0;
+
+    uint8_t percent_msgs_sent_per_ticks = 20;
+    uint32_t nb_msgs_sent = 0;
+    uint32_t nb_msgs_recv = 0;
 
     uint16_t id;
     void* data = nullptr;

@@ -213,8 +213,8 @@ void setup(void) {
 
     // Set main loop frequency, message sending frequency, message processing frequency
     main_loop_hz = 60;
-    send_msg_hz = 60;
-    process_msg_hz = 60;
+    max_nb_processed_msg_per_tick = 5;
+    percent_msgs_sent_per_ticks = 20;
     // Specify functions to send/transmit messages
     msg_rx_fn = process_message;
     msg_tx_fn = send_message;
@@ -985,17 +985,17 @@ void iteration(void) {
     }
 }
 
-void send_message(void) {
+bool send_message(void) {
     if(!mydata->enable_message_sending)
         // Not allowed to send messages!
-        return;
+        return false;
     // Random delay
     //msleep(rand() % max_delay_send_message);
 
     // Probability of sending the message
     int const c = rand() % 100;
     if(c >= PROB_MSG_SENT) {
-        return;
+        return false;
     }
 
     // Send message
@@ -1011,6 +1011,7 @@ void send_message(void) {
             pogobot_infrared_sendLongMessage_omniGen( (uint8_t *)(&mydata->data_to_send), sizeof(mydata->data_to_send) );
             break;
     }
+    return true;
 }
 
 

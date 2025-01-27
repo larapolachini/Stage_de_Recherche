@@ -1,6 +1,8 @@
 #ifndef POGOSIM_H
 #define POGOSIM_H
 
+#include <stdbool.h>
+
 #ifdef REAL_ROBOT
 #include "pogobot.h"
 #else
@@ -33,14 +35,17 @@ extern "C" {
 extern uint32_t pogobot_ticks;
 
 extern uint8_t main_loop_hz;
-extern uint8_t send_msg_hz;
-extern uint8_t process_msg_hz;
+extern uint8_t max_nb_processed_msg_per_tick;
 extern void (*msg_rx_fn)(message_t *);
-extern void (*msg_tx_fn)(void);
+extern bool (*msg_tx_fn)(void);
 extern int8_t error_codes_led_idx;
 extern time_reference_t _global_timer;
 extern time_reference_t timer_main_loop;
 extern uint32_t _current_time_milliseconds;
+
+extern uint8_t percent_msgs_sent_per_ticks;
+extern uint32_t nb_msgs_sent;
+extern uint32_t nb_msgs_recv;
 
 typedef enum {
     ERROR_TIME_OVERFLOW,

@@ -238,7 +238,7 @@ void end_iteration(void);
 
 void purge_old_neighbors(void);
 void clear_all_neighbors(void);
-void send_message(void);
+bool send_message(void);
 //uint16_t get_message_neighbor_id(void);
 //uint16_t get_message_neighbor_id(uint16_t const sender_id);
 void process_message(message_t* mr);

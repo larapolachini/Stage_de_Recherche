@@ -11,6 +11,21 @@ typedef struct {
 REGISTER_USERDATA(USERDATA)
 
 
+bool send_message(void) {
+    if (pogobot_helper_getid() == 0 && pogobot_ticks % 1000 == 0) {
+        printf("send_message. Robot ID: %d   Current time: %llu   pogobot_ticks: %lu\n",
+            pogobot_helper_getid(), (long unsigned int) current_time_milliseconds(), (long unsigned int) pogobot_ticks);
+    }
+    return true;
+}
+
+void process_message(message_t* mr) {
+    if (pogobot_helper_getid() == 0 && pogobot_ticks % 1000 == 0) {
+        printf("process_message. Robot ID: %d   Current time: %llu   pogobot_ticks: %lu\n",
+            pogobot_helper_getid(), (long unsigned int) current_time_milliseconds(), (long unsigned int) pogobot_ticks);
+    }
+}
+
 
 void user_init(void) {
 #ifndef SIMULATOR
@@ -22,11 +37,10 @@ void user_init(void) {
 
     // Set main loop frequency, message sending frequency, message processing frequency
     main_loop_hz = 60;
-    send_msg_hz = 10;
-    process_msg_hz = 10;
+    max_nb_processed_msg_per_tick = 3;
     // Specify functions to send/transmit messages
-    msg_rx_fn = NULL;
-    msg_tx_fn = NULL;
+    msg_rx_fn = process_message;
+    msg_tx_fn = send_message;
 
     // Set led index to show error codes
     error_codes_led_idx = 3; // Default value, negative values to disable
@@ -34,10 +48,10 @@ void user_init(void) {
 
 
 void user_step(void) {
-    if (pogobot_ticks % 100 == 0 && pogobot_helper_getid() == 0) {
+    if (pogobot_ticks % 1000 == 0 && pogobot_helper_getid() == 0) {
         //printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %lu   pogobot_ticks: %d\n", pogobot_helper_getid(), pogobot_stopwatch_get_elapsed_microseconds(&mydata->timer_it), pogobot_ticks);
         printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %llu   pogobot_ticks: %lu\n",
-                pogobot_helper_getid(), (long long unsigned int) current_time_milliseconds(), (long unsigned int) pogobot_ticks);
+            pogobot_helper_getid(), (long unsigned int) current_time_milliseconds(), (long unsigned int) pogobot_ticks);
     }
 
     if ((uint32_t)(current_time_milliseconds() / 10000) % 2 == 0) {
