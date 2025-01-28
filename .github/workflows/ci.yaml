@@ -1,0 +1,61 @@
+name: C++ CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Install dependencies (including GCC)
+      - name: Install dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential cmake git libboost-system-dev libsdl2-dev libsdl2-image-dev libsdl2-gfx-dev libsdl2-ttf-dev libyaml-cpp-dev libspdlog-dev wget unzip ca-certificates
+          git clone https://github.com/erincatto/box2d.git
+          cd box2d
+          git checkout 28adacf82377d4113f2ed00586141463244b9d10       # This commit compiles fine
+          mkdir build
+          cd build
+          cmake -DBOX2D_BUILD_DOCS=OFF -DGLFW_BUILD_WAYLAND=OFF    -DCMAKE_INSTALL_PREFIX=/usr  ..
+          cmake --build .
+          sudo make install
+          cd ../..
+
+      # Step 3: Build the project
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make -j$(nproc)
+          sudo make install
+
+#      # Step 4: Run tests
+#      - name: Run tests
+#        run: |
+#          cd build
+#          ctest --output-on-failure
+#
+#      # Step 5: Static code analysis with cppcheck (optional)
+#      - name: Static analysis with cppcheck
+#        run: |
+#          cppcheck --enable=all --inconclusive --std=c++17 --quiet --suppress=missingIncludeSystem .
+#
+#      # Step 6: Upload build artifacts (optional)
+#      - name: Upload build artifacts
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: build-output
+#          path: build/
