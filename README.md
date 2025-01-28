@@ -5,7 +5,7 @@ Pogosim is coded in C++20 and C17, using SDL2 and Box2D 3.0.
 
 ## Overview
 Here are the simulated runs of several examples (C code found [here](examples)).
-![Hanabi with 300 moving robots in a disk](.description/hanabi_300_disk_movingSpirals.gif)
+![Hanabi with 300 robots in a star-shaped arena](.description/hanabi_300_star.gif)
 ![SSR with 25 robots in a disk](.description/ssr_disk_25_3min.gif)
 ![SSR with 25 robots in an annulus](.description/ssr_annulus_25_3min.gif)
 
