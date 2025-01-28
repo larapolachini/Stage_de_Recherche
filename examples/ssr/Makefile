@@ -16,9 +16,16 @@ POGO_SDK_INCS=$(POGO_SDK)/includes
 POGO_SDK_LIBS=$(POGO_SDK)/libs
 
 POGO_VAR=$(POGO_SDK_TOOLS)
-
+# Check if "bin" is one of the goals, or if "make" or "make all" is called
+ifneq ($(filter bin all default,$(MAKECMDGOALS)),)
 include $(POGO_VAR)/variables.mak
 include $(POGO_SDK_TOOLS)/common.mak
+endif
+# Include files when MAKECMDGOALS is empty (e.g., `make` with no arguments)
+ifeq ($(MAKECMDGOALS),)
+include $(POGO_VAR)/variables.mak
+include $(POGO_SDK_TOOLS)/common.mak
+endif
 
 TTY?=/dev/ttyUSB0
 

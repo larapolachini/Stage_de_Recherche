@@ -90,7 +90,7 @@ void Simulation::create_membranes() {
 
 
 void Simulation::create_arena() {
-    std::string const csv_file = config.get("arena_file", "test.csv");
+    std::string const csv_file = resolve_path(config.get("arena_file", "test.csv"));
 
     float const friction = 0.05f;
     float const restitution = 1.8f; // Bounciness
@@ -270,7 +270,8 @@ void Simulation::init_SDL() {
 
     // Init fonts
     font = FC_CreateFont();
-    FC_LoadFont(font, renderer, "fonts/helvetica.ttf", 20, FC_MakeColor(0,0,0,255), TTF_STYLE_NORMAL);  
+    //FC_LoadFont(font, renderer, "fonts/helvetica.ttf", 20, FC_MakeColor(0,0,0,255), TTF_STYLE_NORMAL);  
+    FC_LoadFont(font, renderer, resolve_path("fonts/helvetica.ttf").c_str(), 20, FC_MakeColor(0,0,0,255), TTF_STYLE_NORMAL);  
 }
 
 

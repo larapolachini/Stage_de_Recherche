@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(pogosim VERSION 1.0.0 LANGUAGES CXX C)
+include(GNUInstallDirs)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules" ${CMAKE_MODULE_PATH})
 
@@ -41,6 +42,11 @@ target_include_directories(${PROJECT_NAME}
         ${spdlog_INCLUDE_DIRS}
 )
 
+target_compile_definitions(${PROJECT_NAME}
+    PUBLIC
+        DATA_DIR="${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}"
+)
+
 # Link libraries
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
@@ -60,7 +66,6 @@ target_compile_options(${PROJECT_NAME}
 )
 
 # Install rules
-include(GNUInstallDirs)
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # Shared libraries (.so, .dylib)
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # Static libraries (.a)
@@ -73,6 +78,17 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/pogosim/  # Path to the header files
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"  # Only install .h and .hpp files
 )
 
+# Install fonts directory
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/fonts/  # Source directory
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/fonts  # Install location
+    FILES_MATCHING PATTERN "*"  # Install all files
+)
+
+# Install arenas directory
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/arenas/  # Source directory
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/arenas  # Install location
+    FILES_MATCHING PATTERN "*.csv"  # Install all files
+)
 
 # Generate and install CMake config files
 include(CMakePackageConfigHelpers)

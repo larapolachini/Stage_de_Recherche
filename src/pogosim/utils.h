@@ -21,6 +21,9 @@ void ensure_directories_exist(const std::string& filename);
 void delete_files_with_extension(const std::string& path, const std::string& extension, bool recursive = false);
 bool string_to_bool( std::string const& str);
 
+std::string resolve_path(const std::string& inputPath);
+
+
 #endif // UTILS_H
 
 // MODELINE "{{{1

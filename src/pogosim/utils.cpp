@@ -81,6 +81,34 @@ void delete_files_with_extension(const std::string& path, const std::string& ext
     }
 }
 
+
+std::string resolve_path(const std::string& inputPath) {
+    namespace fs = std::filesystem;
+
+    // Convert the input path to a filesystem path
+    fs::path path(inputPath);
+
+    // 1. Check if the file is accessible from the current directory
+    if (fs::exists(path) && fs::is_regular_file(path)) {
+        return fs::absolute(path).string();
+    }
+
+    // 2. Check if the file is accessible relative to DATA_DIR
+#ifdef DATA_DIR
+    fs::path dataDirPath(DATA_DIR);
+    fs::path relativeToDataDir = dataDirPath / path;
+
+    glogger->debug("DATA_DIR: {}", DATA_DIR);
+    glogger->debug("Trying to find: {}", relativeToDataDir.string());
+    if (fs::exists(relativeToDataDir) && fs::is_regular_file(relativeToDataDir)) {
+        return fs::absolute(relativeToDataDir).string();
+    }
+#endif
+
+    // If the file is not found in either location, throw an exception
+    throw std::runtime_error("Impossible to load file '" + inputPath + "'.");
+}
+
 // MODELINE "{{{1
 // vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
 // vim:foldmethod=marker
