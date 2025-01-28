@@ -11,6 +11,8 @@ See SDL_FontCache.h for license info.
 #include <stdlib.h>
 #include <string.h>
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 // Visual C does not support static inline
 #ifndef static_inline
 	#ifdef _MSC_VER
