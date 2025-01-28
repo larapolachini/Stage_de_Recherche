@@ -1,0 +1,70 @@
+Bootstrap: docker
+From: ubuntu:24.04
+
+
+%labels
+    Author leo.cazenille@gmail.com
+    Version 0.1.0
+
+%environment
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    export DEBIAN_FRONTEND=noninteractive
+    export CMAKE_MODULE_PATH="/opt/pogosim/cmake/modules"
+    export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+    export PATH="/usr/local/bin:$PATH"
+
+%files
+    # Copy project source files to the container
+    ./src /opt/pogosim/src
+    ./cmake /opt/pogosim/cmake
+    ./fonts /opt/pogosim/fonts
+    ./arenas /opt/pogosim/arenas
+
+    # Copy CMakeLists.txt to the container
+    ./CMakeLists.txt /opt/pogosim/CMakeLists.txt
+
+
+%post
+    echo 'Acquire::Retries "10";' > /etc/apt/apt.conf.d/80-retries
+    # Update and install required packages
+    apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        git \
+        libboost-system-dev \
+        libsdl2-dev \
+        libsdl2-image-dev \
+        libsdl2-gfx-dev \
+        libsdl2-ttf-dev \
+        libyaml-cpp-dev \
+        libspdlog-dev \
+        wget \
+        unzip \
+        ca-certificates \
+        && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+    # Install Box2D 3.x
+    git clone https://github.com/erincatto/box2d.git
+    cd box2d
+    git checkout 28adacf82377d4113f2ed00586141463244b9d10       # This commit compiles fine
+    mkdir build
+    cd build
+    cmake -DBOX2D_BUILD_DOCS=OFF -DGLFW_BUILD_WAYLAND=OFF    -DCMAKE_INSTALL_PREFIX=/usr  ..
+    cmake --build .
+    make install
+    cd ../..
+
+    # Create a working directory
+    mkdir -p /opt/pogosim
+    cd /opt/pogosim
+
+    mkdir -p build
+    cd build
+    cmake ..
+    make -j 20
+    make install
+
+%runscript
+    exec ./launch_random.sh
+
