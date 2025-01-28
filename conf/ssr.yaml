@@ -2,8 +2,8 @@
 
 window_width: 670
 window_height: 670
-#arena_file: arenas/annulus.csv
-arena_file: arenas/disk.csv
+arena_file: arenas/annulus.csv
+#arena_file: arenas/disk.csv
 delete_old_files: true
 
 seed: 0

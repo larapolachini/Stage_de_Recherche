@@ -15,7 +15,7 @@
  *    If the receiver detects that the (neighbor) sender age is higher, then it copies its age and color.
  *  - A robot changes autonomously its state with a probability of 1/den_p_change_led_color.
  *  - A stagnation prevention mechanism tests if the age stays the same in a period of timeout_age_s seconds. This could happen
- *    if the maximum age value is exceeded, or if a robot doesn't receive messages from aged neighbors and doesn't change its state autonoumosly.
+ *    if the maximum age value is exceeded, or if a robot doesn't receive messages from aged neighbors and doesn't change its state autonomously.
  *
  * Leo Cazenille 2025-01.
  *  - adapted the hanabi code to be used in the pogosim simulator.
@@ -35,7 +35,7 @@
 #define INFRARED_POWER 2 // 1,2,3
 
 #define FQCY 60             // control update frequency. 30Hz | 60 Hz | 90 Hz | etc.
-#define MAX_NB_OF_MSG 3     // max. number of messages per step which this robot can record // 3
+#define MAX_NB_OF_MSG 3     // max. number of messages per step which this robot can process
 #define PERCENT_MSG_SENT 50 // Percent of messages sent per tick
 
 #define SEND_MODE_ALLDIRECTION true // true: all direction at once; false: 4x one-direction
@@ -68,6 +68,9 @@ typedef union message_template {
     RawMessage msg_values;
 } message;
 
+void process_message(message_t* mr);
+bool send_message(void);
+
 
 // ********************************************************************************
 // * Initialization: Pogobot led colors structure
@@ -92,8 +95,6 @@ rgb_color const light_pink =  {.name = "light_pink", .r = 12, .g = 3,  .b = 12};
 rgb_color const mint_green =  {.name = "mint_green", .r = 6,  .g = 25, .b = 6};
 rgb_color const white =       {.name = "white",      .r = 25, .g = 25, .b = 25};
 
-void process_message(message_t* mr);
-bool send_message(void);
 
 
 // ********************************************************************************
@@ -105,6 +106,7 @@ uint8_t const nb_rgb_colors = sizeof(rgb_colors) / sizeof(rgb_colors[0]);
 uint16_t const den_p_change_led_color = 20000; // probability to change led color independently (1/den_p_change_led_color) (p=3000 for 15 robots; p=20000 for 72 robots)
 
 
+// Non-const global variables used by each robot. They will be accessible through the mydata pointer, declared by the macro "REGISTER_USERDATA"
 typedef struct {
     // XXX remove and put into lib
     uint64_t start_of_experiment_ms;
@@ -113,7 +115,6 @@ typedef struct {
 
     uint16_t my_pogobot_id;
     uint16_t age; // number of times this robot has changed color from the start of the algorithm, from 0 to max 65535 (16 bits unsigned)
-    //uint8_t led1_status;
 
     uint8_t rgb_colors_index; // index of the rgb_colors array
 } USERDATA;

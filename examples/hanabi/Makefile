@@ -1,4 +1,9 @@
 
+# Get the absolute path of the Makefile
+MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+
+# Extract the directory name from the path
+MAKEFILE_DIR := $(notdir $(patsubst %/,%,$(dir $(MAKEFILE_PATH))))
 
 ##### Settings for the pogobot binary #####
 BUILD_DIR=./build
@@ -31,7 +36,7 @@ SIM_CXX = g++
 SIM_CFLAGS = -Wall -MMD -MP -O2 -std=c11 -I$(POGOSIM_INCLUDE_DIR)
 SIM_CXXFLAGS = -Wall -MMD -MP -O2 -std=c++20 `pkg-config --cflags spdlog` -pthread -I$(POGOSIM_INCLUDE_DIR)
 SIM_LDFLAGS = -L$(POGOSIM_DIR)/build -Wl,--whole-archive -lpogosim -Wl,--no-whole-archive -lboost_system -lyaml-cpp `pkg-config --libs spdlog` -lSDL2 -lSDL2_gfx -lSDL2_ttf -lbox2d -lstdc++ -lfmt -lm 
-SIM_TARGET = hanabi
+SIM_TARGET = $(MAKEFILE_DIR)
 
 SIM_SRCS_CXX = $(wildcard *.cpp)
 SIM_SRCS_C = $(wildcard *.c)
