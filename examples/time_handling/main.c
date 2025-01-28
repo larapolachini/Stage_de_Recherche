@@ -1,6 +1,6 @@
 
 //#include "pogobot.h"
-#include "pogosim.h"
+#include "pogosim/pogosim.h"
 
 typedef struct {
     uint8_t data_foo[8];

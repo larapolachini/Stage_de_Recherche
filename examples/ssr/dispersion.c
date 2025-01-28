@@ -1,7 +1,7 @@
 /* TODO
  */
 
-#include "pogosim.h"
+#include "pogosim/pogosim.h"
 #include <math.h>
 #include "dispersion.h"
 #include "util.h"

@@ -55,7 +55,7 @@ typedef double fp_t;
 #define ABS(x) fabs(x)
 #define LOG(x) log(x)
 
-#include "pogosim.h"
+#include "pogosim/pogosim.h"
 
 extern fp_t const initial_s_max_val;
 

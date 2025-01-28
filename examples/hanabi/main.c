@@ -27,7 +27,7 @@
 **/
 
 //#include "pogobot.h"
-#include "pogosim.h"
+#include "pogosim/pogosim.h"
 #include "time.h"
 
 #define CODENAME "HANABI"

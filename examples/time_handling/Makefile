@@ -8,8 +8,8 @@ MAKEFILE_DIR := $(notdir $(patsubst %/,%,$(dir $(MAKEFILE_PATH))))
 ##### Settings for the pogobot binary #####
 BUILD_DIR=./build
 POGO_SDK=../../pogobot-sdk
-POGOSIM_DIR=../../
-POGOSIM_INCLUDE_DIR=../../src
+POGOSIM_INCLUDE_DIR=../../src/
+POGOSIM_SRC_DIR=../../src/pogosim/
 
 POGO_SDK_TOOLS=$(POGO_SDK)/tools
 POGO_SDK_INCS=$(POGO_SDK)/includes
@@ -22,7 +22,9 @@ include $(POGO_SDK_TOOLS)/common.mak
 
 TTY?=/dev/ttyUSB0
 
-SRCS=$(wildcard *.c) $(wildcard $(POGOSIM_INCLUDE_DIR)/*.c)
+#SRCS=$(wildcard *.c) $(wildcard $(POGOSIM_INCLUDE_DIR)/*.c)
+#SRCS := $(filter-out %/SDL*.c, $(wildcard *.c) $(wildcard $(POGOSIM_INCLUDE_DIR)/*.c))
+SRCS := $(filter-out SDL_FontCache.c, $(notdir $(wildcard *.c)) $(notdir $(wildcard $(POGOSIM_SRC_DIR)/*.c)))
 OBJECTS=$(SRCS:.c=.o)
 #OBJECTS_BUILD = $(addprefix $(BUILD_DIR)/, $(OBJECTS))
 #OBJECTS_BUILD = $(patsubst %.c,build/bin/%.o,$(SRCS))
@@ -33,9 +35,9 @@ DEP_FILES=$(patsubst %.c,build/bin/%.d,$(notdir $(SRCS)))
 ##### Compiler settings for the simulator #####
 SIM_CC = gcc
 SIM_CXX = g++
-SIM_CFLAGS = -Wall -MMD -MP -O2 -std=c11 -I$(POGOSIM_INCLUDE_DIR)
-SIM_CXXFLAGS = -Wall -MMD -MP -O2 -std=c++20 `pkg-config --cflags spdlog` -pthread -I$(POGOSIM_INCLUDE_DIR)
-SIM_LDFLAGS = -L$(POGOSIM_DIR)/build -Wl,--whole-archive -lpogosim -Wl,--no-whole-archive -lboost_system -lyaml-cpp `pkg-config --libs spdlog` -lSDL2 -lSDL2_gfx -lSDL2_ttf -lbox2d -lstdc++ -lfmt -lm 
+SIM_CFLAGS = -Wall -MMD -MP -O2 -std=c11
+SIM_CXXFLAGS = -Wall -MMD -MP -O2 -std=c++20 `pkg-config --cflags spdlog` -pthread
+SIM_LDFLAGS = -Wl,--whole-archive -lpogosim -Wl,--no-whole-archive -lboost_system -lyaml-cpp `pkg-config --libs spdlog` -lSDL2 -lSDL2_gfx -lSDL2_ttf -lbox2d -lstdc++ -lfmt -lm 
 SIM_TARGET = $(MAKEFILE_DIR)
 
 SIM_SRCS_CXX = $(wildcard *.cpp)
@@ -96,7 +98,7 @@ $(BUILD_DIR)/bin/firmware.elf: $(OBJECTS_BUILD)
 $(BUILD_DIR)/bin/%.o: %.c | $(BUILD_DIR)/bin
 	$(compile) -DREAL_ROBOT
 
-$(BUILD_DIR)/bin/%.o: $(POGOSIM_INCLUDE_DIR)/%.c | $(BUILD_DIR)/bin
+$(BUILD_DIR)/bin/%.o: $(POGOSIM_SRC_DIR)/%.c | $(BUILD_DIR)/bin
 	$(compile) -DREAL_ROBOT
 
 clean:

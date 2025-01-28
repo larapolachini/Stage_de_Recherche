@@ -62,9 +62,17 @@ target_compile_options(${PROJECT_NAME}
 # Install rules
 include(GNUInstallDirs)
 install(TARGETS ${PROJECT_NAME}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # Shared libraries (.so, .dylib)
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # Static libraries (.a)
+    #RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}  # Executables (if any)
 )
+
+# Install header files
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/pogosim/  # Path to the header files
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}  # Install location
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"  # Only install .h and .hpp files
+)
+
 
 # Generate and install CMake config files
 include(CMakePackageConfigHelpers)
@@ -85,8 +93,8 @@ install(FILES
 file(GLOB EXAMPLE_DIRS RELATIVE ${CMAKE_SOURCE_DIR}/examples ${CMAKE_SOURCE_DIR}/examples/*)
 
 # Create a custom target that will build all examples
-add_custom_target(examples ALL
-    DEPENDS ${PROJECT_NAME}
+add_custom_target(examples #ALL
+#    DEPENDS ${PROJECT_NAME}
     COMMENT "Building all examples"
 )
 
