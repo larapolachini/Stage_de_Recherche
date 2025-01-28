@@ -26,12 +26,12 @@ Then compile and install Box2D 3.0:
 ```shell
 git clone https://github.com/erincatto/box2d.git
 cd box2d
-git checkout 28adacf82377d4113f2ed00586141463244b9d10       # This commit compiles fine
+git checkout 28adacf82377d4113f2ed00586141463244b9d10
 mkdir build
 cd build
-cmake -DBOX2D_BUILD_DOCS=OFF -DGLFW_BUILD_WAYLAND=OFF    -DCMAKE_INSTALL_PREFIX=/usr  ..
+cmake -DBOX2D_BUILD_DOCS=OFF -DGLFW_BUILD_WAYLAND=OFF -DCMAKE_INSTALL_PREFIX=/usr  ..
 cmake --build .
-make install
+sudo make install
 cd ../..
 ```
 
