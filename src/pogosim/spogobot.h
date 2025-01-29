@@ -25,8 +25,6 @@
 extern "C" {
 #endif
 
-// TODO define all functions of the pogobot API
-
 
 
 /************************* POGOLIB API ************************ {{{1 */
