@@ -23,6 +23,10 @@
 	#pragma warning (disable:4127) // conditional expression is constant
 #endif
 
+#ifdef DEBUG
+#define FPNG_NO_SSE (1)
+#endif
+
 // Set FPNG_NO_SSE to 1 to completely disable SSE usage.
 #ifndef FPNG_NO_SSE
 	#define FPNG_NO_SSE (0)

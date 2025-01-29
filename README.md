@@ -10,8 +10,8 @@ Here are the simulated runs of several examples (C code found [here](examples)).
 ![SSR with 25 robots in an annulus](https://github.com/leo-cazenille/pogosim/blob/main/.description/ssr_annulus_25_3min.gif)
 
 
-## Install
-To install it on *Debian/Ubuntu* (tested: 24.04 LTS), use the following commands.
+## Install on Linux
+To install it on *Debian/Ubuntu* (tested: 24.04 LTS), use the following commands. The process will be similar on other Linux distributions.
 
 First, install the necessary packages:
 ```shell
@@ -39,13 +39,7 @@ Clone the pogosim repository, compile pogosim and install it:
 ```shell
 git clone https://github.com/leo-cazenille/pogosim.git
 cd pogosim
-mkdir build
-cd build
-cmake ..
-make -j 20
-sudo make install
-make examples
-cd ..
+./build.sh 
 ```
 
 
@@ -146,5 +140,13 @@ They can be assembled into an animated gif file using various commands, such as 
 We recommand the program [gifski](https://gif.ski/), a very high-quality GIF encoder:
 ```shell
 gifski -r 20 --output animation.gif frames/*png
+```
+
+
+## Development
+
+If you want to compile the pogosim library with debugging symbols and options (e.g. -Og -g compilation parameters), you can specify the configuration Debug to the build script:
+```shell
+./build.sh Debug
 ```
 
