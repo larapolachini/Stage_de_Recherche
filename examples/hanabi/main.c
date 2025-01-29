@@ -101,6 +101,7 @@ rgb_color const white =       {.name = "white",      .r = 25, .g = 25, .b = 25};
 // * main
 // ********************************************************************************
 
+// Const global variables (same values of all robots)
 rgb_color const rgb_colors[] = {red, green, blue, magenta, yellow, cyan, orange, purple, light_pink, mint_green}; // 10 hanabi colors
 uint8_t const nb_rgb_colors = sizeof(rgb_colors) / sizeof(rgb_colors[0]);
 uint16_t const den_p_change_led_color = 20000; // probability to change led color independently (1/den_p_change_led_color) (p=3000 for 15 robots; p=20000 for 72 robots)
@@ -225,13 +226,14 @@ void user_init(void) {
         printf("[INFO] =-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
         printf("[INFO] =-=- POGOBOT::METADATA -=-=\n");
         printf("[INFO] =-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
-        printf("[INFO] CODENAME : %s\n",CODENAME);
-        printf("[INFO] INFRARED_POWER         %d\n",INFRARED_POWER);
-        printf("[INFO] FQCY                   %d\n",FQCY);
-        //printf("[INFO] MAX_NB_OF_MSG          %d\n",MAX_NB_OF_MSG);
-        printf("[INFO] SEND_MODE_ALLDIRECTION %d\n",SEND_MODE_ALLDIRECTION);
-        printf("[INFO] MSG_MODE_FULL_HEADER   %d\n",MSG_MODE_FULL_HEADER);
-        printf("[INFO] DEBUG_LEVEL            %d\n",DEBUG_LEVEL);
+        printf("[INFO] CODENAME : %s\n", CODENAME);
+        printf("[INFO] INFRARED_POWER         %d\n", INFRARED_POWER);
+        printf("[INFO] FQCY                   %d\n", FQCY);
+        printf("[INFO] MAX_NB_OF_MSG          %d\n", MAX_NB_OF_MSG);
+        printf("[INFO] PERCENT_MSG_SENT       %d\n", PERCENT_MSG_SENT);
+        printf("[INFO] SEND_MODE_ALLDIRECTION %d\n", SEND_MODE_ALLDIRECTION);
+        printf("[INFO] MSG_MODE_FULL_HEADER   %d\n", MSG_MODE_FULL_HEADER);
+        printf("[INFO] DEBUG_LEVEL            %d\n", DEBUG_LEVEL);
         printf("[INFO] =-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
     }
 
