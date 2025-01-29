@@ -12,6 +12,7 @@
 #include "robot.h"
 #include "pogosim.h"
 #include "simulator.h"
+#include "version.h"
 
 
 /************* GLOBALS *************/ // {{{1
@@ -261,13 +262,13 @@ int16_t pogobot_battery_voltage_read( void ) {
  * ## Motors API Values
  */
 void pogobot_motor_power_set( motor_id motor, uint16_t value ) {
-    glogger->warn("Function 'pogobot_motor_power_set' is not implemented yet!");
+    glogger->debug("{} Motor {} set to speed {}", log_current_robot(), static_cast<uint8_t>(motor), value);
+    current_robot->set_motor(motor, value);
 }
 
 
 void pogobot_motor_set ( motor_id motor, uint16_t value ) {
-    glogger->debug("{} Motor {} set to speed {}", log_current_robot(), static_cast<uint8_t>(motor), value);
-    current_robot->set_motor(motor, value);
+    pogobot_motor_power_set(motor, value);
 }
 
 uint32_t pogobot_motor_dir_current_status( void ) {
@@ -319,7 +320,7 @@ int16_t pogobot_helper_getRandSeed( void ) {
 }
 
 void pogobot_helper_print_version( void ) {
-    glogger->warn("Function 'pogobot_helper_print_version' is not implemented yet!");
+    printf(" Pogolib Version : %s\n", POGOLIB_RELEASE_VERSION);
 }
 
 
@@ -329,7 +330,7 @@ void pogobot_helper_print_version( void ) {
  */
 
 void pli_timer_sleep_stopwatch_init( void ) {
-    glogger->warn("Function 'pli_timer_sleep_stopwatch_init' is not implemented yet!");
+    // Do nothing ...
 }
 
 
