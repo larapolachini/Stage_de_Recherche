@@ -1,10 +1,12 @@
 Bootstrap: docker
 From: ubuntu:24.04
 
-
 %labels
     Author leo.cazenille@gmail.com
     Version 0.1.0
+
+%arguments
+   USE_CLANG="false"
 
 %environment
     export LC_ALL=C.UTF-8
@@ -41,8 +43,17 @@ From: ubuntu:24.04
         libspdlog-dev \
         wget \
         unzip \
-        ca-certificates \
-        && apt-get clean && rm -rf /var/lib/apt/lists/*
+        ca-certificates
+
+    # Install clang if USE_CLANG is true
+    if [ {{ USE_CLANG }} = "true" ]; then
+        apt-get install -y --no-install-recommends clang
+        update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
+        update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
+    fi
+
+    # Clean apt cache
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
     # Install Box2D 3.x
     git clone https://github.com/erincatto/box2d.git
@@ -64,7 +75,4 @@ From: ubuntu:24.04
     cmake ..
     make -j 20
     make install
-
-%runscript
-    exec ./launch_random.sh
 

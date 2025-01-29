@@ -27,8 +27,6 @@ extern "C" {
 
 // TODO define all functions of the pogobot API
 
-struct Robot;
-
 
 
 /************************* POGOLIB API ************************ {{{1 */

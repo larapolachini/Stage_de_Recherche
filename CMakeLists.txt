@@ -61,8 +61,8 @@ target_link_libraries(${PROJECT_NAME}
 target_compile_options(${PROJECT_NAME}
     PRIVATE
         $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -Wunused-parameter -O3 -msse4.1 -mpclmul -march=native>
-        $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -march=native>
-        $<$<CXX_COMPILER_ID:MSVC>:/W4>
+        $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -Wunused-parameter -O3 -msse4.1 -mpclmul -march=native>
+        $<$<CXX_COMPILER_ID:MSVC>:/W4 /O2 /arch:AVX2>
 )
 
 # Install rules

@@ -1,4 +1,4 @@
-# pogosim ![Badge CI](https://github.com/leo-cazenille/pogosim/actions/workflows/ci.yaml/badge.svg)
+# Pogosim ![Badge CI](https://github.com/leo-cazenille/pogosim/actions/workflows/ci.yaml/badge.svg)
 Pogosim is a simulator for the [Pogobot robots](https://pogobot.github.io/). It aims to reproduce the C API used on the robots, so that the exact same code can be used in simulations as in robotic experiments.
 
 Pogosim is coded in C++20 and C17, using SDL2 and Box2D 3.0.
@@ -111,6 +111,11 @@ To build the image:
 ```shell
 sudo apptainer build --sandbox -F pogosim.simg pogosim-apptainer.def
 ```
+Or, if you want to use Clang instead of GCC:
+```shell
+sudo apptainer build --sandbox -F --build-arg USE_CLANG=true pogosim.simg pogosim-apptainer.def
+```
+
 
 Use the image to compile a pogosim project:
 ```shell
