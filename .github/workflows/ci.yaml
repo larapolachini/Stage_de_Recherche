@@ -68,10 +68,7 @@ jobs:
       # Step 3: Build the project
       - name: Build
         run: |
-          mkdir build
-          cd build
-          cmake ..
-          cmake --build . --config Release
+          ./build.sh Release
 
 #      # Step 4: Run tests
 #      - name: Run tests

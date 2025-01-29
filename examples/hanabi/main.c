@@ -122,7 +122,6 @@ REGISTER_USERDATA(USERDATA)
 
 
 void process_message(message_t* mr) {
-    // XXX remove and put into lib
     // Elaborate robot messages only (avoid controllers messages). NB: this condition works only with long headers
     if (MSG_MODE_FULL_HEADER && mr->header._packet_type != ir_t_user) {
         printf("[I'm Pogobot %d] [RECV] This message is discarded because it didn't come from a Pogobot\n", mydata->my_pogobot_id);
