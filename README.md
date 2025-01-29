@@ -105,6 +105,16 @@ To launch your simulation in headless mode (while still exporting png files of t
 The simulator is far faster in headless mode than in windowed mode.
 
 
+### Command line parameters of the simulator
+```shell
+Usage: ./examples/hanabi/hanabi -c CONFIG_FILE [-v] [-g] [-P]
+```
+- Parameter "-v" specifies a YAML configuration file. See "conf/test.yaml" for an example.
+- Parameter "-v" enables verbose mode (show debug messages).
+- Parameter "-g" enables headless mode: no GUI shown, but the program still export frames.
+- Parameter "-P" displays a progress bar of the simulation, depending on the parameter value "SimulationTime" defined in the configuration file.
+
+
 ## Install and use the simulator in an Apptainer/Singularity container
 
 To build the image:

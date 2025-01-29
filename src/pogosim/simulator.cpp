@@ -13,6 +13,7 @@
 #include <box2d/box2d.h>
 #include "fpng.h"
 
+#include "tqdm.hpp"
 #include "utils.h"
 #include "simulator.h"
 #include "render.h"
@@ -429,6 +430,7 @@ void Simulation::main_loop() {
     // Delete old data, if needed
     delete_old_data();
 
+    bool const progress_bar = string_to_bool(config.get("progress_bar", "false"));
     float const simulation_time = std::stof(config.get("simulationTime", "100.0"));
     glogger->info("Launching the main simulation loop.");
 
@@ -439,11 +441,18 @@ void Simulation::main_loop() {
     //sim_starting_time = std::chrono::system_clock::now();
     sim_starting_time_microseconds = get_current_time_microseconds();
 
-
-    // Main loop for all robots
+    // Prepare main loop
     running = true;
     t = 0.0f;
     last_frame_saved_t = 0.0f - time_step_duration;
+    uint32_t const max_nb_ticks = std::ceil(simulation_time / time_step_duration);
+    auto tqdmrange = tq::trange(max_nb_ticks);
+    if (progress_bar) {
+        tqdmrange.begin();
+        tqdmrange.update();
+    }
+
+    // Main loop for all robots
     while (running && t < simulation_time) {
         handle_SDL_events();
 
@@ -498,6 +507,16 @@ void Simulation::main_loop() {
 
         // Update global time
         t += time_step_duration;
+
+        if (progress_bar) {
+            tqdmrange << 1;
+            tqdmrange.update();
+        }
+    }
+
+    // End progress bar, if needed
+    if (progress_bar) {
+        tqdmrange.end();
     }
 }
 
@@ -517,9 +536,10 @@ uint16_t Simulation::get_current_light_value() const {
 }
 
 
-bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose, bool& gui) {
+bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose, bool& gui, bool& progress) {
     verbose = false;
     gui = true;
+    progress = false;
     config_file.clear();
 
     for (int i = 1; i < argc; ++i) {
@@ -536,6 +556,8 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
             gui = false;
         } else if (arg == "-v") {
             verbose = true;
+        } else if (arg == "-P") {
+            progress = true;
         } else {
             std::cerr << "Unknown argument: " << arg << std::endl;
             return false;
@@ -550,10 +572,11 @@ int main(int argc, char** argv) {
     std::string config_file;
     bool verbose = false;
     bool gui = true;
+    bool progress = false;
 
     // Parse command-line arguments
-    if (!parse_arguments(argc, argv, config_file, verbose, gui)) {
-        std::cerr << "Usage: " << argv[0] << " -c CONFIG_FILE [-v] [-g]" << std::endl;
+    if (!parse_arguments(argc, argv, config_file, verbose, gui, progress)) {
+        std::cerr << "Usage: " << argv[0] << " -c CONFIG_FILE [-v] [-g] [-P]" << std::endl;
         return 1;
     }
 
@@ -584,6 +607,7 @@ int main(int argc, char** argv) {
             glogger->debug(config.summary());
 
         config.set("GUI", gui ? "true" : "false");
+        config.set("progress_bar", progress ? "true" : "false");
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
