@@ -1,4 +1,4 @@
-name: C++ CI
+name: GitHub Actions CI build
 
 on:
   push:
