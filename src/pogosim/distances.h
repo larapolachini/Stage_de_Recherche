@@ -7,6 +7,7 @@
 
 #include "utils.h"
 #include "spogobot.h"
+#include "robot.h"
 
 float euclidean_distance(const b2Vec2& a, const b2Vec2& b);
 

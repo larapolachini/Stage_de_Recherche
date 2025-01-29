@@ -1,5 +1,6 @@
 
 #include "pogosim.h"
+#include "robot.h"
 
 #ifdef SIMULATOR // Compiling for the simulator
 void pogobot_start(void (*user_init)(void), void (*user_step)(void)) {

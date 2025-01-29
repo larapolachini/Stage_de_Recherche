@@ -3,6 +3,7 @@
 
 //#include "spogobot.h"
 #include "pogosim.h"
+#include "robot.h"
 #include "configuration.h"
 #include "SDL_FontCache.h"
 
