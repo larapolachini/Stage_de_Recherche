@@ -12,6 +12,7 @@
 #include <SDL2/SDL.h>
 #include <box2d/box2d.h>
 #include "fpng.h"
+#include "SDL2_gfxPrimitives.h"
 
 #include "tqdm.hpp"
 #include "utils.h"
@@ -383,7 +384,32 @@ void Simulation::handle_SDL_events() {
             } else if (event.wheel.y < 0) {
                 adjust_mm_to_pixels(-0.1);
             }
+
+        } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+            if (event.button.button == SDL_BUTTON_RIGHT) {
+                dragging_pos_by_mouse = true;
+                last_mouse_x = event.button.x;
+                last_mouse_y = event.button.y;
+            }
+
+        } else if (event.type == SDL_MOUSEBUTTONUP) {
+            if (event.button.button == SDL_BUTTON_RIGHT) {
+                dragging_pos_by_mouse = false;
+            }
+
+        } else if (event.type == SDL_MOUSEMOTION) {
+            if (dragging_pos_by_mouse) {
+                int dx = event.motion.x - last_mouse_x;
+                int dy = event.motion.y - last_mouse_y;
+                visualization_x += dx;
+                visualization_y += dy;
+                last_mouse_x = event.motion.x;
+                last_mouse_y = event.motion.y;
+                //printf("Visualization moved to: (%d, %d)\n", visualization_x, visualization_y);
+            }
         }
+
+
     }
 }
 
@@ -411,20 +437,12 @@ void Simulation::draw_scale_bar() {
     int x2 = x1 + bar_length;
     int y2 = y1;
 
-    // Set color (white)
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-
     // Draw the scale bar (horizontal line)
-    SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
-
-//    // Optional: Draw a thicker bar by adding multiple lines
-//    for (int i = 0; i < bar_thickness; i++) {
-//        SDL_RenderDrawLine(renderer, x1, y1 - i, x2, y2 - i);
-//    }
+    thickLineRGBA(renderer, x1, y1, x2, y2, 4, 0, 0, 0, 255);
 
     // Render the scale
     std::string formatted_scale = std::vformat("{:.2f} mm", std::make_format_args(mm_scale));
-    FC_Draw(font, renderer, x1, y1, "%s", formatted_scale.c_str()); 
+    FC_Draw(font, renderer, x1, y1 + 5, "%s", formatted_scale.c_str()); 
 }
 
 

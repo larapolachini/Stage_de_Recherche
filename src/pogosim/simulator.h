@@ -22,6 +22,7 @@ class Simulation {
     bool enable_gui = true;
     bool paused = false;
     bool running = true;
+
     float t = 0.0f;
 
     uint16_t window_width = 800;    // In pixels
@@ -51,6 +52,12 @@ class Simulation {
 
     // Fonts
     FC_Font* font;
+
+    // Dragging position using the mouse
+    bool dragging_pos_by_mouse = false;
+    int last_mouse_x;
+    int last_mouse_y;
+
 
 public:
     Simulation(Configuration& _config);
