@@ -6,8 +6,13 @@
 #include <box2d/box2d.h>
 
 float const VISUALIZATION_SCALE = 100.0f; // 1 Box2D unit = 100 pixels
-extern float cm_to_pixels;
+extern float mm_to_pixels;
+extern float visualization_x;
+extern float visualization_y;
 
+void adjust_mm_to_pixels(float delta);
+b2Vec2 visualization_position(float x, float y);
+b2Vec2 visualization_position(b2Vec2 pos);
 
 //std::vector<b2Vec2> read_poly_from_csv(const std::string& filename, float window_width, float window_height);
 std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename, float window_width, float window_height);

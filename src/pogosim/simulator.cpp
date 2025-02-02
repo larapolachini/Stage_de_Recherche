@@ -220,7 +220,8 @@ void Simulation::init_box2d() {
 void Simulation::init_config() {
     window_width = std::stoi(config.get("window_width", "800"));
     window_height = std::stoi(config.get("window_height", "800"));
-    cm_to_pixels = std::stof(config.get("cm_to_pixels", "1.0"));
+    mm_to_pixels = 0.0f;
+    adjust_mm_to_pixels(std::stof(config.get("mm_to_pixels", "1.0")));
     robot_radius = std::stof(config.get("robot_radius", "10.0"));
     enable_gui = string_to_bool(config.get("GUI", "true"));
     GUI_speed_up = std::stof(config.get("GUI_speed_up", "1.0"));
@@ -351,21 +352,36 @@ void Simulation::handle_SDL_events() {
                     pause();
                     break;
                 case SDLK_UP:
-                    // TODO
-                    std::cout << "UP arrow key pressed!" << std::endl;
+                    visualization_y += 10.0f;
                     break;
                 case SDLK_DOWN:
-                    // TODO
-                    std::cout << "DOWN arrow key pressed!" << std::endl;
+                    visualization_y -= 10.0f;
                     break;
                 case SDLK_LEFT:
-                    // TODO
-                    std::cout << "LEFT arrow key pressed!" << std::endl;
+                    visualization_x += 10.0f;
                     break;
                 case SDLK_RIGHT:
-                    // TODO
-                    std::cout << "RIGHT arrow key pressed!" << std::endl;
+                    visualization_x -= 10.0f;
                     break;
+                case SDLK_PLUS:
+                    adjust_mm_to_pixels(0.1);
+                    break;
+                case SDLK_MINUS:
+                    adjust_mm_to_pixels(-0.1);
+                    break;
+                case SDLK_0:
+                    visualization_x = 0.0f;
+                    visualization_y = 0.0f;
+                    mm_to_pixels = 0.0f;
+                    adjust_mm_to_pixels(std::stof(config.get("mm_to_pixels", "1.0")));
+                    break;
+            }
+
+        } else if (event.type == SDL_MOUSEWHEEL) {
+            if (event.wheel.y > 0) {
+                adjust_mm_to_pixels(0.1);
+            } else if (event.wheel.y < 0) {
+                adjust_mm_to_pixels(-0.1);
             }
         }
     }
@@ -375,6 +391,40 @@ void Simulation::handle_SDL_events() {
 void Simulation::compute_neighbors() {
     find_neighbors(robots, comm_radius / VISUALIZATION_SCALE);
     //glogger->debug("Robot 0 has {} neighbors.", robots[0].neighbors.size());
+}
+
+
+void Simulation::draw_scale_bar() {
+    // Get the window size
+    int window_width, window_height;
+    SDL_GetWindowSize(window, &window_width, &window_height);
+
+    float mm_scale = 100.0f;
+
+    int bar_length = (int)(mm_scale * mm_to_pixels);
+    //int bar_thickness = 3; // Thickness of the line
+    int margin = 40; // Margin from the bottom-left corner
+
+    // Define start and end points of the scale bar
+    int x1 = margin;
+    int y1 = window_height - margin;
+    int x2 = x1 + bar_length;
+    int y2 = y1;
+
+    // Set color (white)
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
+    // Draw the scale bar (horizontal line)
+    SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+
+//    // Optional: Draw a thicker bar by adding multiple lines
+//    for (int i = 0; i < bar_thickness; i++) {
+//        SDL_RenderDrawLine(renderer, x1, y1 - i, x2, y2 - i);
+//    }
+
+    // Render the scale
+    std::string formatted_scale = std::vformat("{:.2f} mm", std::make_format_args(mm_scale));
+    FC_Draw(font, renderer, x1, y1, "%s", formatted_scale.c_str()); 
 }
 
 
@@ -402,6 +452,9 @@ void Simulation::render_all() {
     // Render the current time
     std::string formatted_time = std::vformat("{:.4f}s", std::make_format_args(t));
     FC_Draw(font, renderer, windowWidth - 120, 10, "t=%s", formatted_time.c_str()); 
+
+    // Render the scale bar
+    draw_scale_bar();
 }
 
 void Simulation::export_frames() {

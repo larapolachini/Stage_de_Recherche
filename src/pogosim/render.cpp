@@ -11,8 +11,29 @@
 #include "fpng.h"
 
 
-float cm_to_pixels = 1.0f;
+float mm_to_pixels = 1.0f;
+float visualization_x = 0.0f;
+float visualization_y = 0.0f;
 
+
+void adjust_mm_to_pixels(float delta) {
+    mm_to_pixels += delta;
+    if (mm_to_pixels <= 0.50) {
+        mm_to_pixels = 0.50;
+    } else if (mm_to_pixels >= 10.0) {
+        mm_to_pixels = 10.0;
+    }
+}
+
+b2Vec2 visualization_position(float x, float y) {
+    b2Vec2 res = {.x = (x + visualization_x) * mm_to_pixels, .y = (y + visualization_y) * mm_to_pixels};
+    return res;
+}
+
+b2Vec2 visualization_position(b2Vec2 pos) {
+    b2Vec2 res = {.x = (pos.x + visualization_x) * mm_to_pixels, .y = (pos.y + visualization_y) * mm_to_pixels};
+    return res;
+}
 
 std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename, float window_width, float window_height) {
     std::vector<std::vector<b2Vec2>> polygons;
@@ -316,19 +337,23 @@ void draw_polygon(SDL_Renderer* renderer, const std::vector<b2Vec2>& polygon) {
 
     // Draw lines between consecutive points
     for (size_t i = 0; i < polygon.size() - 1; ++i) {
+        auto const orig_pos = visualization_position(polygon[i].x, polygon[i].y);
+        auto const dest_pos = visualization_position(polygon[i+1].x, polygon[i+1].y);
         SDL_RenderDrawLine(renderer,
-                           static_cast<int>(polygon[i].x * cm_to_pixels),
-                           static_cast<int>(polygon[i].y * cm_to_pixels),
-                           static_cast<int>(polygon[i + 1].x * cm_to_pixels),
-                           static_cast<int>(polygon[i + 1].y * cm_to_pixels));
+                           static_cast<int>(orig_pos.x),
+                           static_cast<int>(orig_pos.y),
+                           static_cast<int>(dest_pos.x),
+                           static_cast<int>(dest_pos.y));
     }
 
     // Connect the last point to the first to close the polygon
+    auto const back_pos  = visualization_position(polygon.back().x, polygon.back().y);
+    auto const front_pos = visualization_position(polygon.front().x, polygon.front().y);
     SDL_RenderDrawLine(renderer,
-                       static_cast<int>(polygon.back().x * cm_to_pixels),
-                       static_cast<int>(polygon.back().y * cm_to_pixels),
-                       static_cast<int>(polygon.front().x * cm_to_pixels),
-                       static_cast<int>(polygon.front().y * cm_to_pixels));
+                       static_cast<int>(back_pos.x),
+                       static_cast<int>(back_pos.y),
+                       static_cast<int>(front_pos.x),
+                       static_cast<int>(front_pos.y));
 }
 
 

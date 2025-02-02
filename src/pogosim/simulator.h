@@ -29,10 +29,10 @@ class Simulation {
     uint16_t sub_step_count = 4;
     double GUI_speed_up = 1.0;
 
-    float robot_radius = 10.0;      // In cm
-    float comm_radius = 90.0;       // In cm
+    float robot_radius = 10.0;      // In mm
+    float comm_radius = 90.0;       // In mm
 
-    float const wall_offset = 30.0f;    // In cm
+    float const wall_offset = 30.0f;    // In mm
     float const minX = wall_offset + robot_radius*2;
     float const maxX = window_width - wall_offset - robot_radius*2;
     float const minY = wall_offset + robot_radius*2;
@@ -66,6 +66,7 @@ public:
     void main_loop();
     void handle_SDL_events();
     void render_all();
+    void draw_scale_bar();
     void export_frames();
     void delete_old_data();
     void compute_neighbors();

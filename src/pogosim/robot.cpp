@@ -88,7 +88,8 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
     // Draw circle representing the robot's body
 //    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Gray color for robot body
 //    SDL_RenderDrawCircle(renderer, static_cast<int>(screenX), static_cast<int>(screenY), radius);
-    circleRGBA(renderer, screenX * cm_to_pixels, screenY * cm_to_pixels, radius, 0, 0, 0, 255);
+    auto const circle_pos = visualization_position(screenX, screenY);
+    circleRGBA(renderer, circle_pos.x, circle_pos.y, radius * mm_to_pixels, 0, 0, 0, 255);
 
     // Get the robot's orientation as a rotation (cosine/sine pair)
     b2Rot rotation = b2Body_GetRotation(bodyId);
@@ -103,7 +104,8 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
 //        SDL_RenderDrawLine(renderer, screenX + offset, screenY, orientationX + offset, orientationY);
 //        SDL_RenderDrawLine(renderer, screenX, screenY + offset, orientationX, orientationY + offset);
 //    }
-    thickLineRGBA(renderer, screenX * cm_to_pixels, screenY * cm_to_pixels, orientationX * cm_to_pixels, orientationY * cm_to_pixels, 4, 0, 0, 255, 150);
+    auto const orientation_pos = visualization_position(orientationX, orientationY);
+    thickLineRGBA(renderer, circle_pos.x, circle_pos.y, orientation_pos.x, orientation_pos.y, 4, 0, 0, 255, 150);
 
     // Define relative positions for LEDs around the robot based on orientation
     std::vector<b2Vec2> ledOffsets = {
@@ -142,12 +144,13 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
         float ledScreenY = screenY + rotatedLedOffsets[i].y * 2.0;
 
         // Draw LED as a small circle
+        auto const led_pos = visualization_position(ledScreenX, ledScreenY);
         if (i == 0) {
             //SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius - 2);
-            filledCircleRGBA(renderer, ledScreenX * cm_to_pixels, ledScreenY * cm_to_pixels, (radius - 2) * cm_to_pixels, r, g, b, 255);
+            filledCircleRGBA(renderer, led_pos.x, led_pos.y, (radius - 2) * mm_to_pixels, r, g, b, 255);
         } else {
             //SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius / 2.5);
-            filledCircleRGBA(renderer, ledScreenX * cm_to_pixels, ledScreenY * cm_to_pixels, (radius / 2.5) * cm_to_pixels, r, g, b, 255);
+            filledCircleRGBA(renderer, led_pos.x, led_pos.y, (radius / 2.5) * mm_to_pixels, r, g, b, 255);
         }
     }
 }
