@@ -1,7 +1,7 @@
 ---
 
 window_width: 800
-window_height: 800
+window_height: 600
 arena_file: arenas/disk.csv
 delete_old_files: true
 
