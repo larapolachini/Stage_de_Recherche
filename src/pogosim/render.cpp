@@ -18,8 +18,8 @@ float visualization_y = 0.0f;
 
 void adjust_mm_to_pixels(float delta) {
     mm_to_pixels += delta;
-    if (mm_to_pixels <= 0.50) {
-        mm_to_pixels = 0.50;
+    if (mm_to_pixels <= 0.10) {
+        mm_to_pixels = 0.10;
     } else if (mm_to_pixels >= 10.0) {
         mm_to_pixels = 10.0;
     }
@@ -35,7 +35,7 @@ b2Vec2 visualization_position(b2Vec2 pos) {
     return res;
 }
 
-std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename, float window_width, float window_height) {
+std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename, float tot_width, float tot_height) {
     std::vector<std::vector<b2Vec2>> polygons;
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -44,8 +44,10 @@ std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename,
         //return polygons;
     }
 
-    float const width = (window_width - 2 * 30);  // Adjusted width
-    float const height = (window_height - 2 * 30);  // Adjusted height
+    //float const width = (tot_width - 2 * 30);    // Adjusted width
+    //float const height = (tot_height - 2 * 30);  // Adjusted height
+    float const width = (tot_width);
+    float const height = (tot_height);
 
     std::vector<b2Vec2> currentPolygon;
     std::string line;

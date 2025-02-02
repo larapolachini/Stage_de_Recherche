@@ -100,7 +100,7 @@ void Simulation::create_arena() {
              // Careful! Values higher than 1.0 / VISUALIZATION_SCALE results in robots outside arena
 
     // Read multiple polygons from the CSV file
-    arena_polygons = read_poly_from_csv(csv_file, window_width, window_height);
+    arena_polygons = read_poly_from_csv(csv_file, arena_width, arena_height);
     if (arena_polygons.empty()) {
         glogger->error("Error: No polygons found in the arena file");
         throw std::runtime_error("No polygons found in the arena file or unable to open arena file");
@@ -155,6 +155,14 @@ void Simulation::create_arena() {
     }
 
     glogger->info("Arena walls created from CSV file: {}", csv_file);
+
+    // Adjust mm_to_pixels to show the entire arena, by default
+    float const ratio_width  = window_width  / arena_width;
+    float const ratio_height = window_height / arena_height;
+    float const ratio = std::min(ratio_width, ratio_height);
+    mm_to_pixels = 0.0f;
+    adjust_mm_to_pixels(ratio);
+    config.set("mm_to_pixels", std::to_string(mm_to_pixels));
 }
 
 
@@ -221,15 +229,20 @@ void Simulation::init_box2d() {
 void Simulation::init_config() {
     window_width = std::stoi(config.get("window_width", "800"));
     window_height = std::stoi(config.get("window_height", "800"));
+
+    arena_width = std::stof(config.get("arena_width", "1000.0"));
+    arena_height = std::stof(config.get("arena_height", "1000.0"));
+
     mm_to_pixels = 0.0f;
     adjust_mm_to_pixels(std::stof(config.get("mm_to_pixels", "1.0")));
     robot_radius = std::stof(config.get("robot_radius", "10.0"));
+    comm_radius = std::stof(config.get("commRadius", "90"));
+
     enable_gui = string_to_bool(config.get("GUI", "true"));
     GUI_speed_up = std::stof(config.get("GUI_speed_up", "1.0"));
     current_light_value = std::stoi(config.get("initial_light_value", "32767"));
     photo_start_at = std::stof(config.get("photo_start_at", "1.0"));
     photo_start_duration = std::stof(config.get("photo_start_duration", "1.0"));
-    comm_radius = std::stof(config.get("commRadius", "90"));
 
     std::srand(std::time(nullptr));
 }

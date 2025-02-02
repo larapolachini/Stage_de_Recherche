@@ -1,19 +1,23 @@
 ---
 
-window_width: 800
-window_height: 800
+window_width: 800       # In pixels
+window_height: 800      # In pixels
+
 arena_file: arenas/disk.csv
+arena_width: 1200.0     # In mm
+arena_height: 1200.0    # In mm
+
 delete_old_files: true
 
 seed: 0
-nBots: 30
-robot_radius: 30
-simulationTime: 5000.0
-commRadius: 70
+nBots: 100
+simulationTime: 500.0
+robot_radius: 30.0      # In mm
+commRadius: 70.0        # In mm
 msgSuccessRate: 0.5
 showComms: false
 GUI: true
-mm_to_pixels: 1.0
+#mm_to_pixels: 0.0
 
 #timeStep: 0.02  #0.01667
 #GUItimeStep: 0.001  #0.01667

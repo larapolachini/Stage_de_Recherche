@@ -14,8 +14,8 @@ void adjust_mm_to_pixels(float delta);
 b2Vec2 visualization_position(float x, float y);
 b2Vec2 visualization_position(b2Vec2 pos);
 
-//std::vector<b2Vec2> read_poly_from_csv(const std::string& filename, float window_width, float window_height);
-std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename, float window_width, float window_height);
+//std::vector<b2Vec2> read_poly_from_csv(const std::string& filename, float tot_width, float tot_height);
+std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename, float tot_width, float tot_height);
 
 std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float offset);
 b2Vec2 generate_random_point_within_polygon(const std::vector<b2Vec2>& polygon);

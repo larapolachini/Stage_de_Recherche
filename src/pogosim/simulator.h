@@ -30,6 +30,8 @@ class Simulation {
     uint16_t sub_step_count = 4;
     double GUI_speed_up = 1.0;
 
+    float arena_width = 1000.0;     // In mm
+    float arena_height = 1000.0;    // In mm
     float robot_radius = 10.0;      // In mm
     float comm_radius = 90.0;       // In mm
 
