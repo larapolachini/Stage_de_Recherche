@@ -11,61 +11,8 @@
 #include "fpng.h"
 
 
-//// Helper function to read CSV and return vector of b2Vec2 points
-//std::vector<b2Vec2> read_poly_from_csv(const std::string& filename, float window_width, float window_height) {
-//    std::vector<b2Vec2> rawPoints;
-//    std::ifstream file(filename);
-//    if (!file.is_open()) {
-//        glogger->error("Error: Unable to open file {}", filename);
-//        return rawPoints;
-//    }
-//
-//    float const width = (window_width - 2 * 30); // Width adjusted for 30-pixel offset
-//    float const height = (window_height - 2 * 30); // Height adjusted for 30-pixel offset
-//
-//    std::string line;
-//    while (std::getline(file, line)) {
-//        std::istringstream ss(line);
-//        std::string xStr, yStr;
-//        if (std::getline(ss, xStr, ',') && std::getline(ss, yStr)) {
-//            float x = std::stof(xStr);
-//            float y = std::stof(yStr);
-//            rawPoints.emplace_back(x, y);
-//        }
-//    }
-//
-//    file.close();
-//
-//    // If no points were read, return empty vector
-//    if (rawPoints.empty()) {
-//        glogger->error("Error: No points found in the file {}.", filename);
-//        return rawPoints;
-//    }
-//
-//    // Compute min and max for x and y
-//    float minX = std::numeric_limits<float>::max();
-//    float maxX = std::numeric_limits<float>::lowest();
-//    float minY = std::numeric_limits<float>::max();
-//    float maxY = std::numeric_limits<float>::lowest();
-//
-//    for (const auto& point : rawPoints) {
-//        minX = std::min(minX, point.x);
-//        maxX = std::max(maxX, point.x);
-//        minY = std::min(minY, point.y);
-//        maxY = std::max(maxY, point.y);
-//    }
-//
-//    // Normalize and scale points
-//    std::vector<b2Vec2> normalizedPoints;
-//    for (const auto& point : rawPoints) {
-//        float normX = (point.x - minX) / (maxX - minX); // Min-max normalization for X
-//        float normY = (point.y - minY) / (maxY - minY); // Min-max normalization for Y
-//        //normalizedPoints.emplace_back(normX * width, normY * height); // Scale by width and height
-//        normalizedPoints.emplace_back(normX * width, normY * height); // Scale by width and height
-//    }
-//
-//    return normalizedPoints;
-//}
+float cm_to_pixels = 1.0f;
+
 
 std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename, float window_width, float window_height) {
     std::vector<std::vector<b2Vec2>> polygons;
@@ -370,18 +317,18 @@ void draw_polygon(SDL_Renderer* renderer, const std::vector<b2Vec2>& polygon) {
     // Draw lines between consecutive points
     for (size_t i = 0; i < polygon.size() - 1; ++i) {
         SDL_RenderDrawLine(renderer,
-                           static_cast<int>(polygon[i].x),
-                           static_cast<int>(polygon[i].y),
-                           static_cast<int>(polygon[i + 1].x),
-                           static_cast<int>(polygon[i + 1].y));
+                           static_cast<int>(polygon[i].x * cm_to_pixels),
+                           static_cast<int>(polygon[i].y * cm_to_pixels),
+                           static_cast<int>(polygon[i + 1].x * cm_to_pixels),
+                           static_cast<int>(polygon[i + 1].y * cm_to_pixels));
     }
 
     // Connect the last point to the first to close the polygon
     SDL_RenderDrawLine(renderer,
-                       static_cast<int>(polygon.back().x),
-                       static_cast<int>(polygon.back().y),
-                       static_cast<int>(polygon.front().x),
-                       static_cast<int>(polygon.front().y));
+                       static_cast<int>(polygon.back().x * cm_to_pixels),
+                       static_cast<int>(polygon.back().y * cm_to_pixels),
+                       static_cast<int>(polygon.front().x * cm_to_pixels),
+                       static_cast<int>(polygon.front().y * cm_to_pixels));
 }
 
 

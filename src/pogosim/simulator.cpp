@@ -220,7 +220,8 @@ void Simulation::init_box2d() {
 void Simulation::init_config() {
     window_width = std::stoi(config.get("window_width", "800"));
     window_height = std::stoi(config.get("window_height", "800"));
-    robot_radius = std::stoi(config.get("robot_radius", "10"));
+    cm_to_pixels = std::stof(config.get("cm_to_pixels", "1.0"));
+    robot_radius = std::stof(config.get("robot_radius", "10.0"));
     enable_gui = string_to_bool(config.get("GUI", "true"));
     GUI_speed_up = std::stof(config.get("GUI_speed_up", "1.0"));
     current_light_value = std::stoi(config.get("initial_light_value", "32767"));

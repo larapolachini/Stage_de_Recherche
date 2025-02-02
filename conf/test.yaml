@@ -13,6 +13,7 @@ commRadius: 70
 msgSuccessRate: 0.5
 showComms: false
 GUI: true
+cm_to_pixels: 1.0
 
 #timeStep: 0.02  #0.01667
 #GUItimeStep: 0.001  #0.01667

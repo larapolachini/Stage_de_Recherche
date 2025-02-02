@@ -24,14 +24,15 @@ class Simulation {
     bool running = true;
     float t = 0.0f;
 
-    uint16_t window_width = 800;
-    uint16_t window_height = 600;
-    uint16_t robot_radius = 10;
+    uint16_t window_width = 800;    // In pixels
+    uint16_t window_height = 600;   // In pixels
     uint16_t sub_step_count = 4;
     double GUI_speed_up = 1.0;
-    float comm_radius = 90.0;
 
-    float const wall_offset = 30.0f;
+    float robot_radius = 10.0;      // In cm
+    float comm_radius = 90.0;       // In cm
+
+    float const wall_offset = 30.0f;    // In cm
     float const minX = wall_offset + robot_radius*2;
     float const maxX = window_width - wall_offset - robot_radius*2;
     float const minY = wall_offset + robot_radius*2;

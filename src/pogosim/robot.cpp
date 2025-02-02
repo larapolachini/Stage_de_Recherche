@@ -88,7 +88,7 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
     // Draw circle representing the robot's body
 //    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Gray color for robot body
 //    SDL_RenderDrawCircle(renderer, static_cast<int>(screenX), static_cast<int>(screenY), radius);
-    circleRGBA(renderer, screenX, screenY, radius, 0, 0, 0, 255);
+    circleRGBA(renderer, screenX * cm_to_pixels, screenY * cm_to_pixels, radius, 0, 0, 0, 255);
 
     // Get the robot's orientation as a rotation (cosine/sine pair)
     b2Rot rotation = b2Body_GetRotation(bodyId);
@@ -103,7 +103,7 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
 //        SDL_RenderDrawLine(renderer, screenX + offset, screenY, orientationX + offset, orientationY);
 //        SDL_RenderDrawLine(renderer, screenX, screenY + offset, orientationX, orientationY + offset);
 //    }
-    thickLineRGBA(renderer, screenX, screenY, orientationX, orientationY, 4, 0, 0, 255, 150);
+    thickLineRGBA(renderer, screenX * cm_to_pixels, screenY * cm_to_pixels, orientationX * cm_to_pixels, orientationY * cm_to_pixels, 4, 0, 0, 255, 150);
 
     // Define relative positions for LEDs around the robot based on orientation
     std::vector<b2Vec2> ledOffsets = {
@@ -144,10 +144,10 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
         // Draw LED as a small circle
         if (i == 0) {
             //SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius - 2);
-            filledCircleRGBA(renderer, ledScreenX, ledScreenY, radius - 2, r, g, b, 255);
+            filledCircleRGBA(renderer, ledScreenX * cm_to_pixels, ledScreenY * cm_to_pixels, (radius - 2) * cm_to_pixels, r, g, b, 255);
         } else {
             //SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius / 2.5);
-            filledCircleRGBA(renderer, ledScreenX, ledScreenY, radius / 2.5, r, g, b, 255);
+            filledCircleRGBA(renderer, ledScreenX * cm_to_pixels, ledScreenY * cm_to_pixels, (radius / 2.5) * cm_to_pixels, r, g, b, 255);
         }
     }
 }
