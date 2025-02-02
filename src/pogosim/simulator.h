@@ -84,6 +84,7 @@ public:
     void speed_down();
     void pause();
     void photo_start();
+    void help_message();
 
     uint16_t get_current_light_value() const;
 };

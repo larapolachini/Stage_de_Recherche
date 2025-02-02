@@ -303,7 +303,7 @@ void Simulation::create_robots() {
         auto const points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * robot_radius, nb_robots);
 
         for (size_t i = 0; i < nb_robots; ++i) {
-            //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius); // XXX quick & dirty :-/
+            //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius);
             auto const point = points[i];
             robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId, msg_success_rate);
             //float x = minX + std::rand() % static_cast<int>(maxX - minX);
@@ -345,6 +345,21 @@ void Simulation::pause() {
     paused = !paused;
 }
 
+void Simulation::help_message() {
+    glogger->info("Welcome to the Pogosim's GUI. This is an help message...");
+    glogger->info("Here is a list of shortcuts that can be used to control the GUI:");
+    glogger->info(" - F1: Help message");
+    glogger->info(" - F3: Slow down the simulation");
+    glogger->info(" - F4: Speed up the simulation");
+    glogger->info(" - ESC or q: quit the simulation");
+    glogger->info(" - SPACE: pause the simulation");
+    glogger->info(" - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates");
+    glogger->info(" - Right-Click + Mouse move: move the visualisation coordinates");
+    glogger->info(" - PLUS, MINUS or Mouse Wheel: Zoom up or down");
+    glogger->info(" - 0: Reset the zoom and visualization coordinates");
+}
+
+
 void Simulation::handle_SDL_events() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -353,6 +368,9 @@ void Simulation::handle_SDL_events() {
 
         } else if (event.type == SDL_KEYDOWN) {
             switch (event.key.keysym.sym) {
+                case SDLK_F1:
+                    help_message();
+                    break;
                 case SDLK_F3:
                     speed_down();
                     break;
@@ -536,6 +554,7 @@ void Simulation::main_loop() {
         tqdmrange.begin();
         tqdmrange.update();
     }
+    float gui_delay;
 
     // Main loop for all robots
     while (running && t < simulation_time) {
@@ -549,6 +568,8 @@ void Simulation::main_loop() {
             SDL_Delay(time_step_duration / GUI_speed_up);
             continue;
         }
+
+        gui_delay = time_step_duration / GUI_speed_up;
 
         // Launch user code
         for (auto& robot : robots) {
@@ -576,13 +597,19 @@ void Simulation::main_loop() {
         compute_neighbors();
 
         if (enable_gui) {
-            // Render
-            render_all();
-            export_frames();
-            SDL_RenderPresent(renderer);
+            if (gui_delay >= 1.0) {
+                // Render
+                render_all();
+                export_frames();
+                SDL_RenderPresent(renderer);
 
-            // Delay
-            SDL_Delay(time_step_duration / GUI_speed_up);
+                // Delay
+                SDL_Delay(gui_delay);
+            } else if (save_video_period > 0.0 && t >= last_frame_saved_t + save_video_period) {
+                render_all();
+                export_frames();
+                SDL_RenderPresent(renderer);
+            }
         } else {
             if (save_video_period > 0.0 && t >= last_frame_saved_t + save_video_period) {
                 render_all();
