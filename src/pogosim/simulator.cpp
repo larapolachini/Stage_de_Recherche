@@ -460,11 +460,10 @@ void Simulation::draw_scale_bar() {
 
     int bar_length = (int)(mm_scale * mm_to_pixels);
     //int bar_thickness = 3; // Thickness of the line
-    int margin = 40; // Margin from the bottom-left corner
 
     // Define start and end points of the scale bar
-    int x1 = margin;
-    int y1 = window_height - margin;
+    int x1 = 10;
+    int y1 = window_height - 30;
     int x2 = x1 + bar_length;
     int y2 = y1;
 
