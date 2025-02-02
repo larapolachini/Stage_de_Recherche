@@ -44,7 +44,7 @@ SIM_CC = cc
 SIM_CXX = c++
 SIM_CFLAGS = -Wall -MMD -MP -O2 -std=c11
 SIM_CXXFLAGS = -Wall -MMD -MP -O2 -std=c++20 `pkg-config --cflags spdlog` -pthread
-SIM_LDFLAGS = -Wl,--whole-archive -lpogosim -Wl,--no-whole-archive -lboost_system -lyaml-cpp `pkg-config --libs spdlog` -lSDL2 -lSDL2_gfx -lSDL2_ttf -lbox2d -lstdc++ -lfmt -lm 
+SIM_LDFLAGS = -Wl,--whole-archive -lpogosim -Wl,--no-whole-archive -lboost_system -lyaml-cpp `pkg-config --libs spdlog` -lSDL2 -lSDL2_gfx -lSDL2_ttf -lbox2d -lstdc++ -lfmt -lm -larrow 
 SIM_TARGET = $(MAKEFILE_DIR)
 
 SIM_SRCS_CXX = $(wildcard *.cpp)

@@ -18,6 +18,8 @@ find_package(SDL2_ttf REQUIRED)
 #find_package(Box2D REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(Arrow REQUIRED)
+
 
 # Collect source files
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
@@ -40,6 +42,8 @@ target_include_directories(${PROJECT_NAME}
         #        ${BOX2D_INCLUDE_DIRS}
         ${YAML_CPP_INCLUDE_DIR}
         ${spdlog_INCLUDE_DIRS}
+        ${ARROW_INCLUDE_DIR}
+
 )
 
 target_compile_definitions(${PROJECT_NAME}
