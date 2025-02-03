@@ -14,6 +14,7 @@
 #include "fpng.h"
 #include "SDL2_gfxPrimitives.h"
 
+#include "version.h"
 #include "tqdm.hpp"
 #include "utils.h"
 #include "simulator.h"
@@ -231,6 +232,8 @@ void Simulation::init_box2d() {
 
 
 void Simulation::init_config() {
+    glogger->info("Welcome to the Pogosim simulator, version {}", POGOSIM_VERSION);
+
     window_width = std::stoi(config.get("window_width", "800"));
     window_height = std::stoi(config.get("window_height", "800"));
 
@@ -739,6 +742,9 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
             verbose = true;
         } else if (arg == "-P") {
             progress = true;
+        } else if (arg == "-V") {
+            std::cout << "Pogosim simulator. Version " << POGOSIM_VERSION << "." << std::endl;
+            return false;
         } else {
             std::cerr << "Unknown argument: " << arg << std::endl;
             return false;
@@ -757,7 +763,7 @@ int main(int argc, char** argv) {
 
     // Parse command-line arguments
     if (!parse_arguments(argc, argv, config_file, verbose, gui, progress)) {
-        std::cerr << "Usage: " << argv[0] << " -c CONFIG_FILE [-v] [-g] [-P]" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " -c CONFIG_FILE [-v] [-g] [-P] [-V]" << std::endl;
         return 1;
     }
 

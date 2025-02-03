@@ -1,6 +1,7 @@
 
 #include "data_logger.h"
 #include "utils.h"
+#include "version.h"
 
 
 // Destructor to close file
@@ -33,8 +34,17 @@ void DataLogger::open_file(const std::string& filename) {
     // Define schema
     schema_ = arrow::schema(fields_);
 
+    // Define custom metadata (e.g., program version)
+    arrow::KeyValueMetadata::Make({"program_version"},
+                                  {POGOSIM_VERSION});
+    // Add metadata to schema
+    schema_ = schema_->WithMetadata(
+        std::make_shared<arrow::KeyValueMetadata>(
+            std::vector<std::string>{"program_version"},
+            std::vector<std::string>{POGOSIM_VERSION}));
+
     // Check if parent directory exists
-     ensure_directories_exist(filename);
+    ensure_directories_exist(filename);
 
     // Open file for writing
     auto outfile_result = arrow::io::FileOutputStream::Open(filename);
