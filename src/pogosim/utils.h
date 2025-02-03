@@ -11,7 +11,9 @@
 
 // Declare a global logger (shared pointer)
 extern std::shared_ptr<spdlog::logger> glogger;
+extern std::shared_ptr<spdlog::logger> robotlogger;
 void init_logger();
+void loggers_add_file_sink(std::string const& filename);
 
 // Random device and generator
 extern std::random_device rd;

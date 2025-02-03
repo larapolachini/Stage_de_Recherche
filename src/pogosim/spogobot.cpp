@@ -320,7 +320,7 @@ int16_t pogobot_helper_getRandSeed( void ) {
 }
 
 void pogobot_helper_print_version( void ) {
-    printf(" Pogolib Version : %s\n", POGOLIB_RELEASE_VERSION);
+    pogosim_printf(" Pogolib Version : %s\n", POGOLIB_RELEASE_VERSION);
 }
 
 
@@ -423,8 +423,8 @@ void pogosim_printf(const char* format, ...) {
         final_message.pop_back();
     }
 
-    // Log to glogger->info()
-    glogger->info(final_message);
+    // Log to logger
+    robotlogger->info(final_message);
 
     va_end(args);
 }

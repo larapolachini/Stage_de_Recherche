@@ -4,18 +4,45 @@
 #include <algorithm>
 
 #include "utils.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
+
 
 std::shared_ptr<spdlog::logger> glogger;
+std::shared_ptr<spdlog::logger> robotlogger;
 
 // Random device and generator
 std::random_device rd;
 std::mt19937 rnd_gen(rd());
 
 void init_logger() {
-    // Create a console logger with color support
-    glogger = spdlog::stdout_color_mt("console");
-    glogger->set_level(spdlog::level::info); // Set default log level
-    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v"); // Set log format
+//    // Create a console logger with color support
+//    glogger = spdlog::stdout_color_mt("console");
+//    glogger->set_level(spdlog::level::info); // Set default log level
+//    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v"); // Set log format
+
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    console_sink->set_level(spdlog::level::info);
+    console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+
+    std::vector<spdlog::sink_ptr> sinks{console_sink};
+    glogger     = std::make_shared<spdlog::logger>("global", sinks.begin(), sinks.end());
+    robotlogger = std::make_shared<spdlog::logger>("robot",  sinks.begin(), sinks.end());
+    glogger->set_level(spdlog::level::info);
+    robotlogger->set_level(spdlog::level::info);
+}
+
+void loggers_add_file_sink(std::string const& filename) {
+    ensure_directories_exist(filename);
+
+    // Create the new sink
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename, true);
+    file_sink->set_level(spdlog::level::debug);
+    file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+
+    // Add the new sink to all loggers
+    glogger->sinks().push_back(file_sink);
+    robotlogger->sinks().push_back(file_sink);
 }
 
 

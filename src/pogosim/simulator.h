@@ -89,6 +89,7 @@ public:
     void init_callbacks();
     void init_data_logger();
     void export_data();
+    void init_console_logger();
 
     void speed_up();
     void speed_down();

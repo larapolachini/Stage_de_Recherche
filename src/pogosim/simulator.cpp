@@ -72,6 +72,7 @@ std::unique_ptr<Simulation> simulation;
 Simulation::Simulation(Configuration& _config)
         : config(_config) {
     init_config();
+    init_console_logger();
     init_box2d();
     init_SDL();
     //create_walls();
@@ -491,6 +492,17 @@ void Simulation::init_data_logger() {
     data_logger->open_file(data_filename);
 }
 
+void Simulation::init_console_logger() {
+    bool const enable_console_logging = string_to_bool(config.get("enable_console_logging", "false"));
+    if (!enable_console_logging)
+        return;
+    std::string const console_filename = config.get("console_filename", "console.txt");
+    if (console_filename.size() == 0) {
+        throw std::runtime_error("'enable_console_logging' is set to true, but 'console_filename' is empty.");
+    }
+    loggers_add_file_sink(console_filename);
+}
+
 
 void Simulation::draw_scale_bar() {
     // Get the window size
@@ -715,13 +727,13 @@ uint16_t Simulation::get_current_light_value() const {
 }
 
 DataLogger* Simulation::get_data_logger() {
-    glogger->debug("get_data_logger: ADDR {}", (uintptr_t) this);
     return data_logger.get();
 }
 
 
-bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose, bool& gui, bool& progress) {
+bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose, bool& do_not_show_robot_msg, bool& gui, bool& progress) {
     verbose = false;
+    do_not_show_robot_msg = false;
     gui = true;
     progress = false;
     config_file.clear();
@@ -729,20 +741,22 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
 
-        if (arg == "-c") {
+        if (arg == "-c" || arg == "--config") {
             if (i + 1 < argc) {
                 config_file = argv[++i];
             } else {
                 std::cerr << "Error: -c requires a configuration file argument." << std::endl;
                 return false;
             }
-        } else if (arg == "-g") {
+        } else if (arg == "-g" || arg == "--no-GUI") {
             gui = false;
-        } else if (arg == "-v") {
+        } else if (arg == "-v" || arg == "--verbose") {
             verbose = true;
-        } else if (arg == "-P") {
+        } else if (arg == "-nr" || arg == "--do-not-show-robot-msg") {
+            do_not_show_robot_msg = true;
+        } else if (arg == "-P" || arg == "--progress") {
             progress = true;
-        } else if (arg == "-V") {
+        } else if (arg == "-V" || arg == "--version") {
             std::cout << "Pogosim simulator. Version " << POGOSIM_VERSION << "." << std::endl;
             return false;
         } else {
@@ -758,12 +772,13 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
 int main(int argc, char** argv) {
     std::string config_file;
     bool verbose = false;
+    bool do_not_show_robot_msg = false;
     bool gui = true;
     bool progress = false;
 
     // Parse command-line arguments
-    if (!parse_arguments(argc, argv, config_file, verbose, gui, progress)) {
-        std::cerr << "Usage: " << argv[0] << " -c CONFIG_FILE [-v] [-g] [-P] [-V]" << std::endl;
+    if (!parse_arguments(argc, argv, config_file, verbose, do_not_show_robot_msg, gui, progress)) {
+        std::cerr << "Usage: " << argv[0] << " -c CONFIG_FILE [-v] [-nr] [-g] [-P] [-V]" << std::endl;
         return 1;
     }
 
@@ -774,6 +789,11 @@ int main(int argc, char** argv) {
     if (verbose) {
         glogger->info("Verbose mode enabled.");
         glogger->set_level(spdlog::level::debug);
+        robotlogger->set_level(spdlog::level::debug);
+    }
+
+    if (do_not_show_robot_msg) {
+        robotlogger->sinks().clear();
     }
 
     if (gui) {
