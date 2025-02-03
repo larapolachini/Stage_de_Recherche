@@ -18,6 +18,8 @@ From: ubuntu:24.04
 
 %files
     # Copy project source files to the container
+    ./build.sh /opt/pogosim/
+    ./CMakeLists.txt /opt/pogosim/
     ./src /opt/pogosim/src
     ./cmake /opt/pogosim/cmake
     ./fonts /opt/pogosim/fonts
@@ -43,7 +45,12 @@ From: ubuntu:24.04
         libspdlog-dev \
         wget \
         unzip \
-        ca-certificates
+        ca-certificates lsb-release
+
+    # Install Apache Arrow
+    wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+    apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+    apt update && apt install -y -V libarrow-dev
 
     # Install clang if USE_CLANG is true
     if [ {{ USE_CLANG }} = "true" ]; then
@@ -70,9 +77,6 @@ From: ubuntu:24.04
     mkdir -p /opt/pogosim
     cd /opt/pogosim
 
-    mkdir -p build
-    cd build
-    cmake ..
-    make -j 20
-    make install
+    # Compile and install
+    /opt/pogosim/build.sh
 

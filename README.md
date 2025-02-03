@@ -15,11 +15,17 @@ To install it on *Debian/Ubuntu* (tested: 24.04 LTS), use the following commands
 
 First, install the necessary packages:
 ```shell
-apt-get update && apt-get install -y --no-install-recommends \
+sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     build-essential cmake git libboost-system-dev \
     libsdl2-dev libsdl2-image-dev libsdl2-gfx-dev libsdl2-ttf-dev \
     libyaml-cpp-dev libspdlog-dev \
-    wget unzip ca-certificates
+    wget unzip ca-certificates lsb-release
+
+# Install Apache Arrow
+wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+sudo apt update
+sudo apt install -y -V libarrow-dev
 ```
 
 Then compile and install Box2D 3.0:
@@ -27,8 +33,7 @@ Then compile and install Box2D 3.0:
 git clone https://github.com/erincatto/box2d.git
 cd box2d
 git checkout 28adacf82377d4113f2ed00586141463244b9d10
-mkdir build
-cd build
+mkdir build && cd build
 cmake -DBOX2D_BUILD_DOCS=OFF -DGLFW_BUILD_WAYLAND=OFF -DCMAKE_INSTALL_PREFIX=/usr  ..
 cmake --build .
 sudo make install
