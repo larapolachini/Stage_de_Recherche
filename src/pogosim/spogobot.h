@@ -1006,6 +1006,21 @@ extern "C" {
 void msleep(int milliseconds);
 void pogosim_printf(const char* format, ...);
 
+
+void data_schema_add_field_int8(char const* name);
+void data_schema_add_field_int16(char const* name);
+void data_schema_add_field_int32(char const* name);
+void data_schema_add_field_int64(char const* name);
+void data_schema_add_field_double(char const* name);
+void data_schema_add_field_string(char const* name);
+
+void data_set_value_int8(char const* name, int8_t value);
+void data_set_value_int16(char const* name, int16_t value);
+void data_set_value_int32(char const* name, int32_t value);
+void data_set_value_int64(char const* name, int64_t value);
+void data_set_value_double(char const* name, double value);
+void data_set_value_string(char const* name, char const* value);
+
 #ifdef __cplusplus
 }
 #endif

@@ -26,6 +26,8 @@ public:
     void* data = nullptr;
     void (*user_init)(void) = nullptr;
     void (*user_step)(void) = nullptr;
+    void (*callback_create_data_schema)(void) = nullptr;
+    void (*callback_export_data)(void) = nullptr;
     void launch_user_step();
 
     std::chrono::time_point<std::chrono::system_clock> current_time;
@@ -62,6 +64,7 @@ public:
     void render(SDL_Renderer* renderer, b2WorldId worldId) const;
     void set_motor(motor_id motor, int speed);
     b2Vec2 get_position() const;
+    float get_angle() const;
 
     // LEDs
     std::vector<color_t> leds = std::vector<color_t>(5, {0, 0, 0});

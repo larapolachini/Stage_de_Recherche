@@ -313,10 +313,26 @@ void user_step(void) {
 
 }
 
+#ifdef SIMULATOR
+// Function called by the simulator to specify user-defined data fields to add to the exported data files
+void create_data_schema() {
+    data_schema_add_field_int32("age");
+    data_schema_add_field_int16("rgb_colors_index");
+}
+
+// Function called by the simulator each time data is saved
+void export_data() {
+    data_set_value_int32("age", mydata->age);
+    data_set_value_int16("rgb_colors_index", mydata->rgb_colors_index);
+}
+#endif
+
 int main(void) {
     pogobot_init();
-
     pogobot_start(user_init, user_step);
+
+    SET_CALLBACK(callback_create_data_schema, create_data_schema);
+    SET_CALLBACK(callback_export_data, export_data);
     return 0;
 }
 

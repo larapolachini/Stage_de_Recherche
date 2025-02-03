@@ -33,6 +33,9 @@ void DataLogger::open_file(const std::string& filename) {
     // Define schema
     schema_ = arrow::schema(fields_);
 
+    // Check if parent directory exists
+     ensure_directories_exist(filename);
+
     // Open file for writing
     auto outfile_result = arrow::io::FileOutputStream::Open(filename);
     if (!outfile_result.ok()) {

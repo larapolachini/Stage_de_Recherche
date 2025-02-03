@@ -27,6 +27,8 @@
 void set_current_robot(Robot& robot) {
     // Store values of previous robot
     if (current_robot != nullptr) {
+        current_robot->callback_create_data_schema   = callback_create_data_schema;
+        current_robot->callback_export_data          = callback_export_data;
         current_robot->pogobot_ticks                 = pogobot_ticks;
         current_robot->main_loop_hz                  = main_loop_hz;
         current_robot->max_nb_processed_msg_per_tick = max_nb_processed_msg_per_tick;
@@ -45,10 +47,12 @@ void set_current_robot(Robot& robot) {
     mydata = robot.data;
 
     // Update robot values
+    callback_create_data_schema   = robot.callback_create_data_schema;
+    callback_export_data          = robot.callback_export_data;
     pogobot_ticks                 = robot.pogobot_ticks;
     main_loop_hz                  = robot.main_loop_hz;
     max_nb_processed_msg_per_tick = robot.max_nb_processed_msg_per_tick;
-    msg_rx_fn                     = robot.msg_rx_fn;
+    msg_rx_fn                 = robot.msg_rx_fn;
     msg_tx_fn                     = robot.msg_tx_fn;
     error_codes_led_idx           = robot.error_codes_led_idx;
     _global_timer                 = robot._global_timer;
@@ -351,7 +355,7 @@ void Simulation::help_message() {
     glogger->info(" - F1: Help message");
     glogger->info(" - F3: Slow down the simulation");
     glogger->info(" - F4: Speed up the simulation");
-    glogger->info(" - ESC or q: quit the simulation");
+    glogger->info(" - ESC: quit the simulation");
     glogger->info(" - SPACE: pause the simulation");
     glogger->info(" - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates");
     glogger->info(" - Right-Click + Mouse move: move the visualisation coordinates");
@@ -451,6 +455,40 @@ void Simulation::compute_neighbors() {
 }
 
 
+void Simulation::init_callbacks() {
+    init_data_logger();
+}
+
+void Simulation::init_data_logger() {
+    enable_data_logging = string_to_bool(config.get("enable_data_logging", "true"));
+    if (!enable_data_logging)
+        return;
+    std::string data_filename = config.get("data_filename", "data.feather");
+    if (data_filename.size() == 0) {
+        throw std::runtime_error("'enable_data_logging' is set to true, but 'data_filename' is empty.");
+    }
+
+    data_logger = std::make_unique<DataLogger>();
+
+    // Init base schema
+    data_logger->add_field("t", arrow::float64());
+    data_logger->add_field("robot_id", arrow::int32());
+    data_logger->add_field("pogobot_ticks", arrow::int64());
+    data_logger->add_field("x", arrow::float64());
+    data_logger->add_field("y", arrow::float64());
+    data_logger->add_field("angle", arrow::float64());
+
+    // Init user-defined schema (only call the main function of the first robot)
+    assert(robots.size() > 0);
+    Robot& robot = robots[0];
+    if (robot.callback_create_data_schema != nullptr)
+        robot.callback_create_data_schema();
+
+    // Open data logger file
+    data_logger->open_file(data_filename);
+}
+
+
 void Simulation::draw_scale_bar() {
     // Get the window size
     int window_width, window_height;
@@ -519,6 +557,25 @@ void Simulation::export_frames() {
     }
 }
 
+void Simulation::export_data() {
+    for (auto& robot : robots) {
+        data_logger->set_value("t", t);
+        data_logger->set_value("robot_id", (int32_t) robot.id);
+        data_logger->set_value("pogobot_ticks", (int64_t) robot.pogobot_ticks);
+        auto const pos = robot.get_position();
+        data_logger->set_value("x", pos.x);
+        data_logger->set_value("y", pos.y);
+        data_logger->set_value("angle", robot.get_angle());
+
+        // User-defined values
+        if (robot.callback_export_data != nullptr) {
+            robot.callback_export_data();
+        }
+
+        data_logger->save_row();
+    }
+}
+
 void Simulation::photo_start() {
     if (photo_start_at >= 0 && t >= photo_start_at && t < photo_start_at + photo_start_duration) {
         current_light_value = 0;
@@ -533,12 +590,13 @@ void Simulation::main_loop() {
     delete_old_data();
 
     bool const progress_bar = string_to_bool(config.get("progress_bar", "false"));
-    float const simulation_time = std::stof(config.get("simulationTime", "100.0"));
+    double const simulation_time = std::stof(config.get("simulationTime", "100.0"));
     glogger->info("Launching the main simulation loop.");
 
-    float const save_video_period = std::stof(config.get("save_video_period", "-1.0"));
-    float time_step_duration = std::stof(config.get("timeStep", "0.01667"));
-    //float const GUI_time_step_duration = std::stof(config.get("GUItimeStep", "0.01667"));
+    double const save_data_period = std::stof(config.get("save_data_period", "1.0"));
+    double const save_video_period = std::stof(config.get("save_video_period", "-1.0"));
+    double time_step_duration = std::stof(config.get("timeStep", "0.01"));
+    //double const GUI_time_step_duration = std::stof(config.get("GUItimeStep", "0.01667"));
 
     //sim_starting_time = std::chrono::system_clock::now();
     sim_starting_time_microseconds = get_current_time_microseconds();
@@ -547,13 +605,14 @@ void Simulation::main_loop() {
     running = true;
     t = 0.0f;
     last_frame_saved_t = 0.0f - time_step_duration;
+    last_data_saved_t = 0.0f - time_step_duration;
     uint32_t const max_nb_ticks = std::ceil(simulation_time / time_step_duration);
     auto tqdmrange = tq::trange(max_nb_ticks);
     if (progress_bar) {
         tqdmrange.begin();
         tqdmrange.update();
     }
-    float gui_delay;
+    double gui_delay;
 
     // Main loop for all robots
     while (running && t < simulation_time) {
@@ -578,7 +637,7 @@ void Simulation::main_loop() {
                 robot.launch_user_step();
             }
             // Check if dt is enough to simulate the main loop frequency of this robot
-            float const main_loop_period = 1.0f / main_loop_hz;
+            double const main_loop_period = 1.0f / main_loop_hz;
             if (time_step_duration > main_loop_period) {
                 glogger->warn("Time step duration dt={} is not enough to simulate a main loop frequency of {}. Adjusting to {}", time_step_duration, main_loop_hz, main_loop_period);
                 time_step_duration = main_loop_period;
@@ -594,6 +653,12 @@ void Simulation::main_loop() {
 
         // Compute neighbors
         compute_neighbors();
+
+        // Save data, if needed
+        if (enable_data_logging && t >= last_data_saved_t + save_data_period) {
+            last_data_saved_t = t;
+            export_data();
+        }
 
         if (enable_gui) {
             if (gui_delay >= 1.0) {
@@ -644,6 +709,11 @@ void Simulation::delete_old_data() {
 
 uint16_t Simulation::get_current_light_value() const {
     return current_light_value;
+}
+
+DataLogger* Simulation::get_data_logger() {
+    glogger->debug("get_data_logger: ADDR {}", (uintptr_t) this);
+    return data_logger.get();
 }
 
 
@@ -727,6 +797,7 @@ int main(int argc, char** argv) {
 
     // Create the simulation object
     simulation = std::make_unique<Simulation>(config);
+    simulation->init_callbacks();
 
     // Launch simulation
     simulation->main_loop();

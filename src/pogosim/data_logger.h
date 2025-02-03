@@ -28,7 +28,6 @@ public:
     void set_value(const std::string& column_name, double value);
     void set_value(const std::string& column_name, const std::string& value);
 
-
     void save_row();
 
 

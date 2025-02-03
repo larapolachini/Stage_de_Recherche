@@ -8,6 +8,8 @@ arena_width: 1200.0     # In mm
 arena_height: 1200.0    # In mm
 
 delete_old_files: true
+enable_data_logging: true
+data_filename: "frames/data.feather"
 
 seed: 0
 nBots: 150
@@ -29,6 +31,8 @@ initial_light_value: 32767
 photo_start_at: 1.0
 photo_start_duration: 1.0
 
+
+save_data_period: 1.0
 save_video_period: 1.0
 frames_name: "frames/f{:010.4f}.png"
 

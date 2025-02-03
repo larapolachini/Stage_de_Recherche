@@ -429,6 +429,46 @@ void pogosim_printf(const char* format, ...) {
     va_end(args);
 }
 
+
+void data_schema_add_field_int8(char const* name) {
+    simulation->get_data_logger()->add_field(name, arrow::int8());
+}
+void data_schema_add_field_int16(char const* name) {
+    simulation->get_data_logger()->add_field(name, arrow::int16());
+}
+void data_schema_add_field_int32(char const* name) {
+    simulation->get_data_logger()->add_field(name, arrow::int32());
+}
+void data_schema_add_field_int64(char const* name) {
+    simulation->get_data_logger()->add_field(name, arrow::int64());
+}
+void data_schema_add_field_double(char const* name) {
+    simulation->get_data_logger()->add_field(name, arrow::float64());
+}
+void data_schema_add_field_string(char const* name) {
+    simulation->get_data_logger()->add_field(name, arrow::utf8());
+}
+
+void data_set_value_int8(char const* name, int8_t value) {
+    simulation->get_data_logger()->set_value(name, value);
+}
+void data_set_value_int16(char const* name, int16_t value) {
+    simulation->get_data_logger()->set_value(name, value);
+}
+void data_set_value_int32(char const* name, int32_t value) {
+    simulation->get_data_logger()->set_value(name, value);
+}
+void data_set_value_int64(char const* name, int64_t value) {
+    simulation->get_data_logger()->set_value(name, value);
+}
+void data_set_value_double(char const* name, double value) {
+    simulation->get_data_logger()->set_value(name, value);
+}
+void data_set_value_string(char const* name, char const* value) {
+    simulation->get_data_logger()->set_value(name, value);
+}
+
+
 // MODELINE "{{{1
 // vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
 // vim:foldmethod=marker

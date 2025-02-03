@@ -5,6 +5,7 @@
 #include "pogosim.h"
 #include "robot.h"
 #include "configuration.h"
+#include "data_logger.h"
 #include "SDL_FontCache.h"
 
 extern "C" int robot_main(void);
@@ -23,7 +24,7 @@ class Simulation {
     bool paused = false;
     bool running = true;
 
-    float t = 0.0f;
+    double t = 0.0f;
 
     uint16_t window_width = 800;    // In pixels
     uint16_t window_height = 600;   // In pixels
@@ -46,11 +47,12 @@ class Simulation {
     std::vector<Robot> membranes;
     std::vector<std::vector<b2Vec2>> arena_polygons;
 
-    float last_frame_saved_t = -1.0;
+    double last_frame_saved_t = -1.0;
+    double last_data_saved_t = -1.0;
 
     int16_t current_light_value = std::numeric_limits<int16_t>::max();
-    float photo_start_at = -1.f;
-    float photo_start_duration = 1.f;
+    double photo_start_at = -1.f;
+    double photo_start_duration = 1.f;
 
     // Fonts
     FC_Font* font;
@@ -59,6 +61,10 @@ class Simulation {
     bool dragging_pos_by_mouse = false;
     int last_mouse_x;
     int last_mouse_y;
+
+    // Data logger
+    bool enable_data_logging;
+    std::unique_ptr<DataLogger> data_logger;
 
 
 public:
@@ -80,13 +86,18 @@ public:
     void delete_old_data();
     void compute_neighbors();
 
+    void init_callbacks();
+    void init_data_logger();
+    void export_data();
+
     void speed_up();
     void speed_down();
     void pause();
     void photo_start();
     void help_message();
-
     uint16_t get_current_light_value() const;
+
+    DataLogger* get_data_logger();
 };
 
 extern std::unique_ptr<Simulation> simulation;

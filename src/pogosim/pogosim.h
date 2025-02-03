@@ -17,10 +17,18 @@
 	size_t UserdataSize = sizeof(UDT); \
 	UDT *mydata;
 
+#define SET_CALLBACK(CALLBACK_FN, FN) \
+    CALLBACK_FN = FN;
+
+extern void (*callback_create_data_schema)(void);
+extern void (*callback_export_data)(void);
+
 #else // Compiling for real robots
 #define REGISTER_USERDATA(UDT) 		\
 	UDT myuserdata;                 \
 	UDT *mydata = &myuserdata; 
+
+#define SET_CALLBACK(CALLBACK_FN, FN)
 
 void user_init(void);
 void user_step(void);

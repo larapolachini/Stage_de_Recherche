@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <cstdint>
+#include <cmath>
 #include "SDL2_gfxPrimitives.h"
 
 #include "robot.h"
@@ -212,6 +213,11 @@ void Robot::disable_stop_watches() {
 
 b2Vec2 Robot::get_position() const {
     return b2Body_GetPosition(bodyId);
+}
+
+float Robot::get_angle() const {
+    b2Rot const rotation = b2Body_GetRotation(bodyId);
+    return std::atan2(rotation.s, rotation.c);
 }
 
 

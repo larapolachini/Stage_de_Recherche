@@ -3,6 +3,11 @@
 #include "pogosim.h"
 #include "colormaps.h"
 
+#ifdef SIMULATOR
+void (*callback_create_data_schema)(void) = NULL;
+void (*callback_export_data)(void) = NULL;
+#endif
+
 uint8_t main_loop_hz = 60;
 uint8_t max_nb_processed_msg_per_tick = 3;
 void (*msg_rx_fn)(message_t *) = NULL;
