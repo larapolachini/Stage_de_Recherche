@@ -14,8 +14,8 @@ data_filename: "frames/data.feather"
 seed: 0
 nBots: 150
 simulationTime: 500.0
-robot_radius: 30.0      # In mm
-commRadius: 120.0        # In mm
+robot_radius: 26.5      # In mm
+commRadius: 106.5       # In mm
 msgSuccessRate: 0.5
 showComms: false
 GUI: true

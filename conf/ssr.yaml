@@ -5,8 +5,8 @@ window_height: 600
 
 #arena_file: arenas/disk.csv
 arena_file: arenas/annulus.csv
-arena_width: 570.0     # In mm
-arena_height: 570.0    # In mm
+arena_width: 500.0     # In mm
+arena_height: 500.0    # In mm
 
 delete_old_files: true
 enable_data_logging: true
@@ -14,9 +14,9 @@ data_filename: "frames/data.feather"
 
 seed: 0
 nBots: 25
-robot_radius: 30.0
+robot_radius: 26.5
 simulationTime: 180.0
-commRadius: 120.0
+commRadius: 106.5
 msgSuccessRate: 0.5
 showComms: false
 GUI: true
