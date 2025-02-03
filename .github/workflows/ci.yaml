@@ -28,7 +28,13 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y build-essential cmake git libboost-system-dev libsdl2-dev libsdl2-image-dev libsdl2-gfx-dev libsdl2-ttf-dev libyaml-cpp-dev libspdlog-dev wget unzip ca-certificates
+          sudo apt-get install --no-install-recommends -y build-essential cmake git libboost-system-dev libsdl2-dev libsdl2-image-dev libsdl2-gfx-dev libsdl2-ttf-dev libyaml-cpp-dev libspdlog-dev wget unzip ca-certificates lsb-release
+
+          # Install Apache Arrow
+          wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+          sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+          sudo apt update
+          sudo apt install -y -V libarrow-dev
           
           # Install Box2D
           git clone https://github.com/erincatto/box2d.git
@@ -46,7 +52,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           brew update
-          brew install cmake boost sdl2 sdl2_image sdl2_gfx sdl2_ttf yaml-cpp spdlog box2d
+          brew install cmake boost sdl2 sdl2_image sdl2_gfx sdl2_ttf yaml-cpp spdlog box2d apache-arrow
 
       # Step 2: Install dependencies (Windows)
       - name: Install dependencies (Windows)
