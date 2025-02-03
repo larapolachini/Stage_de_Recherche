@@ -76,3 +76,4 @@ examples/time_handling/time_handling
 
 # Valgrind
 callgrind.*
+vgcore.*
