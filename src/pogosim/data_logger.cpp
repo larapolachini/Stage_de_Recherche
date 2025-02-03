@@ -84,6 +84,10 @@ void DataLogger::set_value(const std::string& column_name, const std::string& va
     check_column(column_name);
     row_values_[column_name] = value;
 }
+void DataLogger::set_value(const std::string& column_name, bool value) {
+    check_column(column_name);
+    row_values_[column_name] = value;
+}
 
 
 void DataLogger::save_row() {
@@ -108,6 +112,8 @@ void DataLogger::save_row() {
             builders[i] = std::make_shared<arrow::DoubleBuilder>();
         } else if (field_type->id() == arrow::Type::STRING) {
             builders[i] = std::make_shared<arrow::StringBuilder>();
+        } else if (field_type->id() == arrow::Type::BOOL) {
+            builders[i] = std::make_shared<arrow::BooleanBuilder>();
         } else {
             throw std::runtime_error("Unsupported data type for column: " + fields_[i]->name());
         }
@@ -134,6 +140,8 @@ void DataLogger::save_row() {
                 status = std::static_pointer_cast<arrow::DoubleBuilder>(builders[i])->AppendNull();
             } else if (field_type->id() == arrow::Type::STRING) {
                 status = std::static_pointer_cast<arrow::StringBuilder>(builders[i])->AppendNull();
+            } else if (field_type->id() == arrow::Type::BOOL) {
+                status = std::static_pointer_cast<arrow::BooleanBuilder>(builders[i])->AppendNull();
             }
         } else {
             // Append actual values
@@ -160,6 +168,10 @@ void DataLogger::save_row() {
             } else if (field_type->id() == arrow::Type::STRING) {
                 status = std::static_pointer_cast<arrow::StringBuilder>(builders[i])->Append(
                     std::get<std::string>(row_values_[field_name])
+                );
+            } else if (field_type->id() == arrow::Type::BOOL) {
+                status = std::static_pointer_cast<arrow::BooleanBuilder>(builders[i])->Append(
+                    std::get<bool>(row_values_[field_name])
                 );
             }
         }

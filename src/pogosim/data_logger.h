@@ -27,6 +27,7 @@ public:
     void set_value(const std::string& column_name, int8_t value);
     void set_value(const std::string& column_name, double value);
     void set_value(const std::string& column_name, const std::string& value);
+    void set_value(const std::string& column_name, bool value);
 
     void save_row();
 
@@ -37,7 +38,7 @@ private:
     std::shared_ptr<arrow::io::OutputStream> outfile_;
     std::shared_ptr<arrow::ipc::RecordBatchWriter> writer_;
     std::unordered_map<std::string, size_t> column_indices_;  // Column name → index
-    std::unordered_map<std::string, std::variant<int64_t, int32_t, int16_t, int8_t, double, std::string>> row_values_;  // Row values
+    std::unordered_map<std::string, std::variant<int64_t, int32_t, int16_t, int8_t, double, std::string, bool>> row_values_;  // Row values
     bool file_opened_ = false;
 
     void check_column(const std::string& column_name);

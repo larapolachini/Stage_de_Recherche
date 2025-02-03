@@ -448,6 +448,9 @@ void data_schema_add_field_double(char const* name) {
 void data_schema_add_field_string(char const* name) {
     simulation->get_data_logger()->add_field(name, arrow::utf8());
 }
+void data_schema_add_field_bool(char const* name) {
+    simulation->get_data_logger()->add_field(name, arrow::boolean());
+}
 
 void data_set_value_int8(char const* name, int8_t value) {
     simulation->get_data_logger()->set_value(name, value);
@@ -465,6 +468,9 @@ void data_set_value_double(char const* name, double value) {
     simulation->get_data_logger()->set_value(name, value);
 }
 void data_set_value_string(char const* name, char const* value) {
+    simulation->get_data_logger()->set_value(name, value);
+}
+void data_set_value_bool(char const* name, bool value) {
     simulation->get_data_logger()->set_value(name, value);
 }
 

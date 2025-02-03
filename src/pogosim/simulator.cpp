@@ -471,7 +471,7 @@ void Simulation::init_data_logger() {
     data_logger = std::make_unique<DataLogger>();
 
     // Init base schema
-    data_logger->add_field("t", arrow::float64());
+    data_logger->add_field("time", arrow::float64());
     data_logger->add_field("robot_id", arrow::int32());
     data_logger->add_field("pogobot_ticks", arrow::int64());
     data_logger->add_field("x", arrow::float64());
@@ -559,7 +559,7 @@ void Simulation::export_frames() {
 
 void Simulation::export_data() {
     for (auto& robot : robots) {
-        data_logger->set_value("t", t);
+        data_logger->set_value("time", t);
         data_logger->set_value("robot_id", (int32_t) robot.id);
         data_logger->set_value("pogobot_ticks", (int64_t) robot.pogobot_ticks);
         auto const pos = robot.get_position();

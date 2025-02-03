@@ -1213,10 +1213,39 @@ void loop(void) {
 }
 
 
+#ifdef SIMULATOR
+// Function called by the simulator to specify user-defined data fields to add to the exported data files
+void create_data_schema() {
+    data_schema_add_field_int8("current_behavior");
+    data_schema_add_field_bool("diffusion_valid1");
+    data_schema_add_field_double("t");
+    data_schema_add_field_int8("nb_neighbors");
+
+    data_schema_add_field_double("s");
+    data_schema_add_field_double("lambda");
+    data_schema_add_field_double("avg_lambda");
+
+}
+
+// Function called by the simulator each time data is saved
+void export_data() {
+    data_set_value_int8("current_behavior", mydata->current_behavior);
+    data_set_value_bool("diffusion_valid1", mydata->diff1.diffusion_valid);
+    data_set_value_double("t", mydata->curr_diff->t);
+    data_set_value_int8("nb_neighbors", mydata->nb_neighbors);
+
+    data_set_value_double("s", mydata->curr_diff->s[0]);
+    data_set_value_double("lambda", mydata->diff1.lambda);
+    data_set_value_double("avg_lambda", mydata->diff1.avg_lambda);
+}
+#endif
+
 
 int main(void) {
     pogobot_init();
     pogobot_start(setup, loop);
+    SET_CALLBACK(callback_create_data_schema, create_data_schema);
+    SET_CALLBACK(callback_export_data, export_data);
     return 0;
 }
 

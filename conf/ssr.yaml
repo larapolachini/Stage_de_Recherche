@@ -1,17 +1,23 @@
 ---
 
-window_width: 670
-window_height: 670
-arena_file: arenas/annulus.csv
+window_width: 600
+window_height: 600
+
 #arena_file: arenas/disk.csv
+arena_file: arenas/annulus.csv
+arena_width: 570.0     # In mm
+arena_height: 570.0    # In mm
+
 delete_old_files: true
+enable_data_logging: true
+data_filename: "frames/data.feather"
 
 seed: 0
 nBots: 25
-robot_radius: 30
+robot_radius: 30.0
 simulationTime: 180.0
-commRadius: 170
-msgSuccessRate: 0.7
+commRadius: 120.0
+msgSuccessRate: 0.5
 showComms: false
 GUI: true
 
@@ -20,12 +26,13 @@ GUI: true
 
 #timeStep: 0.05  #0.01667
 timeStep: 0.01  #0.01667
-GUI_speed_up: 0.01
+GUI_speed_up: 0.009
 
 initial_light_value: 32767
 photo_start_at: 1.0
 photo_start_duration: 1.0
 
+save_data_period: 0.5
 save_video_period: 0.5
 frames_name: "frames/f{:010.4f}.png"
 
