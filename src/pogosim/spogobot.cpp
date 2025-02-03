@@ -57,6 +57,10 @@ void time_reference_t::add_elapsed_microseconds(uint64_t microseconds) {
     elapsed_ms += microseconds;
 }
 
+void time_reference_t::offset_origin_microseconds(uint64_t microseconds) {
+    start_time -= microseconds;
+}
+
 
 uint64_t get_current_time_microseconds() {
     // Get the current time in microseconds since epoch
@@ -114,7 +118,10 @@ void pogobot_infrared_recover_next_message( message_t *mes ) {
 }
 
 void pogobot_infrared_clear_message_queue( void ) {
-    glogger->warn("Function 'pogobot_infrared_clear_message_queue' is not implemented yet!");
+    // Clear the queue
+    while (!current_robot->messages.empty()) {
+        current_robot->messages.pop();
+    }
 }
 
 
@@ -252,8 +259,8 @@ float pogobot_imu_readTemp( void ) {
  * ## Battery API
  */
 int16_t pogobot_battery_voltage_read( void ) {
-    glogger->warn("Function 'pogobot_battery_voltage_read' is not implemented yet!");
-    return 0;
+    // Assumes the battery is full
+    return std::numeric_limits<int16_t>::max();
 }
 
 
@@ -339,39 +346,46 @@ void pogobot_stopwatch_reset(time_reference_t *stopwatch) {
 }
 
 int32_t pogobot_stopwatch_lap( time_reference_t *stopwatch ) {
-    glogger->warn("Function 'pogobot_stopwatch_lap' is not implemented yet!");
-    return 0;
+    auto const res = stopwatch->get_elapsed_microseconds();
+    stopwatch->reset();
+    return res;
 }
-
 
 int32_t pogobot_stopwatch_get_elapsed_microseconds(time_reference_t *stopwatch) {
     return stopwatch->get_elapsed_microseconds();
 }
 
 void pogobot_stopwatch_offset_origin_microseconds( time_reference_t *stopwatch, int32_t microseconds_offset ) {
-    glogger->warn("Function 'pogobot_stopwatch_offset_origin_microseconds' is not implemented yet!");
+    stopwatch->offset_origin_microseconds(microseconds_offset);
 }
 
 void pogobot_timer_init( time_reference_t *timer, int32_t microseconds_to_go ) {
-    glogger->warn("Function 'pogobot_timer_init' is not implemented yet!");
+    pogobot_stopwatch_reset( timer );
+    pogobot_stopwatch_offset_origin_microseconds( timer, microseconds_to_go );
 }
 
 int32_t pogobot_timer_get_remaining_microseconds( time_reference_t *timer ) {
-    glogger->warn("Function 'pogobot_timer_get_remaining_microseconds' is not implemented yet!");
-    return 0;
+    uint32_t const now = get_current_time_microseconds();
+    int32_t const remain = now - timer->start_time;
+    return remain;
 }
 
 bool pogobot_timer_has_expired( time_reference_t *timer ) {
-    glogger->warn("Function 'pogobot_timer_has_expired' is not implemented yet!");
-    return false;
+    return pogobot_timer_get_remaining_microseconds(timer) < 0;
 }
 
 void pogobot_timer_wait_for_expiry( time_reference_t *timer ) {
-    glogger->warn("Function 'pogobot_timer_wait_for_expiry' is not implemented yet!");
+    int64_t const remain = pogobot_timer_get_remaining_microseconds(timer);
+    if (remain <= 0)
+        return;
+    // Simulate sleep
+    for (auto* sw : current_robot->stop_watches) {
+        sw->add_elapsed_microseconds(static_cast<uint64_t>(remain));
+    }
 }
 
 void pogobot_timer_offset_origin_microseconds( time_reference_t *timer, int32_t microseconds_offset ) {
-    glogger->warn("Function 'pogobot_timer_offset_origin_microseconds' is not implemented yet!");
+    timer->offset_origin_microseconds(microseconds_offset);
 }
 
 #pragma GCC diagnostic pop

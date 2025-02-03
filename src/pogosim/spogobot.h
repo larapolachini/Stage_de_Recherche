@@ -869,6 +869,7 @@ typedef struct time_reference_t {
     void enable();
     void disable();
     void add_elapsed_microseconds(uint64_t microseconds);
+    void offset_origin_microseconds(uint64_t microseconds);
 #endif
 
     uint32_t hardware_value_at_time_origin;
