@@ -14,7 +14,7 @@ From: ubuntu:24.04
     export DEBIAN_FRONTEND=noninteractive
     export CMAKE_MODULE_PATH="/opt/pogosim/cmake/modules"
     export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
-    export PATH="/usr/local/bin:$PATH"
+    export PATH="/usr/local/bin:$PATH:/pogobot-sdk/tools/riscv64-unknown-elf-gcc-10.1.0-2020.08.2-x86_64-linux-ubuntu14/bin"
     export NPROC=$(  grep -i "^processor" /proc/cpuinfo | wc -l )
 
 %files
@@ -96,6 +96,7 @@ From: ubuntu:24.04
     chmod +x litex_setup.py
     ./litex_setup.py init
     cat ../../tools/litex_version.txt | awk '{ if(!system("test -d " $1)) {system("git -C " $1 " checkout " $3)}}'
+    rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
     ./litex_setup.py install
     cd ../..
 
