@@ -207,13 +207,6 @@ typedef struct {
     double d_max;
     double frustration;
 
-    // Photo start values;
-#ifdef ENABLE_PHOTO_START
-    int16_t last_data_b;
-    int16_t last_data_fl;
-    int16_t last_data_fr;
-#endif
-
 } USERDATA;
 
 extern USERDATA *mydata;
