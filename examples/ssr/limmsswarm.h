@@ -17,7 +17,7 @@
 
 //#define ENABLE_INITIAL_WAIT_FOR_NEIGHBOR
 #define ENABLE_PHOTO_START
-#define LIGHT_THRESHOLD 5  // You can tweak this parameter to change the sensitivity to the light changes
+#define LIGHT_THRESHOLD 40  // You can tweak this parameter to change the sensitivity to the light changes
 
 //#define ENABLE_SINGLE_DIFF
 //#define ENABLE_DOUBLE_DIFF
@@ -206,6 +206,13 @@ typedef struct {
     double d_min;
     double d_max;
     double frustration;
+
+    // Photo start values;
+#ifdef ENABLE_PHOTO_START
+    int16_t last_data_b;
+    int16_t last_data_fl;
+    int16_t last_data_fr;
+#endif
 
 } USERDATA;
 

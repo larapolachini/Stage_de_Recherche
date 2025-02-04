@@ -824,15 +824,23 @@ void iteration(void) {
 #elif defined(ENABLE_PHOTO_START)
     if(mydata->current_behavior == INIT_BEHAVIOR) {
         mydata->enable_message_sending = false;
-        int16_t const photo0 = pogobot_photosensors_read(0);
-        int16_t const photo1 = pogobot_photosensors_read(1);
-        int16_t const photo2 = pogobot_photosensors_read(2);
+        int16_t const data_b  = pogobot_photosensors_read(0);
+        int16_t const data_fl = pogobot_photosensors_read(1);
+        int16_t const data_fr = pogobot_photosensors_read(2);
+
+        // Stopping if the difference between the last value and the current value is more than the threshold
+        int16_t const diff_b  = data_b  - mydata->last_data_b;  // Positive if data > last_data, i.e more light than before
+        int16_t const diff_fl = data_fl - mydata->last_data_fl;
+        int16_t const diff_fr = data_fr - mydata->last_data_fr;
+        mydata->last_data_b  = data_b;
+        mydata->last_data_fl = data_fl;
+        mydata->last_data_fr = data_fr;
 
 #ifdef ENABLE_DEBUG_MSG
         printf0("Current light level: %d %d %d \n", diff_b, diff_fl, diff_fr);
 #endif
 
-        if (photo0 < LIGHT_THRESHOLD || photo1 < LIGHT_THRESHOLD || photo2 < LIGHT_THRESHOLD) {
+        if(diff_b >= LIGHT_THRESHOLD || diff_fl >= LIGHT_THRESHOLD || diff_fr >= LIGHT_THRESHOLD) {
             printf0("Detected light is above threshold. Starting experiment!\n");
             clear_all_neighbors();
             set_behavior(MISC_BEHAVIOR);
