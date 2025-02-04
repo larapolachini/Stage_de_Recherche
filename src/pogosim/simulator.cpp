@@ -75,10 +75,6 @@ Simulation::Simulation(Configuration& _config)
     init_console_logger();
     init_box2d();
     init_SDL();
-    //create_walls();
-    create_arena();
-    create_robots();
-    create_membranes();
 }
 
 Simulation::~Simulation() {
@@ -90,6 +86,13 @@ Simulation::~Simulation() {
     if (window)
         SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+void Simulation::init_all() {
+    //create_walls();
+    create_arena();
+    create_robots();
+    create_membranes();
 }
 
 // TODO
@@ -832,6 +835,7 @@ int main(int argc, char** argv) {
 
     // Create the simulation object
     simulation = std::make_unique<Simulation>(config);
+    simulation->init_all();
     simulation->init_callbacks();
 
     // Launch simulation

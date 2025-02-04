@@ -200,6 +200,12 @@ void setup(void) {
     clear_known_neighbors();
 #endif
 
+#ifdef ENABLE_PHOTO_START
+    mydata->last_data_b  = pogobot_photosensors_read(0);
+    mydata->last_data_fl = pogobot_photosensors_read(1);
+    mydata->last_data_fr = pogobot_photosensors_read(2);
+#endif
+
     // Set main loop frequency, message sending frequency, message processing frequency
     main_loop_hz = MAIN_LOOP_HZ;
     max_nb_processed_msg_per_tick = MAX_NB_MSGS_PROCESSED_PER_TICK;

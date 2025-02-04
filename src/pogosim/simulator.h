@@ -71,6 +71,8 @@ public:
     Simulation(Configuration& _config);
     virtual ~Simulation();
 
+    void init_all();
+
     void create_robots();
     void create_membranes();
     void create_arena();
