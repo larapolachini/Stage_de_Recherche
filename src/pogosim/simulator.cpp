@@ -536,7 +536,7 @@ void Simulation::draw_scale_bar() {
     thickLineRGBA(renderer, x1, y1, x2, y2, 4, 0, 0, 0, 255);
 
     // Render the scale
-    std::string formatted_scale = std::vformat("{:.2f} mm", std::make_format_args(mm_scale));
+    std::string formatted_scale = std::vformat("{:.0f} mm", std::make_format_args(mm_scale));
     FC_Draw(font, renderer, x1, y1 + 5, "%s", formatted_scale.c_str()); 
 }
 
