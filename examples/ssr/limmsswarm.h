@@ -17,7 +17,7 @@
 
 //#define ENABLE_INITIAL_WAIT_FOR_NEIGHBOR
 #define ENABLE_PHOTO_START
-#define LIGHT_THRESHOLD 10  // You can tweak this parameter to change the sensitivity to the light changes
+#define LIGHT_THRESHOLD 15  // You can tweak this parameter to change the sensitivity to the light changes
 
 //#define ENABLE_SINGLE_DIFF
 //#define ENABLE_DOUBLE_DIFF
