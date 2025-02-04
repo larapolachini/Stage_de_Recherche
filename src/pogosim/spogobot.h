@@ -1008,13 +1008,13 @@ void msleep(int milliseconds);
 void pogosim_printf(const char* format, ...);
 
 
-void data_schema_add_field_int8(char const* name);
-void data_schema_add_field_int16(char const* name);
-void data_schema_add_field_int32(char const* name);
-void data_schema_add_field_int64(char const* name);
-void data_schema_add_field_double(char const* name);
-void data_schema_add_field_string(char const* name);
-void data_schema_add_field_bool(char const* name);
+void data_add_column_int8(char const* name);
+void data_add_column_int16(char const* name);
+void data_add_column_int32(char const* name);
+void data_add_column_int64(char const* name);
+void data_add_column_double(char const* name);
+void data_add_column_string(char const* name);
+void data_add_column_bool(char const* name);
 
 void data_set_value_int8(char const* name, int8_t value);
 void data_set_value_int16(char const* name, int16_t value);

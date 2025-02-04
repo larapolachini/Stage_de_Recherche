@@ -15,6 +15,7 @@ std::shared_ptr<spdlog::logger> robotlogger;
 std::random_device rd;
 std::mt19937 rnd_gen(rd());
 
+
 void init_logger() {
 //    // Create a console logger with color support
 //    glogger = spdlog::stdout_color_mt("console");
@@ -58,6 +59,13 @@ bool string_to_bool( std::string const& str) {
     } else {
         throw std::invalid_argument("Invalid string for boolean conversion: " + str);
     }
+}
+
+// Note: copy the string
+std::string to_lowercase(std::string const& str) {
+    std::string result = str; // Avoid modifying original string
+    std::ranges::transform(result, result.begin(), [](unsigned char c) { return std::tolower(c); });
+    return result;
 }
 
 

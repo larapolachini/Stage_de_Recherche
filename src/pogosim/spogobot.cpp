@@ -444,25 +444,25 @@ void pogosim_printf(const char* format, ...) {
 }
 
 
-void data_schema_add_field_int8(char const* name) {
+void data_add_column_int8(char const* name) {
     simulation->get_data_logger()->add_field(name, arrow::int8());
 }
-void data_schema_add_field_int16(char const* name) {
+void data_add_column_int16(char const* name) {
     simulation->get_data_logger()->add_field(name, arrow::int16());
 }
-void data_schema_add_field_int32(char const* name) {
+void data_add_column_int32(char const* name) {
     simulation->get_data_logger()->add_field(name, arrow::int32());
 }
-void data_schema_add_field_int64(char const* name) {
+void data_add_column_int64(char const* name) {
     simulation->get_data_logger()->add_field(name, arrow::int64());
 }
-void data_schema_add_field_double(char const* name) {
+void data_add_column_double(char const* name) {
     simulation->get_data_logger()->add_field(name, arrow::float64());
 }
-void data_schema_add_field_string(char const* name) {
+void data_add_column_string(char const* name) {
     simulation->get_data_logger()->add_field(name, arrow::utf8());
 }
-void data_schema_add_field_bool(char const* name) {
+void data_add_column_bool(char const* name) {
     simulation->get_data_logger()->add_field(name, arrow::boolean());
 }
 

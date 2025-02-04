@@ -328,6 +328,186 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector
     return points;
 }
 
+
+// Simple polygon centroid function (using the "shoelace" formula):
+b2Vec2 polygon_centroid(const std::vector<b2Vec2>& polygon) {
+    // Expecting polygon to be non-empty and closed (first == last) is optional.
+    double signedArea = 0.0;
+    double cx = 0.0, cy = 0.0;
+    for (size_t i = 0; i < polygon.size(); i++) {
+        const b2Vec2& p0 = polygon[i];
+        const b2Vec2& p1 = polygon[(i+1) % polygon.size()]; 
+        double cross = (p0.x * p1.y) - (p1.x * p0.y);
+        signedArea += cross;
+        cx += (p0.x + p1.x) * cross;
+        cy += (p0.y + p1.y) * cross;
+    }
+    signedArea *= 0.5;
+    cx /= (6.0 * signedArea);
+    cy /= (6.0 * signedArea);
+    return b2Vec2((float)cx, (float)cy);
+}
+
+// Distance from point to line segment (used for computing min-dist from centroid to edges):
+float point_to_line_segment_distance(const b2Vec2& p, 
+                                     const b2Vec2& a, 
+                                     const b2Vec2& b) {
+    // Vector AP and AB
+    float vx = p.x - a.x;
+    float vy = p.y - a.y;
+    float ux = b.x - a.x;
+    float uy = b.y - a.y;
+    // Compute the dot product AP·AB
+    float dot = vx * ux + vy * uy;
+    // Compute squared length of AB
+    float len2 = ux * ux + uy * uy;
+    // Parameter t along AB to project point P
+    float t = (len2 == 0.0f ? 0.0f : dot / len2);
+    // Clamp t to [0,1] so we stay in segment
+    t = std::max(0.0f, std::min(1.0f, t));
+    // Projection point on AB
+    float projx = a.x + t * ux;
+    float projy = a.y + t * uy;
+    // Distance from P to projection
+    float dx = p.x - projx;
+    float dy = p.y - projy;
+    return std::sqrt(dx*dx + dy*dy);
+}
+
+std::vector<b2Vec2> generate_regular_disk_points_in_polygon(
+    const std::vector<std::vector<b2Vec2>>& polygons,
+    float minDistance, 
+    unsigned int N)
+{
+    // 1. Basic validity checks
+    if (polygons.empty()) {
+        throw std::runtime_error("No polygons provided.");
+    }
+    const auto& mainPolygon = polygons.front();
+    if (mainPolygon.size() < 3) {
+        throw std::runtime_error("Polygon must have at least 3 vertices.");
+    }
+
+    // 2. Compute centroid of the *main* polygon
+    b2Vec2 center = polygon_centroid(mainPolygon);
+
+    // 3. Find approximate largest inscribed circle radius
+    //    by taking min distance from centroid to each edge minus minDistance.
+    float minEdgeDist = std::numeric_limits<float>::max();
+    for (size_t i = 0; i < mainPolygon.size(); ++i) {
+        const b2Vec2& a = mainPolygon[i];
+        const b2Vec2& b = mainPolygon[(i + 1) % mainPolygon.size()];
+        float dist = point_to_line_segment_distance(center, a, b);
+        if (dist < minEdgeDist) {
+            minEdgeDist = dist;
+        }
+    }
+    float radius = minEdgeDist - minDistance;
+    if (radius <= 0.0f) {
+        throw std::runtime_error("Polygon is too small or minDistance too large to fit any disk.");
+    }
+
+    // 4. We will place points in a series of concentric "rings" from r=0 to r=radius.
+    //    We'll increment radius by ~minDistance each ring to ensure no overlap.
+    //    For each ring, we compute the angle increment to maintain ~minDistance spacing along the arc.
+    //    If we manage to collect N points, we return them; if we exhaust r > radius without success, we throw.
+
+    std::vector<b2Vec2> result;
+    result.reserve(N);
+
+    // First, place the center point if it is valid (sometimes it might be near a hole boundary):
+    // We also check the holes to ensure the center is not in a hole.
+    if (is_point_within_polygon(mainPolygon, center.x, center.y)) {
+        bool inHole = false;
+        for (size_t h = 1; h < polygons.size(); ++h) {
+            if (is_point_within_polygon(polygons[h], center.x, center.y)) {
+                inHole = true;
+                break;
+            }
+        }
+        if (!inHole) {
+            result.push_back(center);
+        }
+    }
+
+    // If the center was valid, we might have 1 point placed already.
+    // We'll keep going until we have N or we run out of radius.
+
+    float currentRadius = 0.0f;
+    const float stepR = minDistance; // radial increment
+    // (You can tweak stepR to a fraction of minDistance if you want a denser ring approach.)
+
+    while (result.size() < N && currentRadius <= radius + 1e-6f)
+    {
+        currentRadius += stepR;
+        if (currentRadius > radius) break; // we've exceeded the inscribed circle
+
+        // On a ring of radius = currentRadius, the arc length between adjacent points is about 2*minDistance
+        // so that points along the ring won't overlap with each other. 
+        // arc_length = r * dTheta => dTheta = arc_length / r.
+        // We'll choose arc_length ~ (2*minDistance). You might want smaller arcs if you want to
+        // be extra safe about not missing valid placements, but that can slow performance.
+        float arcLength = 2.0f * minDistance;
+        float dTheta = arcLength / currentRadius;
+        if (currentRadius < 1e-6f) {
+            // avoid division by zero if very close to center
+            dTheta = 2.0f * float(M_PI); 
+        }
+
+        // We'll place angles from [0, 2π). We have about 2π / dTheta points on this ring.
+        // If the ring is extremely small, e.g. near zero radius, we handle that separately above.
+        for (float theta = 0.0f; theta < 2.0f * float(M_PI); theta += dTheta) 
+        {
+            float px = center.x + currentRadius * std::cos(theta);
+            float py = center.y + currentRadius * std::sin(theta);
+
+            // 5. Check if this point is inside main polygon & not in a hole
+            if (!is_point_within_polygon(mainPolygon, px, py)) {
+                continue; 
+            }
+            bool inHole = false;
+            for (size_t h = 1; h < polygons.size(); ++h) {
+                if (is_point_within_polygon(polygons[h], px, py)) {
+                    inHole = true;
+                    break;
+                }
+            }
+            if (inHole) {
+                continue;
+            }
+
+            // 6. Ensure this new point is at least 2*minDistance from all existing points 
+            //    (so circles of radius minDistance/2 won't overlap).
+            bool tooClose = false;
+            for (auto& p : result) {
+                if (euclidean_distance(p, b2Vec2(px, py)) < 2.0f * minDistance) {
+                    tooClose = true;
+                    break;
+                }
+            }
+            if (tooClose) {
+                continue;
+            }
+
+            // 7. Accept this point
+            result.emplace_back(px, py);
+            if (result.size() == N) {
+                break;
+            }
+        }
+    }
+
+    // If we exit the loop and haven't collected N points, we must throw.
+    if (result.size() < N) {
+        throw std::runtime_error(
+            "Impossible to place N points inside the polygon with the given minDistance constraints."
+        );
+    }
+
+    return result;
+}
+
+
 void draw_polygon(SDL_Renderer* renderer, const std::vector<b2Vec2>& polygon) {
     if (polygon.size() < 3) {
         std::cerr << "Error: Polygon must have at least 3 points to be drawable." << std::endl;

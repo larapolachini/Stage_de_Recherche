@@ -301,28 +301,37 @@ void Simulation::init_SDL() {
 
 
 void Simulation::create_robots() {
+    std::string const initial_robot_formation = to_lowercase(config.get("initial_robot_formation", "random"));
     uint32_t const nb_robots = std::stoi(config.get("nBots", "100"));
     float const msg_success_rate = std::stof(config.get("msgSuccessRate", "0.50"));
     glogger->info("Creating {} robots", nb_robots);
     if (!nb_robots)
         throw std::runtime_error("Number of robots is 0 (nBot=0 in configuration).");
 
+    std::vector<b2Vec2> points;
     try {
-        auto const points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * robot_radius, nb_robots);
-
-        for (size_t i = 0; i < nb_robots; ++i) {
-            //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius);
-            auto const point = points[i];
-            robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId, msg_success_rate);
-            //float x = minX + std::rand() % static_cast<int>(maxX - minX);
-            //float y = minY + std::rand() % static_cast<int>(maxY - minY);
-            //robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);
-            glogger->debug("Creating robot at ({}, {})", point.x, point.y);
+        if (initial_robot_formation == "random") {
+            points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * robot_radius, nb_robots);
+        } else if (initial_robot_formation == "disk") {
+            points = generate_regular_disk_points_in_polygon(arena_polygons, 1.0 * robot_radius, nb_robots);
+        } else {
+            glogger->error("Unknown 'initial_robot_formation' value: '{}'. Assuming random formation...", initial_robot_formation);
+            points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * robot_radius, nb_robots);
         }
-        current_robot = &robots.front();
     } catch (const std::exception& e) {
         throw std::runtime_error("Impossible to create robots (number may be too high for the provided arena): " + std::string(e.what()));
     }
+
+    for (size_t i = 0; i < nb_robots; ++i) {
+        //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius);
+        auto const point = points[i];
+        robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId, msg_success_rate);
+        //float x = minX + std::rand() % static_cast<int>(maxX - minX);
+        //float y = minY + std::rand() % static_cast<int>(maxY - minY);
+        //robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);
+        glogger->debug("Creating robot at ({}, {})", point.x, point.y);
+    }
+    current_robot = &robots.front();
 
     glogger->info("Initializing all robots...");
     // Launch main() on all robots

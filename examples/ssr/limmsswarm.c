@@ -1214,20 +1214,19 @@ void loop(void) {
 
 
 #ifdef SIMULATOR
-// Function called by the simulator to specify user-defined data fields to add to the exported data files
+// Function called once by the simulator to specify user-defined data fields to add to the exported data files
 void create_data_schema() {
-    data_schema_add_field_int8("current_behavior");
-    data_schema_add_field_bool("diffusion_valid1");
-    data_schema_add_field_double("t");
-    data_schema_add_field_int8("nb_neighbors");
+    data_add_column_int8("current_behavior");
+    data_add_column_bool("diffusion_valid1");
+    data_add_column_double("t");
+    data_add_column_int8("nb_neighbors");
 
-    data_schema_add_field_double("s");
-    data_schema_add_field_double("lambda");
-    data_schema_add_field_double("avg_lambda");
-
+    data_add_column_double("s");
+    data_add_column_double("lambda");
+    data_add_column_double("avg_lambda");
 }
 
-// Function called by the simulator each time data is saved
+// Function called periodically by the simulator each time data is saved (cf config parameter "save_data_period" in seconds)
 void export_data() {
     data_set_value_int8("current_behavior", mydata->current_behavior);
     data_set_value_bool("diffusion_valid1", mydata->diff1.diffusion_valid);

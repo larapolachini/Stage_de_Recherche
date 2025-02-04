@@ -83,6 +83,7 @@ typedef struct {
     uint8_t b;
 } rgb_color;
 
+// Global variables (values accessible by all robots, so everything must be const)
 rgb_color const red =         {.name = "red",        .r = 25, .g = 0,  .b = 0};
 rgb_color const green =       {.name = "green",      .r = 0,  .g = 25, .b = 0};
 rgb_color const blue =        {.name = "blue",       .r = 0,  .g = 0,  .b = 25};
@@ -101,7 +102,7 @@ rgb_color const white =       {.name = "white",      .r = 25, .g = 25, .b = 25};
 // * main
 // ********************************************************************************
 
-// Const global variables (same values of all robots)
+// Const global variables (same values for all robots)
 rgb_color const rgb_colors[] = {red, green, blue, magenta, yellow, cyan, orange, purple, light_pink, mint_green}; // 10 hanabi colors
 uint8_t const nb_rgb_colors = sizeof(rgb_colors) / sizeof(rgb_colors[0]);
 uint16_t const den_p_change_led_color = 20000; // probability to change led color independently (1/den_p_change_led_color) (p=3000 for 15 robots; p=20000 for 72 robots)
@@ -205,9 +206,6 @@ void user_init(void) {
         mydata_ptr[i] = 0;
     }
 
-//    // Init timer
-//    pogobot_stopwatch_reset(&mydata->timer_it);
-
     // Set main loop frequency, message sending frequency, message processing frequency
     main_loop_hz = FQCY;
     max_nb_processed_msg_per_tick = MAX_NB_OF_MSG;
@@ -310,17 +308,17 @@ void user_step(void) {
     // * Robots do not move in this experience.
     // ... NOTHING TO DO ...
 #endif
-
 }
+
 
 #ifdef SIMULATOR
-// Function called by the simulator to specify user-defined data fields to add to the exported data files
+// Function called once by the simulator to specify user-defined data fields to add to the exported data files
 void create_data_schema() {
-    data_schema_add_field_int32("age");
-    data_schema_add_field_int16("rgb_colors_index");
+    data_add_column_int32("age");
+    data_add_column_int16("rgb_colors_index");
 }
 
-// Function called by the simulator each time data is saved
+// Function called periodically by the simulator each time data is saved (cf config parameter "save_data_period" in seconds)
 void export_data() {
     data_set_value_int32("age", mydata->age);
     data_set_value_int16("rgb_colors_index", mydata->rgb_colors_index);
