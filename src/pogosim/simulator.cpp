@@ -688,7 +688,7 @@ void Simulation::main_loop() {
         }
 
         if (enable_gui) {
-            if (gui_delay >= 1.0) {
+            if (gui_delay >= 0.001) {
                 // Render
                 render_all();
                 export_frames();

@@ -24,7 +24,7 @@ fp_t const diffusion_convergence_threshold = 0.1;
 uint16_t const diffusion_min_nb_points = 3;
 fp_t const diffusion_min_abs_s = 0.e-05f;
 
-uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; // 1240;
+uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; // 12400;
 uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 1550;
 uint32_t const µs_randow_walk                       = kiloticks_to_µs * 0; // 6200;
 uint32_t const µs_handshake                         = kiloticks_to_µs * 1240; // 30;
@@ -1203,10 +1203,6 @@ void loop(void) {
 
     // Purge neighbors if needed
     purge_old_neighbors();
-
-//    // Messages I/O
-//    send_message();
-//    process_message();
 
     // Main behavior of the robots
     iteration();

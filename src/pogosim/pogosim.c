@@ -59,9 +59,6 @@ void pogo_main_loop_step(void (*user_step)(void)) {
     // Update millisecond clock
     pogobot_stopwatch_reset(&timer_main_loop);
 
-    // Purge old messages if needed
-    // TODO
-
     // Check if we received a system message (e.g. rc_stop)
     // TODO
 
@@ -93,7 +90,7 @@ void pogo_main_loop_step(void (*user_step)(void)) {
     if (main_loop_hz > 0) {
         // Detect and handle time overflows
         uint64_t const elapsed_µs = pogobot_stopwatch_get_elapsed_microseconds(&timer_main_loop);
-        uint64_t const step_max_duration = 1000000/main_loop_hz;
+        uint64_t const step_max_duration = 1000000LL/main_loop_hz;
         if (elapsed_µs > step_max_duration) {
             printf("[TIME] Error code: %u: TIME OVERFLOW ERROR! Step took %llu µs, should be less than %llu µs.", ERROR_TIME_OVERFLOW, elapsed_µs, step_max_duration);
             display_led_error_code(ERROR_TIME_OVERFLOW);
