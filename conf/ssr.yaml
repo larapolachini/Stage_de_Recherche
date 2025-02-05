@@ -3,8 +3,8 @@
 window_width: 600
 window_height: 600
 
-#arena_file: arenas/disk.csv
-arena_file: arenas/annulus.csv
+arena_file: arenas/disk.csv
+#arena_file: arenas/annulus.csv
 arena_width: 500.0     # In mm
 arena_height: 500.0    # In mm
 

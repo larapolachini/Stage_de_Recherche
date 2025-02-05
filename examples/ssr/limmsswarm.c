@@ -31,10 +31,10 @@ uint32_t const µs_handshake                         = kiloticks_to_µs * 1240; 
 uint32_t const µs_diffusion                         = kiloticks_to_µs * 15345; // 31000; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
 uint32_t const µs_diffusion_it                      = kiloticks_to_µs * 495; // 310; // 93;
 uint32_t const µs_diffusion_burnin                  = kiloticks_to_µs * 3022; // 1240;
-uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 7440; // 1860;
-uint32_t const µs_collective_avg_lambda_it          = kiloticks_to_µs * 310;
-uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 7440; // 1860;
-uint32_t const µs_collective_avg_avg_lambda_it      = kiloticks_to_µs * 310;
+uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 9900; // 1860;
+uint32_t const µs_collective_avg_lambda_it          = kiloticks_to_µs * 495;
+uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 9900; // 1860;
+uint32_t const µs_collective_avg_avg_lambda_it      = kiloticks_to_µs * 495;
 uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
 uint32_t µs_iteration = 0; // Set in ``setup()``
 

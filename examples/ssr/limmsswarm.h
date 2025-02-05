@@ -7,8 +7,8 @@
 #define MAXN 20 // 20
 #define RB_SIZE 8   // Ring buffer size. Choose a power of two for faster code
 #define PERCENT_MSG_SENT 50
-#define MAIN_LOOP_HZ 60
-#define MAX_NB_MSGS_PROCESSED_PER_TICK 5
+#define MAIN_LOOP_HZ 50
+#define MAX_NB_MSGS_PROCESSED_PER_TICK 3
 
 #define ENABLE_AVG_AVG_LAMBDA
 //#define ENABLE_INIT_REMOVE_SUM_S
@@ -51,7 +51,7 @@
 #define NUMBER_DIFF 6
 #endif
 
-typedef double fp_t;
+typedef float fp_t;
 #define ABS(x) fabs(x)
 #define LOG(x) log(x)
 
@@ -201,11 +201,11 @@ typedef struct {
     uint64_t tumble_time;
     uint64_t run_time;
     uint8_t direction;
-    double prob;
+    float prob;
     uint8_t flag_dispersion;
-    double d_min;
-    double d_max;
-    double frustration;
+    float d_min;
+    float d_max;
+    float frustration;
 
     // Photo start values;
 #ifdef ENABLE_PHOTO_START
