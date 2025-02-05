@@ -217,7 +217,9 @@ void setup(void) {
     // Set led index to show error codes
     error_codes_led_idx = 3; // Default value, negative values to disable
 
-    pogobot_led_setColors(25, 0, 0, 0);
+    for (uint8_t i = 0; i < 5; i++) {
+        pogobot_led_setColors(0, 0, 0, i);
+    }
     init_ticks();
     printf0("\ninit ok\n");
 }
@@ -803,10 +805,6 @@ void iteration(void) {
 
     //printf0("Debug iteration: pogoticks=%u  elapsed_since_start_it=%u\n", (uint16_t) (pogoticks / 1000000), (uint16_t) (µs_elapsed_since_start_it / 1000000));
 
-#ifdef SHOW_AVGLAMBDA_IN_LED1
-    set_color_from_lambda(mydata->curr_diff->avg_lambda, 1);
-#endif
-
 #ifdef ENABLE_INITIAL_WAIT_FOR_NEIGHBOR
     if(mydata->current_behavior == INIT_BEHAVIOR) {
         if((pogoticks / µs_random_walk_choice) % 2 == 0) {
@@ -854,6 +852,10 @@ void iteration(void) {
         }
         return;
     }
+#endif
+
+#ifdef SHOW_AVGLAMBDA_IN_LED1
+    set_color_from_lambda(mydata->curr_diff->avg_lambda, 1);
 #endif
 
     if(pogoticks < µs_initial_random_walk) {
