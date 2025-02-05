@@ -19,7 +19,7 @@ nBots: 25
 initial_robot_formation: random
 robot_radius: 26.5
 simulationTime: 180.0
-commRadius: 106.5
+commRadius: 110 #106.5
 msgSuccessRate: 0.5
 showComms: false
 GUI: true

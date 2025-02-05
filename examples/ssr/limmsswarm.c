@@ -18,7 +18,7 @@ uint32_t const main_loop_delay = 30; // 20; // 100; // 500; // 50; // ms
 uint8_t const wait_for_min_nb_neighbors = 1; // = 1;
 
 fp_t const initial_s_max_val = 1.f;
-fp_t const inv_tau = 10.f; // Originally 10.f
+fp_t const inv_tau = 12.f; // Originally 10.f
 
 fp_t const diffusion_convergence_threshold = 0.1;
 uint16_t const diffusion_min_nb_points = 3;
@@ -28,13 +28,13 @@ uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; // 
 uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 1550;
 uint32_t const µs_randow_walk                       = kiloticks_to_µs * 0; // 6200;
 uint32_t const µs_handshake                         = kiloticks_to_µs * 1240; // 30;
-uint32_t const µs_diffusion                         = kiloticks_to_µs * 15345; // 31000; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
-uint32_t const µs_diffusion_it                      = kiloticks_to_µs * 495; // 310; // 93;
-uint32_t const µs_diffusion_burnin                  = kiloticks_to_µs * 3022; // 1240;
-uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 9900; // 1860;
-uint32_t const µs_collective_avg_lambda_it          = kiloticks_to_µs * 495;
-uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 9900; // 1860;
-uint32_t const µs_collective_avg_avg_lambda_it      = kiloticks_to_µs * 495;
+uint32_t const µs_diffusion                         = kiloticks_to_µs * 16275; // 31000; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
+uint32_t const µs_diffusion_it                      = kiloticks_to_µs * 465; // 310; // 93;
+uint32_t const µs_diffusion_burnin                  = kiloticks_to_µs * 2325; // 1240;
+uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 13950; // 1860;
+uint32_t const µs_collective_avg_lambda_it          = kiloticks_to_µs * 465;
+uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 13950; // 1860;
+uint32_t const µs_collective_avg_avg_lambda_it      = kiloticks_to_µs * 465;
 uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
 uint32_t µs_iteration = 0; // Set in ``setup()``
 
@@ -435,7 +435,6 @@ void compute_lambda_v_leastsquaresMSE(void) {
                 diff->hist_logs[i][(uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE] = logs;
                 diff->hist_t[i][(uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE] = t;
 
-// XXX
                 if(diff->ls_nb_points[i] > 3.0f) {
                     fp_t const _lambda = -(diff->ls_nb_points[i] * diff->sum_tlogs[i] - diff->sum_t[i] * diff->sum_logs[i]) / (diff->ls_nb_points[i] * diff->sum_t2[i] - diff->sum_t[i] * diff->sum_t[i]);
                     fp_t const _v = EXP( (diff->sum_logs[i] - _lambda * diff->sum_t[i]) / diff->ls_nb_points[i] );
