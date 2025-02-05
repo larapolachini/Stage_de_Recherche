@@ -9,10 +9,8 @@
 #include "SDL_FontCache.h"
 
 extern "C" int robot_main(void);
-
-//void create_robots(Configuration& config);
-//void main_loop(Configuration& config);
 void set_current_robot(Robot& robot);
+void print_help();
 
 class Simulation {
     Configuration& config;

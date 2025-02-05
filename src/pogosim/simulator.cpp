@@ -39,6 +39,7 @@ void set_current_robot(Robot& robot) {
         current_robot->_global_timer                 = _global_timer;
         current_robot->timer_main_loop               = timer_main_loop;
         current_robot->_current_time_milliseconds    = _current_time_milliseconds;
+        current_robot->_error_code_initial_time      = _error_code_initial_time;
         current_robot->percent_msgs_sent_per_ticks   = percent_msgs_sent_per_ticks;
         current_robot->nb_msgs_sent                  = nb_msgs_sent;
         current_robot->nb_msgs_recv                  = nb_msgs_recv;
@@ -59,6 +60,7 @@ void set_current_robot(Robot& robot) {
     _global_timer                 = robot._global_timer;
     timer_main_loop               = robot.timer_main_loop;
     _current_time_milliseconds    = robot._current_time_milliseconds;
+    _error_code_initial_time      = robot._error_code_initial_time;
     percent_msgs_sent_per_ticks   = robot.percent_msgs_sent_per_ticks;
     nb_msgs_sent                  = robot.nb_msgs_sent;
     nb_msgs_recv                  = robot.nb_msgs_recv;
@@ -771,6 +773,9 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
         } else if (arg == "-V" || arg == "--version") {
             std::cout << "Pogosim simulator. Version " << POGOSIM_VERSION << "." << std::endl;
             return false;
+        } else if (arg == "-h" || arg == "--help") {
+            print_help();
+            return false;
         } else {
             std::cerr << "Unknown argument: " << arg << std::endl;
             return false;
@@ -778,6 +783,18 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
     }
 
     return true;
+}
+
+void print_help() {
+    std::cout << "Usage: pogosim [options]\n"
+              << "Options:\n"
+              << "  -c, --config <file>             Specify the configuration file.\n"
+              << "  -g, --no-GUI                    Disable GUI mode.\n"
+              << "  -v, --verbose                   Enable verbose mode.\n"
+              << "  -nr, --do-not-show-robot-msg    Suppress robot messages.\n"
+              << "  -P, --progress                  Show progress output.\n"
+              << "  -V, --version                   Show version information.\n"
+              << "  -h, --help                      Display this help message.\n";
 }
 
 

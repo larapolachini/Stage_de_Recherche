@@ -43,6 +43,7 @@ public:
     time_reference_t _global_timer;
     time_reference_t timer_main_loop;
     uint32_t _current_time_milliseconds = 0;
+    uint32_t _error_code_initial_time = 0;
     uint8_t percent_msgs_sent_per_ticks = 20;
     uint32_t nb_msgs_sent = 0;
     uint32_t nb_msgs_recv = 0;

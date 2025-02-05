@@ -15,6 +15,7 @@ bool (*msg_tx_fn)(void) = NULL;
 int8_t error_codes_led_idx = 3; // Default value, negative values to disable
 uint32_t pogobot_ticks = 0;
 uint32_t _current_time_milliseconds = 0LL;
+uint32_t _error_code_initial_time = 0LL;
 time_reference_t _global_timer;
 time_reference_t timer_main_loop;
 
@@ -53,6 +54,7 @@ void display_led_error_code(error_code_t const c) {
     uint8_t r, g, b;
     qualitative_colormap(c, &r, &g, &b);
     pogobot_led_setColors(r, g, b, error_codes_led_idx);
+    _error_code_initial_time = current_time_milliseconds();
 }
 
 void pogo_main_loop_step(void (*user_step)(void)) {
@@ -101,6 +103,11 @@ void pogo_main_loop_step(void (*user_step)(void)) {
             uint32_t const ms_to_sleep = (step_max_duration - elapsed_µs) / 1000;
             msleep(ms_to_sleep); // Wait for next step
         }
+    }
+
+    // Check if the error code has expired. When 'display_led_error_code' is called, the error code led is lighted only for 1 seccond.
+    if (error_codes_led_idx >= 0 && _error_code_initial_time > 0 && current_time_milliseconds() >= _error_code_initial_time + 1000) {
+        pogobot_led_setColors(0, 0, 0, error_codes_led_idx);
     }
 
     // Update pogobot_ticks

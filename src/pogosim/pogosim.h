@@ -50,6 +50,7 @@ extern int8_t error_codes_led_idx;
 extern time_reference_t _global_timer;
 extern time_reference_t timer_main_loop;
 extern uint32_t _current_time_milliseconds;
+extern uint32_t _error_code_initial_time;
 
 extern uint8_t percent_msgs_sent_per_ticks;
 extern uint32_t nb_msgs_sent;
