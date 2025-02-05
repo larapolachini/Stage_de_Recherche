@@ -52,8 +52,9 @@
 #endif
 
 typedef float fp_t;
-#define ABS(x) fabs(x)
-#define LOG(x) log(x)
+#define ABS(x) fabsf(x)
+#define LOG(x) logf(x)
+#define EXP(x) expf(x)
 
 #include "pogosim/pogosim.h"
 

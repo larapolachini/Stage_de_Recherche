@@ -417,26 +417,28 @@ void compute_lambda_v_leastsquaresMSE(void) {
     fp_t const t = (fp_t)diff->current_diffusion_it / inv_tau;
     diff->t = t;
 
-    fp_t nb_valid_lambda = 0.;
-    fp_t sum_all_lambda = 0.;
+    fp_t nb_valid_lambda = 0.f;
+    fp_t sum_all_lambda = 0.f;
 
     if(diff->diffusion_valid && diff->current_diffusion_it >= µs_diffusion_burnin / µs_diffusion_it) {
 
         for(uint8_t i = 0; i < NUMBER_DIFF; i++) {
-            fp_t mse = 1000.;
+            fp_t mse = 1000.f;
             fp_t const logs = LOG(ABS(diff->s[i]));
-            if(is_number_valid(logs) && ABS(logs) > 0.) {
+            if(is_number_valid(logs) && ABS(logs) > 0.f) {
                 diff->sum_t[i] += t;
                 diff->sum_t2[i] += t * t;
                 diff->sum_logs[i] += logs;
                 diff->sum_tlogs[i] += t * logs;
-                diff->ls_nb_points[i] += 1.0;
+                diff->ls_nb_points[i] += 1.0f;
+
                 diff->hist_logs[i][(uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE] = logs;
                 diff->hist_t[i][(uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE] = t;
 
-                if(diff->ls_nb_points[i] > 3.0) {
+// XXX
+                if(diff->ls_nb_points[i] > 3.0f) {
                     fp_t const _lambda = -(diff->ls_nb_points[i] * diff->sum_tlogs[i] - diff->sum_t[i] * diff->sum_logs[i]) / (diff->ls_nb_points[i] * diff->sum_t2[i] - diff->sum_t[i] * diff->sum_t[i]);
-                    fp_t const _v = exp( (diff->sum_logs[i] - _lambda * diff->sum_t[i]) / diff->ls_nb_points[i] );
+                    fp_t const _v = EXP( (diff->sum_logs[i] - _lambda * diff->sum_t[i]) / diff->ls_nb_points[i] );
 
                     if(!is_number_valid(_lambda) || !is_number_valid(_v)) {
                         // ...
@@ -462,6 +464,7 @@ void compute_lambda_v_leastsquaresMSE(void) {
                     }
 
                 }
+
             }
         }
 
