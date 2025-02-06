@@ -379,7 +379,7 @@ void compute_next_s(void) {
     }
 
     for(uint8_t j = 0; j < NUMBER_DIFF; j++) {
-        if (ABS(new_s[j]) <= 1e-3) {
+        if (ABS(new_s[j]) <= 1e-3f) {
             diff->stopped_diffusion[j] = true;
         }
     }
@@ -457,7 +457,7 @@ void compute_lambda_v_leastsquaresMSE(void) {
         if (diff->stopped_diffusion[i])
             continue;
         fp_t mse = 1000.f;
-        if (ABS(diff->s[i]) <= 1e-7) {
+        if (ABS(diff->s[i]) <= 1e-7f) {
             diff->stopped_diffusion[i] = true;
             continue;
         }
