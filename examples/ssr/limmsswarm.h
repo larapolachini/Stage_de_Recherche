@@ -63,7 +63,8 @@ extern fp_t const initial_s_max_val;
 #ifdef SIMULATOR
 #define printf0(fmt, ...) if (pogobot_helper_getid() == 0) { printf(fmt, ##__VA_ARGS__ ); }
 #else
-#define printf0(fmt, ...) printf(fmt, ##__VA_ARGS__ )
+#define POGOBOT_PRINTF_ID 38191
+#define printf0(fmt, ...) if (pogobot_helper_getid() == POGOBOT_PRINTF_ID) { printf(fmt, ##__VA_ARGS__ ); }
 #endif
 
 
