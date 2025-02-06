@@ -5,10 +5,9 @@
 //#define DISABLE_MOTION
 
 #define MAXN 20 // 20
-#define RB_SIZE 8   // Ring buffer size. Choose a power of two for faster code
-#define PERCENT_MSG_SENT 50
-#define MAIN_LOOP_HZ 60
-#define MAX_NB_MSGS_PROCESSED_PER_TICK 10
+#define PERCENT_MSG_SENT 60
+#define MAIN_LOOP_HZ 20
+#define MAX_NB_MSGS_PROCESSED_PER_TICK 100
 
 #define ENABLE_AVG_AVG_LAMBDA
 //#define ENABLE_INIT_REMOVE_SUM_S
@@ -37,7 +36,7 @@
 #define SHOW_AVGLAMBDA_IN_LED1
 //#define ENABLE_SHOW_BEHAVIOR_COLOR
 
-//#define DIFFUSION_WINDOW_SIZE 40 // XXX Original value
+//#define DIFFUSION_WINDOW_SIZE 40
 #define DIFFUSION_WINDOW_SIZE 20 // XXX Original value
 //#define DIFFUSION_WINDOW_SIZE 10
 //#define DIFFUSION_WINDOW_SIZE 3
@@ -64,8 +63,9 @@ extern fp_t const initial_s_max_val;
 #ifdef SIMULATOR
 #define printf0(fmt, ...) if (pogobot_helper_getid() == 0) { printf(fmt, ##__VA_ARGS__ ); }
 #else
-#define POGOBOT_PRINTF_ID  65535 //38191
-#define printf0(fmt, ...) if (pogobot_helper_getid() == POGOBOT_PRINTF_ID) { printf(fmt, ##__VA_ARGS__ ); }
+//#define POGOBOT_PRINTF_ID  65535 //38191
+//#define printf0(fmt, ...) if (pogobot_helper_getid() == POGOBOT_PRINTF_ID) { printf(fmt, ##__VA_ARGS__ ); }
+#define printf0(fmt, ...) printf(fmt, ##__VA_ARGS__ );
 #endif
 
 
