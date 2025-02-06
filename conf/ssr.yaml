@@ -16,12 +16,12 @@ console_filename: "frames/console.txt"
 
 seed: 0
 nBots: 25
-#initial_robot_formation: random
-initial_robot_formation: disk
+initial_robot_formation: random
+#initial_robot_formation: disk
 robot_radius: 26.5
 simulationTime: 1800.0
 commRadius: 120.0 # 106.5
-msgSuccessRate: 0.5
+msgSuccessRate: 0.8
 showComms: false
 GUI: true
 

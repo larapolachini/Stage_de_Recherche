@@ -16,7 +16,7 @@ REGISTER_USERDATA(USERDATA)
 uint8_t const wait_for_min_nb_neighbors = 1; // = 1;
 
 fp_t const initial_s_max_val = 1.f;
-fp_t const inv_tau = 10.f; // 15.f; // 12.f; // Originally 10.f
+fp_t const inv_tau = 20.f; // 15.f; // 12.f; // Originally 10.f
 
 fp_t const diffusion_convergence_threshold = 0.1;
 uint16_t const diffusion_min_nb_points = 3;
@@ -36,15 +36,15 @@ fp_t const diffusion_min_abs_s = 0.e-05f;
 //uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
 //uint32_t µs_iteration = 0; // Set in ``setup()``
 
-uint32_t const max_age = kiloticks_to_µs * 620; // 186; // 320; // 620; //620;
+uint32_t const max_age = kiloticks_to_µs * 310; // 186; // 320; // 620; //620;
 
 uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; // 12400;
 uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 1550;
 uint32_t const µs_randow_walk                       = kiloticks_to_µs * 0; // 6200;
 uint32_t const µs_handshake                         = max_age * 5; // 30;
-uint32_t const µs_diffusion                         = max_age * 60; // 31000; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
+uint32_t const µs_diffusion                         = max_age * 100; // 31000; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
 uint32_t const µs_diffusion_it                      = max_age; // 310; // 93;
-uint32_t const µs_diffusion_burnin                  = max_age * 5; // 1240;
+uint32_t const µs_diffusion_burnin                  = max_age * 20; // 1240;
 uint32_t const µs_collective_avg_lambda             = max_age * 20; // 1860;
 uint32_t const µs_collective_avg_lambda_it          = max_age;
 uint32_t const µs_collective_avg_avg_lambda         = max_age * 20; // 1860;
