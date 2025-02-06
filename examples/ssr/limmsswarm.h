@@ -8,7 +8,7 @@
 #define RB_SIZE 8   // Ring buffer size. Choose a power of two for faster code
 #define PERCENT_MSG_SENT 50
 #define MAIN_LOOP_HZ 30
-#define MAX_NB_MSGS_PROCESSED_PER_TICK 10
+#define MAX_NB_MSGS_PROCESSED_PER_TICK 5
 
 #define ENABLE_AVG_AVG_LAMBDA
 //#define ENABLE_INIT_REMOVE_SUM_S
@@ -161,7 +161,8 @@ typedef struct {
     fp_t best_mse[NUMBER_DIFF];
 
     uint16_t current_avg_it;
-    uint8_t diffusion_valid;
+    bool diffusion_valid;
+    bool stopped_diffusion[NUMBER_DIFF];
 
     uint16_t current_diffusion_it;
     uint64_t time_last_diff_it;

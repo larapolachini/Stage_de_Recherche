@@ -18,26 +18,41 @@ uint32_t const main_loop_delay = 30; // 20; // 100; // 500; // 50; // ms
 uint8_t const wait_for_min_nb_neighbors = 1; // = 1;
 
 fp_t const initial_s_max_val = 1.f;
-fp_t const inv_tau = 12.f; // Originally 10.f
+fp_t const inv_tau = 15.f; // 12.f; // Originally 10.f
 
 fp_t const diffusion_convergence_threshold = 0.1;
 uint16_t const diffusion_min_nb_points = 3;
 fp_t const diffusion_min_abs_s = 0.e-05f;
 
+//uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; // 12400;
+//uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 1550;
+//uint32_t const µs_randow_walk                       = kiloticks_to_µs * 0; // 6200;
+//uint32_t const µs_handshake                         = kiloticks_to_µs * 1240; // 30;
+//uint32_t const µs_diffusion                         = kiloticks_to_µs * 16275; // 31000; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
+//uint32_t const µs_diffusion_it                      = kiloticks_to_µs * 465; // 310; // 93;
+//uint32_t const µs_diffusion_burnin                  = kiloticks_to_µs * 2325; // 1240;
+//uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 13950; // 1860;
+//uint32_t const µs_collective_avg_lambda_it          = kiloticks_to_µs * 465;
+//uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 13950; // 1860;
+//uint32_t const µs_collective_avg_avg_lambda_it      = kiloticks_to_µs * 465;
+//uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
+//uint32_t µs_iteration = 0; // Set in ``setup()``
+
+uint32_t const max_age = kiloticks_to_µs * 620; //620;
+
 uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; // 12400;
 uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 1550;
 uint32_t const µs_randow_walk                       = kiloticks_to_µs * 0; // 6200;
-uint32_t const µs_handshake                         = kiloticks_to_µs * 1240; // 30;
-uint32_t const µs_diffusion                         = kiloticks_to_µs * 16275; // 31000; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
-uint32_t const µs_diffusion_it                      = kiloticks_to_µs * 465; // 310; // 93;
-uint32_t const µs_diffusion_burnin                  = kiloticks_to_µs * 2325; // 1240;
-uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 13950; // 1860;
-uint32_t const µs_collective_avg_lambda_it          = kiloticks_to_µs * 465;
-uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 13950; // 1860;
-uint32_t const µs_collective_avg_avg_lambda_it      = kiloticks_to_µs * 465;
+uint32_t const µs_handshake                         = max_age * 4; // 30;
+uint32_t const µs_diffusion                         = max_age * 70; // 31000; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
+uint32_t const µs_diffusion_it                      = max_age; // 310; // 93;
+uint32_t const µs_diffusion_burnin                  = max_age * 10; // 1240;
+uint32_t const µs_collective_avg_lambda             = max_age * 50; // 1860;
+uint32_t const µs_collective_avg_lambda_it          = max_age;
+uint32_t const µs_collective_avg_avg_lambda         = max_age * 20; // 1860;
+uint32_t const µs_collective_avg_avg_lambda_it      = max_age;
 uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
 uint32_t µs_iteration = 0; // Set in ``setup()``
-
 
 
 inline static bool is_number_valid(fp_t nb) {
@@ -154,6 +169,9 @@ void setup_diff(diffusion_session_t* diff) {
     diff->current_diffusion_it = 0;
 
     diff->diffusion_valid = false;
+    for(uint8_t i = 0; i < NUMBER_DIFF; i++) {
+        diff->stopped_diffusion[i] = false;
+    }
     diff->current_diffusion_it = 0;
     diff->current_avg_it = 0;
     diff->time_last_diff_it = 0;
@@ -193,7 +211,7 @@ void setup(void) {
     }
     mydata->data_to_send.data_type = DATA_NULL;
 	pogobot_infrared_set_power(2);
-    mydata->neighbors_age_max = 31 * kiloticks_to_µs;
+    mydata->neighbors_age_max = max_age;
     mydata->enable_message_sending = false;
     clear_all_neighbors();
 #ifdef ENABLE_HANDSHAKES
@@ -287,6 +305,9 @@ void init_diffusion(diffusion_session_t* diff, fp_t* s, diffusion_type_t type) {
     diff->current_diffusion_it = 0;
     diff->time_last_diff_it = pogoticks;
     diff->diffusion_valid = true;
+    for(uint8_t i = 0; i < NUMBER_DIFF; i++) {
+        diff->stopped_diffusion[i] = false;
+    }
 
     // Broadcast s to neighboring agents
     switch(type) {
@@ -343,7 +364,6 @@ void compute_next_s(void) {
 #endif
 
     for(uint8_t i = 0; i < mydata->nb_neighbors; i++) {
-
         if(    (diff->type == NORMAL_DIFFUSION_TYPE && mydata->neighbors[i].data_type == DATA_S)
             || (diff->type == PRE_DIFFUSION_TYPE && mydata->neighbors[i].data_type == DATA_PRE_S)) {
             for(uint8_t j = 0; j < NUMBER_DIFF; j++) {
@@ -354,6 +374,13 @@ void compute_next_s(void) {
                 }
                 //printf0("    for next_s i=%d j=%d val=%d.%d new_s[j]=%d.%d\n", i, j, _float_to_2_int(val), _float_to_2_int(new_s[j])); // XXX HACK
             }
+
+        }
+    }
+
+    for(uint8_t j = 0; j < NUMBER_DIFF; j++) {
+        if (ABS(new_s[j]) <= 1e-3) {
+            diff->stopped_diffusion[j] = true;
         }
     }
 
@@ -420,59 +447,70 @@ void compute_lambda_v_leastsquaresMSE(void) {
     fp_t nb_valid_lambda = 0.f;
     fp_t sum_all_lambda = 0.f;
 
-    if(diff->diffusion_valid && diff->current_diffusion_it >= µs_diffusion_burnin / µs_diffusion_it) {
+    //if(!diff->diffusion_valid || diff->stopped_diffusion || diff->current_diffusion_it < µs_diffusion_burnin / µs_diffusion_it) {
+    if(!diff->diffusion_valid || diff->current_diffusion_it < µs_diffusion_burnin / µs_diffusion_it) {
+        return;
+    }
 
-        for(uint8_t i = 0; i < NUMBER_DIFF; i++) {
-            fp_t mse = 1000.f;
-            fp_t const logs = LOG(ABS(diff->s[i]));
-            if(is_number_valid(logs) && ABS(logs) > 0.f) {
-                diff->sum_t[i] += t;
-                diff->sum_t2[i] += t * t;
-                diff->sum_logs[i] += logs;
-                diff->sum_tlogs[i] += t * logs;
-                diff->ls_nb_points[i] += 1.0f;
+    for(uint8_t i = 0; i < NUMBER_DIFF; i++) {
+        //printf0("DEBUG compute_lambda_v_leastsquaresMSE: i=%d  s[i]=%d.%d  stopped=%d", i, _float_to_2_int(diff->s[i]), diff->stopped_diffusion[i]);
+        if (diff->stopped_diffusion[i])
+            continue;
+        fp_t mse = 1000.f;
+        if (ABS(diff->s[i]) <= 1e-7) {
+            diff->stopped_diffusion[i] = true;
+            continue;
+        }
+        fp_t const logs = LOG(ABS(diff->s[i]));
+        if (!is_number_valid(logs) || ABS(logs) <= 0.f) {
+            diff->stopped_diffusion[i] = true;
+            continue;
+        }
+        diff->sum_t[i] += t;
+        diff->sum_t2[i] += t * t;
+        diff->sum_logs[i] += logs;
+        diff->sum_tlogs[i] += t * logs;
+        diff->ls_nb_points[i] += 1.0f;
 
-                diff->hist_logs[i][(uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE] = logs;
-                diff->hist_t[i][(uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE] = t;
+        diff->hist_logs[i][(uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE] = logs;
+        diff->hist_t[i][(uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE] = t;
 
-                if(diff->ls_nb_points[i] > 3.0f) {
-                    fp_t const _lambda = -(diff->ls_nb_points[i] * diff->sum_tlogs[i] - diff->sum_t[i] * diff->sum_logs[i]) / (diff->ls_nb_points[i] * diff->sum_t2[i] - diff->sum_t[i] * diff->sum_t[i]);
-                    fp_t const _v = EXP( (diff->sum_logs[i] - _lambda * diff->sum_t[i]) / diff->ls_nb_points[i] );
+        if(diff->ls_nb_points[i] > 3.0f) {
+            fp_t const _lambda = -(diff->ls_nb_points[i] * diff->sum_tlogs[i] - diff->sum_t[i] * diff->sum_logs[i]) / (diff->ls_nb_points[i] * diff->sum_t2[i] - diff->sum_t[i] * diff->sum_t[i]);
+            fp_t const _v = EXP( (diff->sum_logs[i] - _lambda * diff->sum_t[i]) / diff->ls_nb_points[i] );
 
-                    if(!is_number_valid(_lambda) || !is_number_valid(_v)) {
-                        // ...
-                        //diff->diffusion_valid = false;
-                    } else {
-                        if(diff->ls_nb_points[i] >= DIFFUSION_WINDOW_SIZE) {
-                            //mse = compute_MSE(_lambda, _v, diff->hist_logs[i], diff->hist_t[i]);
-                            mse = compute_MSE(_lambda, _v, i);
-                            if(mse < diff->best_mse[i]) {
-                                diff->best_mse[i] = mse;
-                                diff->lambda_[i] = _lambda;
-                                //diff->v[i] = _v;
-                            }
-                        } else {
-                            diff->lambda_[i] = _lambda;
-                            //diff->v[i] = _v;
-                        }
-
-                        if(is_number_valid(diff->lambda_[i]) && diff->best_mse[i] < 100.) {
-                            sum_all_lambda += diff->lambda_[i];
-                            nb_valid_lambda++;
-                        }
+            if(!is_number_valid(_lambda) || !is_number_valid(_v)) {
+                // ...
+                //diff->diffusion_valid = false;
+            } else {
+                if(diff->ls_nb_points[i] >= DIFFUSION_WINDOW_SIZE) {
+                    //mse = compute_MSE(_lambda, _v, diff->hist_logs[i], diff->hist_t[i]);
+                    mse = compute_MSE(_lambda, _v, i);
+                    if(mse < diff->best_mse[i]) {
+                        diff->best_mse[i] = mse;
+                        diff->lambda_[i] = _lambda;
+                        //diff->v[i] = _v;
                     }
-
+                } else {
+                    diff->lambda_[i] = _lambda;
+                    //diff->v[i] = _v;
                 }
 
+                if(is_number_valid(diff->lambda_[i]) && diff->best_mse[i] < 100.) {
+                    sum_all_lambda += diff->lambda_[i];
+                    nb_valid_lambda++;
+                }
             }
+
         }
 
-        fp_t const _lambda = sum_all_lambda / nb_valid_lambda;
-        if(!is_number_valid(_lambda) || nb_valid_lambda == 0) {
+    }
+
+    fp_t const _lambda = sum_all_lambda / nb_valid_lambda;
+    if(!is_number_valid(_lambda) || nb_valid_lambda == 0) {
 //            diff->diffusion_valid = false;
-        } else {
-            diff->lambda = _lambda;
-        }
+    } else {
+        diff->lambda = _lambda;
     }
 
 //        printf0("DEBUG diff: valid=%d t=%f s=%f logs=%f orig_t=%f orig_logx=%f lambda=%f v=%f cv=%f \n", diff->diffusion_valid, (fp_t)t, (fp_t)diff->s, (fp_t)logs, (fp_t)diff->diffusion_orig_t, (fp_t)diff->diffusion_orig_logx, (fp_t)diff->lambda, (fp_t)diff->v, (fp_t)diff->cv);
@@ -497,7 +535,7 @@ void behav_diffusion(void) {
         diff->current_diffusion_it++;
         diff->time_last_diff_it = pogoticks;
 
-        printf0("    step%d t=%d.%d s_0=%d.%d ls_nb_points_0=%lu\n", diff->current_diffusion_it, _float_to_2_int(diff->t), _float_to_2_int(diff->s[0]), (long unsigned int) diff->ls_nb_points[0]); // XXX HACK
+        printf0("    step %d t=%d.%d s_0=%d.%d ls_nb_points_0=%lu  stopped=%d,%d,%d\n", diff->current_diffusion_it, _float_to_2_int(diff->t), _float_to_2_int(diff->s[0]), (long unsigned int) diff->ls_nb_points[0], diff->stopped_diffusion[0], diff->stopped_diffusion[1], diff->stopped_diffusion[2]); // XXX HACK
 
 #if defined(ENABLE_COLOR_FROM_LAMBDA)
         set_color_from_lambda(diff->lambda, 0);
@@ -1027,44 +1065,6 @@ bool send_message(void) {
     return true;
 }
 
-
-
-//// TODO BUG XXX
-////uint16_t get_message_neighbor_id(void) {
-//uint16_t get_message_neighbor_id(uint16_t const sender_id) {
-//    printf0("    DEBUG1 ! get_message_neighbor_id\n");
-//    //message_data_t const* data = (message_data_t*)(&( mydata->recv_msg.payload ));
-//    message_data_t const* data = &(mydata->recv_data);
-//    printf0("    DEBUG2 ! get_message_neighbor_id\n");
-//    // search the neighbor list by ID
-////    uint16_t const sender_id = mydata->recv_msg.header._sender_id;
-//    uint16_t i;
-//    for(i = 0; i < mydata->nb_neighbors; i++) {
-//        if(mydata->neighbors[i].id == sender_id)
-//            break;
-//    }
-//    printf0("    DEBUG3 ! get_message_neighbor_id\n");
-//
-//    // If the neighbor is new, add it to the list
-//    if(i == mydata->nb_neighbors) {
-//        if(mydata->nb_neighbors < MAXN-1)   // If we have too many neighbors, overwrite the last entry
-//            mydata->nb_neighbors++;
-//    }
-//    printf0("    DEBUG4 ! get_message_neighbor_id:  %d  %d\n", i, sender_id);
-//
-//    // Update corresponding neighbor entry
-//    mydata->neighbors[i].id = sender_id;
-//    mydata->neighbors[i].timestamp = pogoticks;
-//    for(uint8_t j = 0; j < NUMBER_DIFF; j++) {
-//        mydata->neighbors[i].val[j] = data->val[j];
-//    }
-//    printf0("    DEBUG6 ! get_message_neighbor_id\n");
-//    mydata->neighbors[i].data_type = data->data_type;
-//    printf0("    new neighbor:%d/%d id=%u timestamp=%llu val0=%d.%d type=%d \n", i, mydata->nb_neighbors, mydata->neighbors[i].id, mydata->neighbors[i].timestamp, _float_to_2_int(mydata->neighbors[i].val[0]), (int)mydata->neighbors[i].data_type); // XXX HACK
-//
-//    printf0("    DEBUG7 ! get_message_neighbor_id\n");
-//    return i;
-//}
 
 void process_message(message_t* mr) {
     // Check if payload has the correct size

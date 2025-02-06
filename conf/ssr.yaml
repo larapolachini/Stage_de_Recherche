@@ -17,9 +17,10 @@ console_filename: "frames/console.txt"
 seed: 0
 nBots: 25
 initial_robot_formation: random
+#initial_robot_formation: disk
 robot_radius: 26.5
-simulationTime: 180.0
-commRadius: 110 #106.5
+simulationTime: 1800.0
+commRadius: 106.5
 msgSuccessRate: 0.5
 showComms: false
 GUI: true
@@ -29,7 +30,7 @@ GUI: true
 
 #timeStep: 0.05  #0.01667
 timeStep: 0.01  #0.01667
-GUI_speed_up: 10.0
+GUI_speed_up: 0.005
 
 initial_light_value: 32767
 photo_start_at: 1.0
