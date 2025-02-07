@@ -106,11 +106,20 @@ The simulator is far faster in headless mode than in windowed mode.
 
 ### Command line parameters of the simulator
 ```shell
-Usage: ./examples/hanabi/hanabi -c CONFIG_FILE [-v] [-g] [-P]
+Usage: pogosim [options]
+Options:
+  -c, --config <file>             Specify the configuration file.
+  -g, --no-GUI                    Disable GUI mode.
+  -v, --verbose                   Enable verbose mode.
+  -nr, --do-not-show-robot-msg    Suppress robot messages.
+  -P, --progress                  Show progress output.
+  -V, --version                   Show version information.
+  -h, --help                      Display this help message.
 ```
-- Parameter "-v" specifies a YAML configuration file. See "conf/test.yaml" for an example.
-- Parameter "-v" enables verbose mode (show debug messages).
+- Parameter "-c" must always be provided, and corresponds to the YAML configuration file to use. See "conf/test.yaml" for an example.
 - Parameter "-g" enables headless mode: no GUI shown, but the program still export frames.
+- Parameter "-v" enables verbose mode (show debug messages).
+- Parameter "-nr" disables messages from the robots (printf in robot code).
 - Parameter "-P" displays a progress bar of the simulation, depending on the parameter value "SimulationTime" defined in the configuration file.
 
 

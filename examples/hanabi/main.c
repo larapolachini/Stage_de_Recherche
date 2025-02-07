@@ -41,7 +41,7 @@
 #define SEND_MODE_ALLDIRECTION true // true: all direction at once; false: 4x one-direction
 #define MSG_MODE_FULL_HEADER true // true: full header; false: short header
 
-#define DEBUG_LEVEL 1 // 0: nothing; 1: debug; 2: synchronzation; 3: communication
+#define DEBUG_LEVEL 0 // 0: nothing; 1: debug; 2: synchronzation; 3: communication
 
 #define BOOT_TIME 5 // waiting time before the start of the experience in seconds
 #define LIGHT_THRESHOLD 10
