@@ -6,7 +6,7 @@
 
 #define MAXN 20 // 20
 #define PERCENT_MSG_SENT 60
-#define MAIN_LOOP_HZ 20
+#define MAIN_LOOP_HZ 30
 #define MAX_NB_MSGS_PROCESSED_PER_TICK 100
 
 #define ENABLE_AVG_AVG_LAMBDA
@@ -161,6 +161,7 @@ typedef struct {
     fp_t hist_logs[NUMBER_DIFF][DIFFUSION_WINDOW_SIZE];
     fp_t hist_t[NUMBER_DIFF][DIFFUSION_WINDOW_SIZE];
     fp_t best_mse[NUMBER_DIFF];
+    fp_t hist_mse[NUMBER_DIFF][DIFFUSION_WINDOW_SIZE];
 
     uint16_t current_avg_it;
     bool diffusion_valid;
@@ -224,9 +225,10 @@ extern USERDATA *mydata;
 
 
 void compute_next_s(void);
-//fp_t compute_MSE(fp_t lambda, fp_t v, fp_t* hist_logs, fp_t* hist_t); // XXX
-//fp_t compute_MSE(fp_t lambda, fp_t v, fp_t hist_logs[DIFFUSION_WINDOW_SIZE], fp_t hist_t[DIFFUSION_WINDOW_SIZE]); // XXX
-fp_t compute_MSE(fp_t lambda, fp_t v, uint8_t j);
+////fp_t compute_MSE(fp_t lambda, fp_t v, fp_t* hist_logs, fp_t* hist_t); // XXX
+////fp_t compute_MSE(fp_t lambda, fp_t v, fp_t hist_logs[DIFFUSION_WINDOW_SIZE], fp_t hist_t[DIFFUSION_WINDOW_SIZE]); // XXX
+//fp_t compute_MSE(fp_t lambda, fp_t v, uint8_t j);
+fp_t compute_MSE(uint8_t i);
 void compute_lambda_v_leastsquaresMSE(void);
 
 void set_behavior(behavior_t behavior);

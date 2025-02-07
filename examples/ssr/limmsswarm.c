@@ -36,7 +36,7 @@ fp_t const diffusion_min_abs_s = 0.e-05f;
 //uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
 //uint32_t µs_iteration = 0; // Set in ``setup()``
 
-uint32_t const max_age = kiloticks_to_µs * 310; // 186; // 320; // 620; //620;
+uint32_t const max_age = kiloticks_to_µs * 155; // 186; // 320; // 620; //620;
 
 uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; // 12400;
 uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 1550;
@@ -294,6 +294,7 @@ void init_diffusion(diffusion_session_t* diff, fp_t* s, diffusion_type_t type) {
         for(uint8_t j = 0; j < DIFFUSION_WINDOW_SIZE; j++) {
             diff->hist_logs[i][j] = 1000;
             diff->hist_t[i][j] = -1;
+            diff->hist_mse[i][j] = -1;
         }
         diff->best_mse[i] = 1000;
 
@@ -411,29 +412,48 @@ void compute_next_s(void) {
 
 
 
-//fp_t compute_MSE(fp_t lambda, fp_t v, fp_t* hist_logs, fp_t* hist_t) {
-//fp_t compute_MSE(fp_t lambda, fp_t v, fp_t hist_logs[DIFFUSION_WINDOW_SIZE], fp_t hist_t[DIFFUSION_WINDOW_SIZE]) {
-fp_t compute_MSE(fp_t lambda, fp_t v, uint8_t j) {
+////fp_t compute_MSE(fp_t lambda, fp_t v, fp_t* hist_logs, fp_t* hist_t) {
+////fp_t compute_MSE(fp_t lambda, fp_t v, fp_t hist_logs[DIFFUSION_WINDOW_SIZE], fp_t hist_t[DIFFUSION_WINDOW_SIZE]) {
+//fp_t compute_MSE(fp_t lambda, fp_t v, uint8_t j) {
+//    diffusion_session_t *const diff = mydata->curr_diff;
+//
+//    fp_t mse = 0;
+//    fp_t nb_points = 0;
+//    for(uint8_t i = 0; i < DIFFUSION_WINDOW_SIZE; i++) {
+//        fp_t const logs = diff->hist_logs[j][i];
+//        fp_t const t = diff->hist_t[j][i];
+//        if(logs >= 0 || t < 0)
+//            continue;
+//        fp_t const err = (-lambda * t + LOG(v)) - (logs);
+//        //fp_t const err = (-lambda * t + v) - (logs);
+//        if(is_number_valid(err)) {
+//            mse += err * err;
+//            nb_points += 1;
+//        }
+//    }
+//    if(nb_points > 0)
+//        return mse/nb_points;
+//    else
+//        return 2000;
+//}
+
+fp_t compute_MSE(uint8_t i) {
     diffusion_session_t *const diff = mydata->curr_diff;
 
-    fp_t mse = 0;
-    fp_t nb_points = 0;
-    for(uint8_t i = 0; i < DIFFUSION_WINDOW_SIZE; i++) {
-        fp_t const logs = diff->hist_logs[j][i];
-        fp_t const t = diff->hist_t[j][i];
-        if(logs >= 0 || t < 0)
-            continue;
-        fp_t const err = (-lambda * t + LOG(v)) - (logs);
-        //fp_t const err = (-lambda * t + v) - (logs);
-        if(is_number_valid(err)) {
-            mse += err * err;
+    fp_t mse = 0.f;
+    uint8_t nb_points = 0;
+    for(uint8_t j = 0; j < DIFFUSION_WINDOW_SIZE; j++) {
+        //if(is_number_valid(err)) {
+        fp_t const mse_inst = diff->hist_mse[i][j];
+        if(mse_inst >= 0.f) {
+            mse += mse_inst;
             nb_points += 1;
         }
     }
     if(nb_points > 0)
-        return mse/nb_points;
+        return mse/(fp_t)nb_points;
     else
-        return 2000;
+        return 2000.f;
 }
 
 
@@ -454,7 +474,6 @@ void compute_lambda_v_leastsquaresMSE(void) {
         //printf0("DEBUG compute_lambda_v_leastsquaresMSE: i=%d  s[i]=%d.%d  stopped=%d", i, _float_to_2_int(diff->s[i]), diff->stopped_diffusion[i]);
         if (diff->stopped_diffusion[i])
             continue;
-        fp_t mse = 1000.f;
         if (ABS(diff->s[i]) <= 1e-7f) {
             diff->stopped_diffusion[i] = true;
             continue;
@@ -470,38 +489,45 @@ void compute_lambda_v_leastsquaresMSE(void) {
         diff->sum_tlogs[i] += t * logs;
         diff->ls_nb_points[i] += 1.0f;
 
-        diff->hist_logs[i][(uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE] = logs;
-        diff->hist_t[i][(uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE] = t;
+        uint8_t const hist_idx = (uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE;
+        diff->hist_logs[i][hist_idx] = logs;
+        diff->hist_t[i][hist_idx] = t;
 
-        if(diff->ls_nb_points[i] > 3.0f) {
-            fp_t const _lambda = -(diff->ls_nb_points[i] * diff->sum_tlogs[i] - diff->sum_t[i] * diff->sum_logs[i]) / (diff->ls_nb_points[i] * diff->sum_t2[i] - diff->sum_t[i] * diff->sum_t[i]);
-            fp_t const _v = EXP( (diff->sum_logs[i] - _lambda * diff->sum_t[i]) / diff->ls_nb_points[i] );
+        // Compute lambda and v
+        fp_t const _lambda = -(diff->ls_nb_points[i] * diff->sum_tlogs[i] - diff->sum_t[i] * diff->sum_logs[i]) / (diff->ls_nb_points[i] * diff->sum_t2[i] - diff->sum_t[i] * diff->sum_t[i]);
+        fp_t const _v = EXP( (diff->sum_logs[i] - _lambda * diff->sum_t[i]) / diff->ls_nb_points[i] );
 
-            if(!is_number_valid(_lambda) || !is_number_valid(_v)) {
-                // ...
-                //diff->diffusion_valid = false;
-            } else {
-                if(diff->ls_nb_points[i] >= DIFFUSION_WINDOW_SIZE) {
-                    //mse = compute_MSE(_lambda, _v, diff->hist_logs[i], diff->hist_t[i]);
-                    mse = compute_MSE(_lambda, _v, i);
-                    if(mse < diff->best_mse[i]) {
-                        diff->best_mse[i] = mse;
-                        diff->lambda_[i] = _lambda;
-                        //diff->v[i] = _v;
-                    }
-                } else {
-                    diff->lambda_[i] = _lambda;
-                    //diff->v[i] = _v;
-                }
-
-                if(is_number_valid(diff->lambda_[i]) && diff->best_mse[i] < 100.) {
-                    sum_all_lambda += diff->lambda_[i];
-                    nb_valid_lambda++;
-                }
-            }
-
+        // Are lambda and v valid?
+        if(!is_number_valid(_lambda) || !is_number_valid(_v)) {
+            continue;
         }
 
+        // Compute instantaneous error
+        fp_t const err = (-_lambda * t + LOG(_v)) - logs;
+        diff->hist_mse[i][hist_idx] = is_number_valid(err) ? err * err : -1;
+
+        // Do we have enough points to compute stats?
+        if(diff->ls_nb_points[i] <= 3.0f) {
+            continue;
+        }
+
+        // Compute MSE. If the fit is better than previous fits, keep it
+        if(diff->ls_nb_points[i] >= DIFFUSION_WINDOW_SIZE) { 
+            fp_t const mse = compute_MSE(i);
+            if(mse < diff->best_mse[i]) {
+                diff->best_mse[i] = mse;
+                diff->lambda_[i] = _lambda;
+                //diff->v[i] = _v;
+            }
+        } else {
+            diff->lambda_[i] = _lambda;
+            //diff->v[i] = _v;
+        }
+
+        if(is_number_valid(diff->lambda_[i]) && diff->best_mse[i] < 100.) {
+            sum_all_lambda += diff->lambda_[i];
+            nb_valid_lambda++;
+        }
     }
 
     fp_t const _lambda = sum_all_lambda / nb_valid_lambda;
