@@ -10,43 +10,6 @@ on:
 
 jobs:
 
-  update-badge:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Check if version.h was modified
-        id: check_version
-        run: |
-          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
-            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
-          else
-            CHANGED_FILES=$(git ls-files --modified)
-          fi
-          
-          if echo "$CHANGED_FILES" | grep -q "src/pogosim/version.h"; then
-            echo "VERSION_CHANGED=true" >> $GITHUB_ENV
-          else
-            echo "VERSION_CHANGED=false" >> $GITHUB_ENV
-          fi
-
-      - name: Extract Version (if changed)
-        if: env.VERSION_CHANGED == 'true'
-        run: |
-          VERSION=$(grep -oP '(?<=#define POGOSIM_VERSION ")[^"]*' src/pogosim/version.h)
-          echo "{\"schemaVersion\":1,\"label\":\"version\",\"message\":\"$VERSION\",\"color\":\"blue\"}" > version.json
-
-      - name: Commit and push (if changed)
-        if: env.VERSION_CHANGED == 'true'
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git add version.json
-          git commit -m "Update version badge to $VERSION"
-          git push
-        continue-on-error: true
-
   build-and-test:
     strategy:
       matrix:
