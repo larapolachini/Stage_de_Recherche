@@ -36,7 +36,7 @@ fp_t const diffusion_min_abs_s = 0.e-05f;
 //uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
 //uint32_t µs_iteration = 0; // Set in ``setup()``
 
-uint32_t const max_age = kiloticks_to_µs * 155; // 186; // 320; // 620; //620;
+uint32_t const max_age = kiloticks_to_µs * 93; // 186; // 320; // 620; //620;
 
 uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; // 12400;
 uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 1550;

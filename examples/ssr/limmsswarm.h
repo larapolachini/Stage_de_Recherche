@@ -6,7 +6,7 @@
 
 #define MAXN 20 // 20
 #define PERCENT_MSG_SENT 60
-#define MAIN_LOOP_HZ 30
+#define MAIN_LOOP_HZ 50
 #define MAX_NB_MSGS_PROCESSED_PER_TICK 100
 
 #define ENABLE_AVG_AVG_LAMBDA
