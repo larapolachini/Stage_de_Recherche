@@ -9,39 +9,43 @@ on:
       - main
 
 jobs:
+
   update-badge:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Extract Version
-        id: get_version
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check if version.h was modified
+        id: check_version
         run: |
-          VERSION=$(grep -oP '(?<=POGOSIM_VERSION ").*(?=")' src/pogosim/version.h)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-      
-      - name: Check if Version Changed
-        id: version_check
-        run: |
-          git fetch origin
-          CURRENT_VERSION=$(git show origin/main:src/pogosim/version.h | grep -oP '(?<=POGOSIM_VERSION ").*(?=")')
-          NEW_VERSION=${{ steps.get_version.outputs.version }}
-          if [ "$CURRENT_VERSION" != "$NEW_VERSION" ]; then
-            echo "version_changed=true" >> $GITHUB_OUTPUT
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
           else
-            echo "version_changed=false" >> $GITHUB_OUTPUT
+            CHANGED_FILES=$(git ls-files --modified)
           fi
-      
-      - name: Create Version Badge
-        if: steps.version_check.outputs.version_changed == 'true'
-        uses: schneegans/dynamic-badges-action@v1.6.0
-        with:
-          auth: ${{ secrets.GIST_SECRET }}
-          gistID: your-gist-id-here
-          filename: version-badge.json
-          label: version
-          message: ${{ steps.get_version.outputs.version }}
-          color: blue
+          
+          if echo "$CHANGED_FILES" | grep -q "src/pogosim/version.h"; then
+            echo "VERSION_CHANGED=true" >> $GITHUB_ENV
+          else
+            echo "VERSION_CHANGED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Extract Version (if changed)
+        if: env.VERSION_CHANGED == 'true'
+        run: |
+          VERSION=$(grep -oP '(?<=#define POGOSIM_VERSION ")[^"]*' src/pogosim/version.h)
+          echo "{\"schemaVersion\":1,\"label\":\"version\",\"message\":\"$VERSION\",\"color\":\"blue\"}" > version.json
+
+      - name: Commit and push (if changed)
+        if: env.VERSION_CHANGED == 'true'
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add version.json
+          git commit -m "Update version badge to $VERSION"
+          git push
+        continue-on-error: true
 
   build-and-test:
     strategy:
