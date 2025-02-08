@@ -300,6 +300,7 @@ void init_diffusion(diffusion_session_t* diff, fp_t* s, diffusion_type_t type) {
 
         mydata->data_to_send.val[i] = diff->s[i];
     }
+    diff->next_diff_to_compute = -1;
     diff->lambda = 0;
     diff->current_diffusion_it = 0;
     diff->time_last_diff_it = pogoticks;
@@ -462,82 +463,67 @@ void compute_lambda_v_leastsquaresMSE(void) {
     fp_t const t = (fp_t)diff->current_diffusion_it / inv_tau;
     diff->t = t;
 
-    fp_t nb_valid_lambda = 0.f;
-    fp_t sum_all_lambda = 0.f;
-
     //if(!diff->diffusion_valid || diff->stopped_diffusion || diff->current_diffusion_it < µs_diffusion_burnin / µs_diffusion_it) {
     if(!diff->diffusion_valid || diff->current_diffusion_it < µs_diffusion_burnin / µs_diffusion_it) {
         return;
     }
 
-    for(uint8_t i = 0; i < NUMBER_DIFF; i++) {
-        //printf0("DEBUG compute_lambda_v_leastsquaresMSE: i=%d  s[i]=%d.%d  stopped=%d", i, _float_to_2_int(diff->s[i]), diff->stopped_diffusion[i]);
-        if (diff->stopped_diffusion[i])
-            continue;
-        if (ABS(diff->s[i]) <= 1e-7f) {
-            diff->stopped_diffusion[i] = true;
-            continue;
-        }
-        fp_t const logs = LOG(ABS(diff->s[i]));
-        if (!is_number_valid(logs) || ABS(logs) <= 0.f) {
-            diff->stopped_diffusion[i] = true;
-            continue;
-        }
-        diff->sum_t[i] += t;
-        diff->sum_t2[i] += t * t;
-        diff->sum_logs[i] += logs;
-        diff->sum_tlogs[i] += t * logs;
-        diff->ls_nb_points[i] += 1.0f;
+    uint8_t const i = diff->next_diff_to_compute;
 
-        uint8_t const hist_idx = (uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE;
-        diff->hist_logs[i][hist_idx] = logs;
-        diff->hist_t[i][hist_idx] = t;
+    //printf0("DEBUG compute_lambda_v_leastsquaresMSE: i=%d  s[i]=%d.%d  stopped=%d", i, _float_to_2_int(diff->s[i]), diff->stopped_diffusion[i]);
+    if (diff->stopped_diffusion[i])
+        return;
+    if (ABS(diff->s[i]) <= 1e-7f) {
+        diff->stopped_diffusion[i] = true;
+        return;
+    }
+    fp_t const logs = LOG(ABS(diff->s[i]));
+    if (!is_number_valid(logs) || ABS(logs) <= 0.f) {
+        diff->stopped_diffusion[i] = true;
+        return;
+    }
+    diff->sum_t[i] += t;
+    diff->sum_t2[i] += t * t;
+    diff->sum_logs[i] += logs;
+    diff->sum_tlogs[i] += t * logs;
+    diff->ls_nb_points[i] += 1.0f;
 
-        // Compute lambda and v
-        fp_t const _lambda = -(diff->ls_nb_points[i] * diff->sum_tlogs[i] - diff->sum_t[i] * diff->sum_logs[i]) / (diff->ls_nb_points[i] * diff->sum_t2[i] - diff->sum_t[i] * diff->sum_t[i]);
-        fp_t const _v = EXP( (diff->sum_logs[i] - _lambda * diff->sum_t[i]) / diff->ls_nb_points[i] );
+    uint8_t const hist_idx = (uint8_t)(diff->ls_nb_points[i]) % DIFFUSION_WINDOW_SIZE;
+    diff->hist_logs[i][hist_idx] = logs;
+    diff->hist_t[i][hist_idx] = t;
 
-        // Are lambda and v valid?
-        if(!is_number_valid(_lambda) || !is_number_valid(_v)) {
-            continue;
-        }
+    // Compute lambda and v
+    fp_t const _lambda = -(diff->ls_nb_points[i] * diff->sum_tlogs[i] - diff->sum_t[i] * diff->sum_logs[i]) / (diff->ls_nb_points[i] * diff->sum_t2[i] - diff->sum_t[i] * diff->sum_t[i]);
+    fp_t const _v = EXP( (diff->sum_logs[i] - _lambda * diff->sum_t[i]) / diff->ls_nb_points[i] );
 
-        // Compute instantaneous error
-        fp_t const err = (-_lambda * t + LOG(_v)) - logs;
-        diff->hist_mse[i][hist_idx] = is_number_valid(err) ? err * err : -1;
+    // Are lambda and v valid?
+    if(!is_number_valid(_lambda) || !is_number_valid(_v)) {
+        return;
+    }
 
-        // Do we have enough points to compute stats?
-        if(diff->ls_nb_points[i] <= 3.0f) {
-            continue;
-        }
+    // Compute instantaneous error
+    fp_t const err = (-_lambda * t + LOG(_v)) - logs;
+    diff->hist_mse[i][hist_idx] = is_number_valid(err) ? err * err : -1;
 
-        // Compute MSE. If the fit is better than previous fits, keep it
-        if(diff->ls_nb_points[i] >= DIFFUSION_WINDOW_SIZE) { 
-            fp_t const mse = compute_MSE(i);
-            if(mse < diff->best_mse[i]) {
-                diff->best_mse[i] = mse;
-                diff->lambda_[i] = _lambda;
-                //diff->v[i] = _v;
-            }
-        } else {
+    // Do we have enough points to compute stats?
+    if(diff->ls_nb_points[i] <= 3.0f) {
+        return;
+    }
+
+    // Compute MSE. If the fit is better than previous fits, keep it
+    if(diff->ls_nb_points[i] >= DIFFUSION_WINDOW_SIZE) { 
+        fp_t const mse = compute_MSE(i);
+        if(mse < diff->best_mse[i]) {
+            diff->best_mse[i] = mse;
             diff->lambda_[i] = _lambda;
             //diff->v[i] = _v;
         }
-
-        if(is_number_valid(diff->lambda_[i]) && diff->best_mse[i] < 100.) {
-            sum_all_lambda += diff->lambda_[i];
-            nb_valid_lambda++;
-        }
-    }
-
-    fp_t const _lambda = sum_all_lambda / nb_valid_lambda;
-    if(!is_number_valid(_lambda) || nb_valid_lambda == 0) {
-//            diff->diffusion_valid = false;
     } else {
-        diff->lambda = _lambda;
+        diff->lambda_[i] = _lambda;
+        //diff->v[i] = _v;
     }
 
-//        printf0("DEBUG diff: valid=%d t=%f s=%f logs=%f orig_t=%f orig_logx=%f lambda=%f v=%f cv=%f \n", diff->diffusion_valid, (fp_t)t, (fp_t)diff->s, (fp_t)logs, (fp_t)diff->diffusion_orig_t, (fp_t)diff->diffusion_orig_logx, (fp_t)diff->lambda, (fp_t)diff->v, (fp_t)diff->cv);
+    //printf0("DEBUG diff: valid=%d t=%f s=%f logs=%f orig_t=%f orig_logx=%f lambda=%f v=%f cv=%f \n", diff->diffusion_valid, (fp_t)t, (fp_t)diff->s, (fp_t)logs, (fp_t)diff->diffusion_orig_t, (fp_t)diff->diffusion_orig_logx, (fp_t)diff->lambda, (fp_t)diff->v, (fp_t)diff->cv);
 }
 
 
@@ -545,21 +531,51 @@ void behav_diffusion(void) {
     diffusion_session_t *const diff = mydata->curr_diff;
     set_motion(STOP);
 
-    if(pogoticks - diff->time_last_diff_it >= µs_diffusion_it) {
+    // Compute next s, if we are at the end of a diffusion step
+    if (pogoticks - diff->time_last_diff_it >= µs_diffusion_it) {
         compute_next_s();
-        if(diff->type != PRE_DIFFUSION_TYPE) {
-            compute_lambda_v_leastsquaresMSE();
+        if (diff->type != PRE_DIFFUSION_TYPE) {
+            diff->next_diff_to_compute = 0;
         }
 
         // Update broadcasting information
-        for(uint8_t i = 0; i < NUMBER_DIFF; i++) {
+        for (uint8_t i = 0; i < NUMBER_DIFF; i++) {
             mydata->data_to_send.val[i] = diff->s[i];
         }
 
         diff->current_diffusion_it++;
         diff->time_last_diff_it = pogoticks;
+    }
 
-        printf0("    step %d t=%d.%d s_0=%d.%d ls_nb_points_0=%lu  stopped=%d,%d,%d\n", diff->current_diffusion_it, _float_to_2_int(diff->t), _float_to_2_int(diff->s[0]), (long unsigned int) diff->ls_nb_points[0], diff->stopped_diffusion[0], diff->stopped_diffusion[1], diff->stopped_diffusion[2]); // XXX HACK
+    // Compute lambda of next diffusion, if needed
+    if (diff->next_diff_to_compute >= 0) {
+        compute_lambda_v_leastsquaresMSE();
+        diff->next_diff_to_compute++;
+    }
+
+    // If we have computed the lambdas of all diffusion
+    if (diff->next_diff_to_compute >= NUMBER_DIFF) {
+        diff->next_diff_to_compute = -1; // Disable lambda computation for now, wait for next diffusion step
+
+        // Compute lambda from the estimates of all diffusions
+        if(diff->diffusion_valid && diff->current_diffusion_it >= µs_diffusion_burnin / µs_diffusion_it) {
+            fp_t nb_valid_lambda = 0.f;
+            fp_t sum_all_lambda = 0.f;
+            for(uint8_t i = 0; i < NUMBER_DIFF; i++) {
+                if(is_number_valid(diff->lambda_[i]) && diff->best_mse[i] < 100.) {
+                    sum_all_lambda += diff->lambda_[i];
+                    nb_valid_lambda++;
+                }
+            }
+            fp_t const _lambda = sum_all_lambda / nb_valid_lambda;
+            if(!is_number_valid(_lambda) || nb_valid_lambda == 0) {
+                //diff->diffusion_valid = false;
+            } else {
+                diff->lambda = _lambda;
+            }
+        }
+
+        printf0("    step %d t=%d.%d s_0=%d.%d ls_nb_points_0=%lu  stopped=%d,%d,%d\n", diff->current_diffusion_it, _float_to_2_int(diff->t), _float_to_2_int(diff->s[0]), (long unsigned int) diff->ls_nb_points[0], diff->stopped_diffusion[0], diff->stopped_diffusion[1], diff->stopped_diffusion[2]);
 
 #if defined(ENABLE_COLOR_FROM_LAMBDA)
         set_color_from_lambda(diff->lambda, 0);
@@ -611,8 +627,8 @@ void behav_diffusion(void) {
 #elif defined(ENABLE_COLOR_NB_NEIGHBOURS)
         set_color_from_nb_neighbours();
 #endif
-
     }
+
 }
 
 
