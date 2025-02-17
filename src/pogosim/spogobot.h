@@ -1006,6 +1006,7 @@ extern "C" {
 
 void msleep(int milliseconds);
 void pogosim_printf(const char* format, ...);
+int pogosim_putchar(int ch);
 
 
 void data_add_column_int8(char const* name);
@@ -1030,6 +1031,7 @@ void data_set_value_bool(char const* name, bool value);
 
 // Define custom printf as the default in files including pogosim.h
 #define printf pogosim_printf
+#define putchar pogosim_putchar
 
 
 #endif

@@ -423,24 +423,37 @@ std::string _format_args_to_string(const char* format, va_list args) {
 }
 
 void pogosim_printf(const char* format, ...) {
+    // Static buffer to hold incomplete message parts across calls.
+    static std::string message_buffer;
+
     va_list args;
     va_start(args, format);
 
-    // Convert va_list arguments to a formatted string
+    // Convert va_list arguments to a formatted string.
     std::string formatted_message = _format_args_to_string(format, args);
-
-    // Combine the robot log prefix and the message
-    std::string final_message = log_current_robot() + "[PRINTF] " + formatted_message;
-
-    // Remove trailing newline, if present
-    if (!final_message.empty() && final_message.back() == '\n') {
-        final_message.pop_back();
-    }
-
-    // Log to logger
-    robotlogger->info(final_message);
-
     va_end(args);
+
+    // Append the new message fragment to the buffer.
+    message_buffer += formatted_message;
+
+    // Process the buffer: for every newline, log a complete line.
+    size_t newline_pos = 0;
+    while ((newline_pos = message_buffer.find('\n')) != std::string::npos) {
+        // Extract the complete line (excluding the newline character)
+        std::string line = message_buffer.substr(0, newline_pos);
+
+        // Combine with the robot log prefix.
+        std::string final_message = log_current_robot() + "[PRINTF] " + line;
+        robotlogger->info(final_message);
+
+        // Remove the logged line (and its trailing newline) from the buffer.
+        message_buffer.erase(0, newline_pos + 1);
+    }
+}
+
+int pogosim_putchar(int ch) {
+    pogosim_printf("%c", ch);
+    return ch;
 }
 
 
