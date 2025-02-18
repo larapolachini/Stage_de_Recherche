@@ -320,7 +320,7 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector
         }
 
         // If too many attempts are made, maybe the problem is impossible
-        if (attempts >= 10000) {
+        if (attempts >= 1000000LL) {
             throw std::runtime_error("Impossible to create random points within polygon: number of points is too high.");
         }
     }
