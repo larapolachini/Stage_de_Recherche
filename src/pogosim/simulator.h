@@ -46,6 +46,7 @@ class Simulation {
     std::vector<Robot> membranes;
     std::vector<std::vector<b2Vec2>> arena_polygons;
 
+    double last_frame_shown_t = -1.0;
     double last_frame_saved_t = -1.0;
     double last_data_saved_t = -1.0;
 

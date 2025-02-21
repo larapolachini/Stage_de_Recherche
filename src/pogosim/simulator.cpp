@@ -629,6 +629,7 @@ void Simulation::main_loop() {
     double const save_video_period = std::stof(config.get("save_video_period", "-1.0"));
     double time_step_duration = std::stof(config.get("timeStep", "0.01"));
     //double const GUI_time_step_duration = std::stof(config.get("GUItimeStep", "0.01667"));
+    double GUI_frame_period;
 
     //sim_starting_time = std::chrono::system_clock::now();
     sim_starting_time_microseconds = get_current_time_microseconds();
@@ -636,6 +637,7 @@ void Simulation::main_loop() {
     // Prepare main loop
     running = true;
     t = 0.0f;
+    last_frame_shown_t = 0.0f - time_step_duration;
     last_frame_saved_t = 0.0f - time_step_duration;
     last_data_saved_t = 0.0f - time_step_duration;
     uint32_t const max_nb_ticks = std::ceil(simulation_time / time_step_duration);
@@ -644,7 +646,7 @@ void Simulation::main_loop() {
         tqdmrange.begin();
         tqdmrange.update();
     }
-    double gui_delay;
+    double gui_delay = time_step_duration;
 
     // Main loop for all robots
     while (running && t < simulation_time) {
@@ -659,7 +661,9 @@ void Simulation::main_loop() {
             continue;
         }
 
+        // Adjust simulation speed
         gui_delay = time_step_duration / GUI_speed_up;
+        GUI_frame_period = time_step_duration * GUI_speed_up;
 
         // Launch user code
         for (auto& robot : robots) {
@@ -693,18 +697,15 @@ void Simulation::main_loop() {
         }
 
         if (enable_gui) {
-            if (gui_delay >= 0.001) {
+            if (    (t >= last_frame_shown_t + GUI_frame_period) ||
+                    (save_video_period > 0.0 && t >= last_frame_saved_t + save_video_period) ) {
                 // Render
                 render_all();
                 export_frames();
                 SDL_RenderPresent(renderer);
-
+                last_frame_shown_t = t;
                 // Delay
                 SDL_Delay(gui_delay);
-            } else if (save_video_period > 0.0 && t >= last_frame_saved_t + save_video_period) {
-                render_all();
-                export_frames();
-                SDL_RenderPresent(renderer);
             }
         } else {
             if (save_video_period > 0.0 && t >= last_frame_saved_t + save_video_period) {
