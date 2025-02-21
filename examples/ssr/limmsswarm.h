@@ -56,7 +56,7 @@ typedef float fp_t;
 #define LOG(x) logf(x)
 #define EXP(x) expf(x)
 
-#include "pogosim/pogosim.h"
+#include "pogobase.h"
 
 extern fp_t const initial_s_max_val;
 

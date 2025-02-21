@@ -26,8 +26,7 @@
  * and observe partitions with groups of same age.
 **/
 
-//#include "pogobot.h"
-#include "pogosim/pogosim.h"
+#include "pogobase.h"
 #include "time.h"
 
 #define CODENAME "HANABI"

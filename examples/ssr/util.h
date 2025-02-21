@@ -6,7 +6,7 @@
 #define M_PI 3.141592653589793238462643383279502884197169399375105820974944
 #endif
 #include "limmsswarm.h"
-#include "pogosim/pogosim.h"
+#include "pogobase.h"
 
 //#define kiloticks_to_µs (1e6 / 31)
 #define kiloticks_to_µs (1e6 / 62)

@@ -95,8 +95,8 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Install header files
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/pogosim/  # Path to the header files
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}  # Install location
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/  # Path to the header files
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # Install location
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"  # Only install .h and .hpp files
 )
 

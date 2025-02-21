@@ -2,7 +2,7 @@
  */
 
 #include "util.h"
-#include "pogosim/pogosim.h"
+#include "pogobase.h"
 
 time_reference_t timer_it;
 uint16_t pogoid;
