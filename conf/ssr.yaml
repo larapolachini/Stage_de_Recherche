@@ -1,7 +1,7 @@
 ---
 
-window_width: 600
-window_height: 600
+window_width: 600       # In pixels
+window_height: 600      # In pixels
 
 #arena_file: arenas/disk.csv
 arena_file: arenas/annulus.csv
@@ -17,26 +17,22 @@ seed: 0
 nBots: 25
 initial_robot_formation: random
 #initial_robot_formation: disk
-robot_radius: 26.5
-simulationTime: 1800.0
-commRadius: 133.0 # 106.5
+simulationTime: 1800.0  # In s
+robot_radius: 26.5      # In mm
+commRadius: 133.0       # In mm, from center of a focal robot to the center of a neighboring robot
 msgSuccessRate: 0.95
 showComms: false
 GUI: true
 
-#timeStep: 0.02  #0.01667
-#GUItimeStep: 0.001  #0.01667
-
-#timeStep: 0.05  #0.01667
-timeStep: 0.01  #0.01667
-GUI_speed_up: 0.005
+timeStep: 0.01          # In s
+GUI_speed_up: 1.0
 
 initial_light_value: 32767
-photo_start_at: 1.0
-photo_start_duration: 1.0
+photo_start_at: 1.0         # In s
+photo_start_duration: 1.0   # In s
 
-save_data_period: 0.5
-save_video_period: 0.5
+save_data_period: 0.5       # In s
+save_video_period: 0.5      # In s
 frames_name: "frames/f{:010.4f}.png"
 
 # MODELINE "{{{1
