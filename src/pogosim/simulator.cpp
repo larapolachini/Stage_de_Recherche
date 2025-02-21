@@ -357,12 +357,14 @@ void Simulation::create_robots() {
 
 
 void Simulation::speed_up() {
-    GUI_speed_up *= 1.1;
+    if (GUI_speed_up <= 1e05)
+        GUI_speed_up *= 1.2;
     glogger->info("Setting GUI speed up to {}", GUI_speed_up);
 }
 
 void Simulation::speed_down() {
-    GUI_speed_up *= 0.9;
+    if (GUI_speed_up >= 1e-04)
+        GUI_speed_up *= 0.8;
     glogger->info("Setting GUI speed up to {}", GUI_speed_up);
 }
 
