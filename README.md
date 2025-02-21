@@ -164,3 +164,26 @@ If you want to compile the pogosim library with debugging symbols and options (e
 ./build.sh Debug
 ```
 
+
+## Authors
+
+ * Leo Cazenille: Main author and maintainer.
+    * email: leo "dot" cazenille "at" gmail "dot" com
+ * Nicolas Bredeche
+    * email: nicolas "dot" bredeche "at" sorbonne-universite "dot" fr
+
+
+## Citing
+
+```bibtex
+@misc{qdpy,
+    title = {pogosim: A simulator for Pogobot robots},
+    author = {Cazenille, L., Bredeche, N.},
+    year = {2025},
+    publisher = {Github},
+    journal = {GitHub repository},
+    howpublished = {\url{https://github.com/Adacoma/pogosim}},
+}
+```
+
+
