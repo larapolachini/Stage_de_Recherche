@@ -109,9 +109,7 @@ uint16_t const den_p_change_led_color = 20000; // probability to change led colo
 
 // Non-const global variables used by each robot. They will be accessible through the mydata pointer, declared by the macro "REGISTER_USERDATA"
 typedef struct {
-    // XXX remove and put into lib
     uint64_t start_of_experiment_ms;
-    // XXX remove and put into lib
     bool started;
 
     uint16_t my_pogobot_id;
@@ -241,7 +239,6 @@ void user_init(void) {
 
 
 void user_step(void) {
-    // XXX remove and put into lib
     // ********************************************************************************
     // * Start-up phase for simultaneous start of the robots when the lights turn off
     // ********************************************************************************
@@ -260,7 +257,6 @@ void user_step(void) {
         }
     }
 
-    // XXX remove and put into lib
     // Experiment has started. Wait for some time
     if (current_time_milliseconds() - mydata->start_of_experiment_ms < BOOT_TIME * 1000) {
         pogobot_led_setColor(white.r, white.g, white.b); // set boot led color to white
