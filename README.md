@@ -75,6 +75,19 @@ Which can then be launched through:
 ```
 
 
+### Controlling the GUI
+Here is a list of shortcuts that can be used to control the GUI:
+ - F1: Help message
+ - F3: Slow down the simulation
+ - F4: Speed up the simulation
+ - ESC: quit the simulation
+ - SPACE: pause the simulation
+ - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates
+ - Right-Click + Mouse move: move the visualisation coordinates
+ - PLUS, MINUS or Mouse Wheel: Zoom up or down
+ - 0: Reset the zoom and visualization coordinates
+
+
 ### Compile a binary for the real Pogobots
 Download the [pogobot-SDK](https://github.com/nekonaute/pogobot-sdk) somewhere:
 ```shell
