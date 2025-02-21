@@ -5,8 +5,7 @@ window_height: 600
 
 #arena_file: arenas/disk.csv
 arena_file: arenas/annulus.csv
-arena_width: 450.0     # In mm
-arena_height: 450.0    # In mm
+arena_surface: 1.5e5    # In mm²
 
 delete_old_files: true
 enable_data_logging: true

@@ -4,8 +4,7 @@ window_width: 600       # In pixels
 window_height: 600      # In pixels
 
 arena_file: arenas/disk.csv
-arena_width: 1200.0     # In mm
-arena_height: 1200.0    # In mm
+arena_surface: 1.0e6    # In mm²
 
 delete_old_files: true
 enable_data_logging: true

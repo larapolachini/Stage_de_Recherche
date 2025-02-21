@@ -31,6 +31,7 @@ class Simulation {
 
     float arena_width = 1000.0;     // In mm
     float arena_height = 1000.0;    // In mm
+    float arena_surface = 1e6;      // In mm²
     float robot_radius = 10.0;      // In mm
     float comm_radius = 90.0;       // In mm
 

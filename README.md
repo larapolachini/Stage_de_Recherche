@@ -164,7 +164,7 @@ apptainer exec /PATH/TO/pogosim.simg ./my_pogobot_project -c conf/test.yaml
 ## Generate gif files of the traces
 By default, the frames of a simulated run are stored in the directory "frames/" (cf variable "frames\_name" in the configuration file).
 They can be assembled into an animated gif file using various commands, such as mencoder, ffmpeg, or ImageMagick.
-We recommand the program [gifski](https://gif.ski/), a very high-quality GIF encoder:
+We recommend the program [gifski](https://gif.ski/), a very high-quality GIF encoder:
 ```shell
 gifski -r 20 --output animation.gif frames/*png
 ```

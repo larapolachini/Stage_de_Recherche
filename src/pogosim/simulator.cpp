@@ -111,11 +111,15 @@ void Simulation::create_arena() {
              // Careful! Values higher than 1.0 / VISUALIZATION_SCALE results in robots outside arena
 
     // Read multiple polygons from the CSV file
-    arena_polygons = read_poly_from_csv(csv_file, arena_width, arena_height);
+    //arena_polygons = read_poly_from_csv(csv_file, arena_width, arena_height);
+    arena_polygons = read_poly_from_csv(csv_file, arena_surface);
     if (arena_polygons.empty()) {
         glogger->error("Error: No polygons found in the arena file");
         throw std::runtime_error("No polygons found in the arena file or unable to open arena file");
     }
+
+    // Compute the bounding box of the main polygon
+    std::tie(arena_width, arena_height) = compute_polygon_dimensions(arena_polygons[0]);
 
     // Process each polygon
     for (const auto& polygon : arena_polygons) {
@@ -243,8 +247,7 @@ void Simulation::init_config() {
     window_width = std::stoi(config.get("window_width", "800"));
     window_height = std::stoi(config.get("window_height", "800"));
 
-    arena_width = std::stof(config.get("arena_width", "1000.0"));
-    arena_height = std::stof(config.get("arena_height", "1000.0"));
+    arena_surface = std::stof(config.get("arena_surface", "1e6"));
 
     mm_to_pixels = 0.0f;
     adjust_mm_to_pixels(std::stof(config.get("mm_to_pixels", "1.0")));
