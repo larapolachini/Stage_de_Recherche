@@ -627,6 +627,10 @@ void Simulation::main_loop() {
     double const simulation_time = std::stof(config.get("simulationTime", "100.0"));
     glogger->info("Launching the main simulation loop.");
 
+    // Print an help message with the GUI keyboard shortcuts
+    if (enable_gui)
+        help_message();
+
     double const save_data_period = std::stof(config.get("save_data_period", "1.0"));
     double const save_video_period = std::stof(config.get("save_video_period", "-1.0"));
     double time_step_duration = std::stof(config.get("timeStep", "0.01"));
