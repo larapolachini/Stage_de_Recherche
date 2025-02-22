@@ -137,6 +137,7 @@ Options:
 
 
 ## Install and use the simulator in an Apptainer/Singularity container
+The main image definition file for apptainer is based on Ubuntu 24.04 LTS ("pogosim-apptainer.def"). An alternative image based on Ubuntu 22.04 LTS can also be found ("pogosim-apptainer\_ubuntu22.04.def").
 
 To build the image:
 ```shell
@@ -159,6 +160,7 @@ Then the simulator can be launched with:
 ```shell
 apptainer exec /PATH/TO/pogosim.simg ./my_pogobot_project -c conf/test.yaml
 ```
+
 
 
 ## Generate gif files of the traces
