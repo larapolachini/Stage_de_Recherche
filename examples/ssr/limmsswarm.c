@@ -11,46 +11,33 @@
 #include "limmsswarm.h"
 #include "dispersion.h"
 
+// Don't forget to call this macro in the main .c file of your project (only once!)
 REGISTER_USERDATA(USERDATA)
+// Now, members of the USERDATA struct can be accessed through mydata->MEMBER. E.g. mydata->age
+//  On real robots, the compiler will automatically optimize the code to access member variables as if they were true globals.
 
-uint8_t const wait_for_min_nb_neighbors = 1; // = 1;
+
+uint8_t const wait_for_min_nb_neighbors = 1;
 
 fp_t const initial_s_max_val = 1.f;
-fp_t const inv_tau = 20.f; // 15.f; // 12.f; // Originally 10.f
+fp_t const inv_tau = 20.f;
 
 fp_t const diffusion_convergence_threshold = 0.1;
 uint16_t const diffusion_min_nb_points = 3;
 fp_t const diffusion_min_abs_s = 0.e-05f;
 
-//uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; // 12400;
-//uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 1550;
-//uint32_t const µs_randow_walk                       = kiloticks_to_µs * 0; // 6200;
-//uint32_t const µs_handshake                         = kiloticks_to_µs * 1240; // 30;
-//uint32_t const µs_diffusion                         = kiloticks_to_µs * 16275; // 31000; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
-//uint32_t const µs_diffusion_it                      = kiloticks_to_µs * 465; // 310; // 93;
-//uint32_t const µs_diffusion_burnin                  = kiloticks_to_µs * 2325; // 1240;
-//uint32_t const µs_collective_avg_lambda             = kiloticks_to_µs * 13950; // 1860;
-//uint32_t const µs_collective_avg_lambda_it          = kiloticks_to_µs * 465;
-//uint32_t const µs_collective_avg_avg_lambda         = kiloticks_to_µs * 13950; // 1860;
-//uint32_t const µs_collective_avg_avg_lambda_it      = kiloticks_to_µs * 465;
-//uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
-//uint32_t µs_iteration = 0; // Set in ``setup()``
-
-uint32_t const max_age = kiloticks_to_µs * 155; // 186; // 320; // 620; //620;
-
-uint32_t const µs_initial_random_walk               = kiloticks_to_µs * 0; // 12400;
-uint32_t const µs_random_walk_choice                = kiloticks_to_µs * 1550;
-uint32_t const µs_randow_walk                       = kiloticks_to_µs * 0; // 6200;
-uint32_t const µs_handshake                         = max_age * 5; // 30;
-uint32_t const µs_diffusion                         = max_age * 100; // 31000; // 6200; // 1550; // 1860 // 930; // 465; // 6510;
-uint32_t const µs_diffusion_it                      = max_age; // 310; // 93;
-uint32_t const µs_diffusion_burnin                  = max_age * 20; // 1240;
-uint32_t const µs_collective_avg_lambda             = max_age * 20; // 1860;
+uint32_t const max_age = kiloticks_to_µs * 155;
+uint32_t const µs_initial_random_walk               = max_age * 0;
+uint32_t const µs_random_walk_choice                = max_age * 2;
+uint32_t const µs_randow_walk                       = max_age * 0;
+uint32_t const µs_diffusion                         = max_age * 100;
+uint32_t const µs_diffusion_it                      = max_age;
+uint32_t const µs_diffusion_burnin                  = max_age * 20;
+uint32_t const µs_collective_avg_lambda             = max_age * 20;
 uint32_t const µs_collective_avg_lambda_it          = max_age;
-uint32_t const µs_collective_avg_avg_lambda         = max_age * 20; // 1860;
+uint32_t const µs_collective_avg_avg_lambda         = max_age * 20;
 uint32_t const µs_collective_avg_avg_lambda_it      = max_age;
-uint32_t const µs_start_it_waiting_time             = kiloticks_to_µs * 31; // 465;
-uint32_t µs_iteration = 0; // Set in ``setup()``
+uint32_t const µs_start_it_waiting_time             = max_age * 1;
 
 
 inline static bool is_number_valid(fp_t nb) {
@@ -97,12 +84,6 @@ void set_behavior(behavior_t behavior) {
             pogobot_led_setColors(3, 3, 3, 2);
             break;
 
-#ifdef ENABLE_HANDSHAKES
-        case HANDSHAKE:
-            pogobot_led_setColors(3, 3, 3, 2);
-            break;
-#endif
-
         default:
             break;
     }
@@ -124,24 +105,6 @@ void purge_old_neighbors(void) {
 void clear_all_neighbors(void) {
     mydata->nb_neighbors = 0;
 }
-
-#ifdef ENABLE_HANDSHAKES
-
-void clear_known_neighbors(void) {
-    mydata->nb_known_neighbors = 0;
-    mydata->current_peer_index = 0;
-}
-
-bool is_neighbor_known(uint16_t uid) {
-    for(int8_t i = mydata->nb_known_neighbors-1; i >= 0; i--) {
-        if(uid == mydata->known_neighbors_uid[i])
-            return true;
-    }
-    return false;
-}
-
-#endif
-
 
 
 void setup_diff(diffusion_session_t* diff) {
@@ -182,15 +145,12 @@ void setup(void) {
     init_pogoid();
 
     // Init µs_iteration
-    µs_iteration = µs_randow_walk + µs_diffusion + µs_collective_avg_lambda + µs_start_it_waiting_time
+    mydata->µs_iteration = µs_randow_walk + µs_diffusion + µs_collective_avg_lambda + µs_start_it_waiting_time
 #ifdef ENABLE_AVG_AVG_LAMBDA
         + µs_collective_avg_avg_lambda
 #endif
 #ifdef ENABLE_PRE_DIFFUSION
         + µs_diffusion
-#endif
-#ifdef ENABLE_HANDSHAKES
-        + µs_handshake
 #endif
         ;
 
@@ -212,9 +172,6 @@ void setup(void) {
     mydata->neighbors_age_max = max_age;
     mydata->enable_message_sending = false;
     clear_all_neighbors();
-#ifdef ENABLE_HANDSHAKES
-    clear_known_neighbors();
-#endif
 
 #ifdef ENABLE_PHOTO_START
     mydata->last_data_b  = pogobot_photosensors_read(0);
@@ -411,32 +368,6 @@ void compute_next_s(void) {
     }
 }
 
-
-
-////fp_t compute_MSE(fp_t lambda, fp_t v, fp_t* hist_logs, fp_t* hist_t) {
-////fp_t compute_MSE(fp_t lambda, fp_t v, fp_t hist_logs[DIFFUSION_WINDOW_SIZE], fp_t hist_t[DIFFUSION_WINDOW_SIZE]) {
-//fp_t compute_MSE(fp_t lambda, fp_t v, uint8_t j) {
-//    diffusion_session_t *const diff = mydata->curr_diff;
-//
-//    fp_t mse = 0;
-//    fp_t nb_points = 0;
-//    for(uint8_t i = 0; i < DIFFUSION_WINDOW_SIZE; i++) {
-//        fp_t const logs = diff->hist_logs[j][i];
-//        fp_t const t = diff->hist_t[j][i];
-//        if(logs >= 0 || t < 0)
-//            continue;
-//        fp_t const err = (-lambda * t + LOG(v)) - (logs);
-//        //fp_t const err = (-lambda * t + v) - (logs);
-//        if(is_number_valid(err)) {
-//            mse += err * err;
-//            nb_points += 1;
-//        }
-//    }
-//    if(nb_points > 0)
-//        return mse/nb_points;
-//    else
-//        return 2000;
-//}
 
 fp_t compute_MSE(uint8_t i) {
     diffusion_session_t *const diff = mydata->curr_diff;
@@ -809,38 +740,11 @@ void behav_coll_avg_avg_lambda(void) {
 #endif
 
 
-#ifdef ENABLE_HANDSHAKES
-void behav_handshake(void) {
-    mydata->enable_message_sending = true;
-    mydata->hmsg_to_send.data_type = DATA_HANDSHAKE;
-    set_motion(STOP);
-
-    // Set number of peers to include in the message
-    uint8_t nb_peers = mydata->nb_neighbors;
-    mydata->hmsg_to_send.nb_peers = nb_peers;
-
-    // Add peers in the message
-    for(uint8_t i = 0; i < nb_peers; i++) {
-        if(mydata->current_peer_index >= mydata->nb_neighbors)
-            mydata->current_peer_index = 0;
-        mydata->hmsg_to_send.peers[i] = mydata->neighbors[mydata->current_peer_index].id;
-        mydata->current_peer_index++;
-    }
-#ifdef ENABLE_DEBUG_MSG
-    printf0("Exchanging Handshakes. nb_peers=%d nb_known_neighbors=%d \n", nb_peers, mydata->nb_known_neighbors);
-#endif
-}
-#endif
-
 
 
 void end_iteration(void) {
 #if !defined(ENABLE_AVG_AVG_LAMBDA)
     end_coll_avg_lambda();
-#endif
-
-#ifdef ENABLE_HANDSHAKES
-    clear_known_neighbors();
 #endif
 
 #ifdef ENABLE_INIT_REMOVE_SUM_S
@@ -987,17 +891,6 @@ void iteration(void) {
         }
         set_behavior(RANDOM_WALK);
 
-#ifdef ENABLE_HANDSHAKES
-    } else if(iteration_reached_behavior(µs_handshake)) {
-        if(mydata->current_behavior != HANDSHAKE) {
-            set_motion(STOP);
-            printf0("Exchanging Handshakes\n");
-            clear_all_neighbors();
-            clear_known_neighbors();
-        }
-        set_behavior(HANDSHAKE);
-#endif
-
 #ifdef ENABLE_PRE_DIFFUSION
     } else if(iteration_reached_behavior(µs_diffusion)) {
         if(mydata->current_behavior != PRE_DIFFUSION) {
@@ -1062,10 +955,6 @@ void iteration(void) {
     if(mydata->current_behavior == RANDOM_WALK || mydata->current_behavior == INIT_RANDOM_WALK) {
         behav_random_walk();
         //behav_dispersion();
-#ifdef ENABLE_HANDSHAKES
-    } else if(mydata->current_behavior == HANDSHAKE) {
-        behav_handshake();
-#endif
 #ifdef ENABLE_PRE_DIFFUSION
     } else if(mydata->current_behavior == PRE_DIFFUSION) {
         behav_diffusion();
@@ -1091,11 +980,6 @@ bool send_message(void) {
 
     // Send message
     switch(mydata->current_behavior) {
-#ifdef ENABLE_HANDSHAKES
-        case HANDSHAKE:
-            pogobot_infrared_sendLongMessage_omniGen( (uint8_t *)(&mydata->hmsg_to_send), sizeof(mydata->hmsg_to_send) );
-            break;
-#endif
 
         default:
             //pogobot_infrared_sendMessageAllDirection( 0x1234, (uint8_t *)(&mydata->data_to_send), sizeof(mydata->data_to_send) );
@@ -1120,20 +1004,6 @@ void process_message(message_t* mr) {
     // Get message data
     message_data_t const* data = (message_data_t*)(&( mr->payload ));
 
-#ifdef ENABLE_HANDSHAKES
-#ifdef ENABLE_INITIAL_WAIT_FOR_NEIGHBOR
-    if(data->data_type != DATA_HANDSHAKE && data->data_type != DATA_HEARTBEAT) {
-#else
-    if(data->data_type != DATA_HANDSHAKE) {
-#endif
-        // Check if neighbor is known
-        if(!is_neighbor_known(sender_id)) {
-            // Unknown neighbor. Ignore message
-            return;
-        }
-    }
-#endif
-
     // Further process message according to current behavior
     switch(mydata->current_behavior) {
 #ifdef ENABLE_INITIAL_WAIT_FOR_NEIGHBOR
@@ -1141,13 +1011,6 @@ void process_message(message_t* mr) {
             // XXX
             //if(data->data_type != DATA_HEARTBEAT) // Check if message if of the correct type
             //    return;
-            break;
-#endif
-
-#ifdef ENABLE_HANDSHAKES
-        case HANDSHAKE:
-            if(data->data_type != DATA_HANDSHAKE) // Check if message if of the correct type
-                return;
             break;
 #endif
 
@@ -1197,29 +1060,6 @@ void process_message(message_t* mr) {
 
     // Update internal values depending on current behavior
     switch(mydata->current_behavior) {
-#ifdef ENABLE_HANDSHAKES
-        case HANDSHAKE: {
-            handshake_message_data_t const* hmsg = (handshake_message_data_t*) (&( mr->payload ));
-            uint8_t am_i_a_peer = false;
-            uint8_t nb_peers = hmsg->nb_peers;
-            if(nb_peers > MAXN)
-                nb_peers = MAXN;
-            for(uint8_t j = 0; j < nb_peers; j++) {
-                am_i_a_peer |= hmsg->peers[j] == pogoid; // Bit-wise OR. Still works because the condition results in either 0 or 1
-            }
-            if(am_i_a_peer) {
-                // Check if the neighbor is not already known
-                if(!is_neighbor_known(sender_id) && mydata->nb_known_neighbors < MAXN-1) {
-                    // If neighbor is unknown, add it to the list of known neighbors
-                    mydata->known_neighbors_uid[mydata->nb_known_neighbors] = sender_id;
-                    mydata->nb_known_neighbors++;          // sloppy but better than overflow
-                }
-            }
-            break;
-        }
-
-#endif
-
         default:
             for(uint8_t j = 0; j < NUMBER_DIFF; j++) {
                 mydata->neighbors[i].val[j] = data->val[j];

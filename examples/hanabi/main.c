@@ -26,7 +26,9 @@
  * and observe partitions with groups of same age.
 **/
 
+// Main include for pogobots, both for real robots and for simulations
 #include "pogobase.h"
+
 #include "time.h"
 
 #define CODENAME "HANABI"
@@ -60,7 +62,7 @@ typedef struct RawMessage {
     uint8_t rgb_colors_index;
 } RawMessage;
 
-#define MSG_SIZE sizeof(RawMessage) // number of bytes
+#define MSG_SIZE sizeof(RawMessage) // Number of bytes
 
 typedef union message_template {
     uint8_t msg_array[MSG_SIZE];
@@ -107,9 +109,10 @@ uint8_t const nb_rgb_colors = sizeof(rgb_colors) / sizeof(rgb_colors[0]);
 uint16_t const den_p_change_led_color = 20000; // probability to change led color independently (1/den_p_change_led_color) (p=3000 for 15 robots; p=20000 for 72 robots)
 
 
+// "Global" variables should be inserted within the USERDATA struct.
 // Non-const global variables used by each robot. They will be accessible through the mydata pointer, declared by the macro "REGISTER_USERDATA"
 typedef struct {
-    uint64_t start_of_experiment_ms;
+    uint32_t start_of_experiment_ms;
     bool started;
 
     uint16_t my_pogobot_id;
@@ -117,9 +120,17 @@ typedef struct {
 
     uint8_t rgb_colors_index; // index of the rgb_colors array
 } USERDATA;
-REGISTER_USERDATA(USERDATA)
+
+// Call this macro in the same file (.h or .c) as the declaration of USERDATA
+DECLARE_USERDATA(USERDATA);
+
+// Don't forget to call this macro in the main .c file of your project (only once!)
+REGISTER_USERDATA(USERDATA);
+// Now, members of the USERDATA struct can be accessed through mydata->MEMBER. E.g. mydata->age
+//  On real robots, the compiler will automatically optimize the code to access member variables as if they were true globals.
 
 
+// Called by the pogobot main loop before 'user_step', if there are messages to be processed
 void process_message(message_t* mr) {
     // Elaborate robot messages only (avoid controllers messages). NB: this condition works only with long headers
     if (MSG_MODE_FULL_HEADER && mr->header._packet_type != ir_t_user) {
@@ -154,7 +165,7 @@ void process_message(message_t* mr) {
 // * Each robot transmits 2 information to the neighbors: a color and an iterator.
 // * The iterator (age) corresponds to how many times the sender has changed color.
 // ********************************************************************************
-bool send_message(void) {
+bool send_message(void) {        // Called by the pogobot main loop before 'user_step'
     uint16_t msg_id;
     uint8_t data[MSG_SIZE]; // message to send, containing uint8_t data
     message msg_from_neighbor;
@@ -193,15 +204,13 @@ bool send_message(void) {
 }
 
 
+// Init function. Called once at the beginning of the program (cf 'pogobot_start' call in main())
 void user_init(void) {
     srand(pogobot_helper_getRandSeed()); // initialize the random number generator
     pogobot_infrared_set_power(INFRARED_POWER); // set the power level used to send all the next messages
 
     // Set mydata variables to 0
-    uint8_t* mydata_ptr = (uint8_t *) mydata;
-    for (size_t i = 0; i < sizeof(*mydata); i++) {
-        mydata_ptr[i] = 0;
-    }
+    memset(mydata, 0, sizeof(*mydata));
 
     // Set main loop frequency, message sending frequency, message processing frequency
     main_loop_hz = FQCY;
@@ -238,6 +247,7 @@ void user_init(void) {
 }
 
 
+// Step function. Called continuously at each step of the pogobot main loop
 void user_step(void) {
     // ********************************************************************************
     // * Start-up phase for simultaneous start of the robots when the lights turn off
@@ -321,12 +331,20 @@ void export_data() {
 }
 #endif
 
+
+// Entrypoint of the program
 int main(void) {
-    pogobot_init();
+    pogobot_init();     // Initialization routine for the robots
+    // Specify the user_init and user_step functions
     pogobot_start(user_init, user_step);
 
+    // Specify the callback functions. Only called by the simulator.
+    //  In particular, they serve to add data fields to the exported data files
     SET_CALLBACK(callback_create_data_schema, create_data_schema);
     SET_CALLBACK(callback_export_data, export_data);
     return 0;
 }
 
+// MODELINE "{{{1
+// vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+// vim:foldmethod=marker

@@ -21,7 +21,6 @@ commRadius: 133.0       # In mm, from center of a focal robot to the center of a
 msgSuccessRate: 0.9
 showComms: false
 GUI: true
-#mm_to_pixels: 0.0
 
 timeStep: 0.01          # In s
 GUI_speed_up: 1.0

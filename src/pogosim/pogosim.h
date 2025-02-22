@@ -13,6 +13,10 @@
 // Macros to declare the mydata pointer
 #ifdef SIMULATOR // Compiling for the simulator
 #include <stddef.h>
+
+#define DECLARE_USERDATA(UDT)       \
+    extern UDT *mydata;
+
 #define REGISTER_USERDATA(UDT) 		\
 	size_t UserdataSize = sizeof(UDT); \
 	UDT *mydata;
@@ -24,9 +28,19 @@ extern void (*callback_create_data_schema)(void);
 extern void (*callback_export_data)(void);
 
 #else // Compiling for real robots
+
+// On real robots, declare an extern variable for a single shared instance.
+#define DECLARE_USERDATA(UDT)       \
+    extern UDT myuserdata;         \
+    static inline UDT * restrict get_mydata(void) { return &myuserdata; }  // The accessor returns a restrict-qualified pointer.
+    // Here we use the keyword "restrict" to ensure that the compiler automatically transform mydata->foo statements into myuserdata.foo after optimization.
+    //  This increases performance by removing pointer access operations.
+
+/* Now, use mydata as an alias for the inline function result */
+#define mydata (get_mydata())
+
 #define REGISTER_USERDATA(UDT) 		\
-	UDT myuserdata;                 \
-	UDT *mydata = &myuserdata; 
+	UDT myuserdata;
 
 #define SET_CALLBACK(CALLBACK_FN, FN)
 

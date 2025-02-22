@@ -12,7 +12,6 @@
 #define ENABLE_AVG_AVG_LAMBDA
 //#define ENABLE_INIT_REMOVE_SUM_S
 #define ENABLE_PRE_DIFFUSION
-//#define ENABLE_HANDSHAKES
 
 //#define ENABLE_INITIAL_WAIT_FOR_NEIGHBOR
 #define ENABLE_PHOTO_START
@@ -37,8 +36,7 @@
 //#define ENABLE_SHOW_BEHAVIOR_COLOR
 
 #define DIFFUSION_WINDOW_SIZE 40
-//#define DIFFUSION_WINDOW_SIZE 20 // XXX Original value
-//#define DIFFUSION_WINDOW_SIZE 10
+//#define DIFFUSION_WINDOW_SIZE 20
 //#define DIFFUSION_WINDOW_SIZE 3
 
 #if defined(ENABLE_SINGLE_DIFF)
@@ -75,9 +73,6 @@ typedef enum {
     INIT_BEHAVIOR,
     INIT_RANDOM_WALK,
     RANDOM_WALK,
-#ifdef ENABLE_HANDSHAKES
-    HANDSHAKE,
-#endif
     PRE_DIFFUSION,
     DIFFUSION,
     AVG_LAMBDA,
@@ -96,9 +91,6 @@ typedef enum {
 #ifdef ENABLE_INITIAL_WAIT_FOR_NEIGHBOR
     DATA_HEARTBEAT,
 #endif
-#ifdef ENABLE_HANDSHAKES
-    DATA_HANDSHAKE,
-#endif
     DATA_PRE_S,
     DATA_S,
     DATA_LAMBDA,
@@ -110,15 +102,6 @@ typedef struct __attribute__((__packed__)) {        //   that all variable follo
     data_type_t data_type;
     fp_t val[NUMBER_DIFF];
 } message_data_t;
-
-#ifdef ENABLE_HANDSHAKES
-#pragma pack(1)                                      // These two lines are needed to ensure 
-typedef struct __attribute__((__packed__)) {       //   that all variable follow the same order as defined in the code
-    data_type_t data_type;
-    uint16_t peers[MAXN];
-    uint8_t nb_peers;
-} handshake_message_data_t;
-#endif
 
 typedef struct {
     uint16_t id;
@@ -174,15 +157,10 @@ typedef struct {
 } diffusion_session_t;
 
 typedef struct {
+    uint32_t µs_iteration; // Set in ``setup()``
+
     neighbor_t neighbors[MAXN];
     uint8_t nb_neighbors;
-
-#ifdef ENABLE_HANDSHAKES
-    uint16_t known_neighbors_uid[MAXN];
-    uint8_t nb_known_neighbors;
-    uint8_t current_peer_index;
-    handshake_message_data_t hmsg_to_send;
-#endif
 
     uint32_t neighbors_age_max;
     bool enable_message_sending;
@@ -223,13 +201,11 @@ typedef struct {
 
 } USERDATA;
 
-extern USERDATA *mydata;
+// Call this macro in the same file (.h or .c) as the declaration of USERDATA
+DECLARE_USERDATA(USERDATA);
 
 
 void compute_next_s(void);
-////fp_t compute_MSE(fp_t lambda, fp_t v, fp_t* hist_logs, fp_t* hist_t); // XXX
-////fp_t compute_MSE(fp_t lambda, fp_t v, fp_t hist_logs[DIFFUSION_WINDOW_SIZE], fp_t hist_t[DIFFUSION_WINDOW_SIZE]); // XXX
-//fp_t compute_MSE(fp_t lambda, fp_t v, uint8_t j);
 fp_t compute_MSE(uint8_t i);
 void compute_lambda_v_leastsquaresMSE(void);
 
@@ -244,11 +220,6 @@ void behav_coll_avg_lambda(void);
 void end_coll_avg_lambda(void);
 void init_coll_avg_avg_lambda(void);
 void behav_coll_avg_avg_lambda(void);
-#ifdef ENABLE_HANDSHAKES
-void behav_handshake(void);
-void clear_known_neighbors(void);
-bool is_neighbor_known(uint16_t uid);
-#endif
 
 void iteration(void);
 void end_iteration(void);
@@ -256,8 +227,6 @@ void end_iteration(void);
 void purge_old_neighbors(void);
 void clear_all_neighbors(void);
 bool send_message(void);
-//uint16_t get_message_neighbor_id(void);
-//uint16_t get_message_neighbor_id(uint16_t const sender_id);
 void process_message(message_t* mr);
 
 void setup(void);
