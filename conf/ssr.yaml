@@ -14,10 +14,10 @@ enable_console_logging: true
 console_filename: "frames/console.txt"
 
 seed: 0
-nBots: 25
+nBots: 30
 initial_robot_formation: random
 #initial_robot_formation: disk
-simulationTime: 1800.0  # In s
+simulationTime: 360.0  # In s
 robot_radius: 26.5      # In mm
 commRadius: 133.0       # In mm, from center of a focal robot to the center of a neighboring robot
 msgSuccessRate: 0.95

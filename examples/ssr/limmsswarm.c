@@ -9,7 +9,6 @@
 #include "util.h"
 #include "colors.h"
 #include "limmsswarm.h"
-#include "dispersion.h"
 
 // Don't forget to call this macro in the main .c file of your project (only once!)
 REGISTER_USERDATA(USERDATA)
@@ -27,9 +26,9 @@ uint16_t const diffusion_min_nb_points = 3;
 fp_t const diffusion_min_abs_s = 0.e-05f;
 
 uint32_t const max_age = kiloticks_to_µs * 155;
-uint32_t const µs_initial_random_walk               = max_age * 0;
+uint32_t const µs_initial_random_walk               = max_age * 100;
 uint32_t const µs_random_walk_choice                = max_age * 2;
-uint32_t const µs_randow_walk                       = max_age * 0;
+uint32_t const µs_randow_walk                       = max_age * 30;
 uint32_t const µs_diffusion                         = max_age * 100;
 uint32_t const µs_diffusion_it                      = max_age;
 uint32_t const µs_diffusion_burnin                  = max_age * 20;
@@ -852,7 +851,6 @@ void iteration(void) {
 #else
             mydata->enable_message_sending = false;
 #endif
-            start_dispersion();
             printf0("Initial random walk\n");
             pogobot_led_setColors(0, 0, 0, 0);
         }
@@ -886,7 +884,6 @@ void iteration(void) {
 #else
             mydata->enable_message_sending = false;
 #endif
-            start_dispersion();
             printf0("  it=%d RANDOM_WALK\n", mydata->current_it);
         }
         set_behavior(RANDOM_WALK);
@@ -954,7 +951,6 @@ void iteration(void) {
 
     if(mydata->current_behavior == RANDOM_WALK || mydata->current_behavior == INIT_RANDOM_WALK) {
         behav_random_walk();
-        //behav_dispersion();
 #ifdef ENABLE_PRE_DIFFUSION
     } else if(mydata->current_behavior == PRE_DIFFUSION) {
         behav_diffusion();

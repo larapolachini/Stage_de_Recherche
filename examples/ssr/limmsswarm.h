@@ -180,18 +180,6 @@ typedef struct {
     behavior_t current_behavior;
     uint16_t current_it;
 
-    // Dispersion
-    uint64_t cycle_dispersion;
-    uint64_t last_pogoticks_dispersion;
-    uint64_t tumble_time;
-    uint64_t run_time;
-    uint8_t direction;
-    float prob;
-    uint8_t flag_dispersion;
-    float d_min;
-    float d_max;
-    float frustration;
-
     // Photo start values;
 #ifdef ENABLE_PHOTO_START
     int16_t last_data_b;
