@@ -3,6 +3,7 @@
 #include <vector>
 #include <random>
 #include <iostream>
+#include <fstream>
 
 #include "utils.h"
 #include "distances.h"
