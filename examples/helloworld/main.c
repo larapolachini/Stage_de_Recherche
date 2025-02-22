@@ -1,16 +1,19 @@
 
+// Main include for pogobots, both for real robots and for simulations
 #include "pogobase.h"
 
+// "Global" variables should be inserted within the USERDATA struct.
+// /!\  In simulation, don't declare non-const global variables outside this struct, elsewise they will be shared among all agents.
 typedef struct {
     uint8_t data_foo[8];
     time_reference_t timer_it;
 } USERDATA;
 
-//extern USERDATA *mydata;
+// Don't forget to call this macro in the main .c file of your project
 REGISTER_USERDATA(USERDATA)
 
 
-
+// Init function. Called once at the beginning of the program (cf 'pogobot_start' call in main())
 void user_init(void) {
 #ifndef SIMULATOR
     printf("setup ok\n");
@@ -31,11 +34,15 @@ void user_init(void) {
 }
 
 
+// Step function. Called continuously at each step of the pogobot main loop
 void user_step(void) {
-    if (pogobot_ticks % 1000 == 0 && pogobot_helper_getid() == 0) {
-        //printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %lu   pogobot_ticks: %d\n", pogobot_helper_getid(), pogobot_stopwatch_get_elapsed_microseconds(&mydata->timer_it), pogobot_ticks);
-        printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %llu   pogobot_ticks: %lu\n",
-                pogobot_helper_getid(), (long long unsigned int) current_time_milliseconds(), (long unsigned int) pogobot_ticks);
+    if (pogobot_ticks % 1000 == 0 && pogobot_helper_getid() == 0) {     // Only print messages for robot 0
+        printf(" HELLO WORLD !!!   Robot ID: %d   Current time: %llums  Timer: %lluµs   pogobot_ticks: %lu\n",
+                pogobot_helper_getid(),
+                (long long unsigned int) current_time_milliseconds(),
+                (long long unsigned int) pogobot_stopwatch_get_elapsed_microseconds(&mydata->timer_it),
+                (long unsigned int) pogobot_ticks       // Increased by one at each execution of user_step
+                );
     }
 
     if ((uint32_t)(current_time_milliseconds() / 10000) % 2 == 0) {
@@ -52,12 +59,14 @@ void user_step(void) {
 }
 
 
+// Entrypoint of the program
 int main(void) {
-    pogobot_init();
+    pogobot_init();     // Initialization routine for the robots
 #ifndef SIMULATOR
     printf("init ok\n");
 #endif
 
+    // Specify the user_init and user_step functions
     pogobot_start(user_init, user_step);
     return 0;
 }
