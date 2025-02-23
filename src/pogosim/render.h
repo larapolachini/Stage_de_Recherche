@@ -6,12 +6,45 @@
 #include <box2d/box2d.h>
 
 float const VISUALIZATION_SCALE = 100.0f; // 1 Box2D unit = 100 pixels
+
+/// Global scaling factor from millimeters to pixels.
 extern float mm_to_pixels;
+/// Global visualization offset for the x-coordinate.
 extern float visualization_x;
+/// Global visualization offset for the y-coordinate.
 extern float visualization_y;
 
+/**
+ * @brief Adjusts the global mm_to_pixels scaling factor.
+ *
+ * This function modifies the conversion factor from millimeters to pixels by adding
+ * the provided delta. The resulting value is clamped between 0.10 and 10.0.
+ *
+ * @param delta The value to add to mm_to_pixels.
+ */
 void adjust_mm_to_pixels(float delta);
+
+/**
+ * @brief Calculates the visualization position for given x and y coordinates.
+ *
+ * This function converts physical coordinates to visualization coordinates using the global
+ * mm_to_pixels scaling factor and visualization offsets.
+ *
+ * @param x The x-coordinate in the original space.
+ * @param y The y-coordinate in the original space.
+ * @return b2Vec2 The computed visualization position.
+ */
 b2Vec2 visualization_position(float x, float y);
+
+/**
+ * @brief Calculates the visualization position for a given point.
+ *
+ * This overloaded function converts a b2Vec2 point to visualization coordinates using the global
+ * mm_to_pixels scaling factor and visualization offsets.
+ *
+ * @param pos The original position as a b2Vec2.
+ * @return b2Vec2 The computed visualization position.
+ */
 b2Vec2 visualization_position(b2Vec2 pos);
 
 /**
@@ -35,12 +68,62 @@ b2Vec2 visualization_position(b2Vec2 pos);
  */
 std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename, float total_surface);
 
-std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float offset);
+/**
+ * @brief Generates a random point within the specified polygon.
+ *
+ * This function calculates the bounding box of the provided polygon and repeatedly generates random points
+ * within that box until one is found that lies inside the polygon.
+ *
+ * @param polygon A vector of b2Vec2 points defining the polygon.
+ * @return b2Vec2 A randomly generated point within the polygon.
+ *
+ * @throws std::runtime_error If the polygon has fewer than 3 points.
+ */
+
 b2Vec2 generate_random_point_within_polygon(const std::vector<b2Vec2>& polygon);
-//b2Vec2 generate_random_point_within_polygon_safe(const std::vector<b2Vec2>& polygon, float minDistance);
-//b2Vec2 generate_random_point_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance);
-std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance, unsigned int N);
+
+/**
+ * @brief Determines whether a point is within a polygon.
+ *
+ * This function uses a ray-casting algorithm to test whether the point (x, y) lies inside the given polygon.
+ *
+ * @param polygon A vector of b2Vec2 points defining the polygon.
+ * @param x The x-coordinate of the point.
+ * @param y The y-coordinate of the point.
+ * @return true If the point is inside the polygon.
+ * @return false Otherwise.
+ */
 bool is_point_within_polygon(const std::vector<b2Vec2>& polygon, float x, float y);
+
+/**
+ * @brief Computes an offset polygon.
+ *
+ * This function generates a new polygon by offsetting the original polygon inward or outward by a specified distance.
+ * It calculates normals at each vertex and computes new offset points accordingly.
+ *
+ * @param polygon A vector of b2Vec2 points defining the original polygon.
+ * @param offset The offset distance to apply.
+ * @return std::vector<b2Vec2> The resulting offset polygon.
+ *
+ * @throws std::runtime_error If the polygon has fewer than 3 points.
+ */
+std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float offset);
+
+/**
+ * @brief Generates a set of random points within a polygon with minimum separation.
+ *
+ * This function generates N random points within the main polygon (first element in polygons),
+ * ensuring that each point maintains at least minDistance from all others. Points are also checked
+ * against exclusion zones defined by subsequent polygons.
+ *
+ * @param polygons A vector of polygons where the first polygon is the main area and others are exclusion zones.
+ * @param minDistance The minimum distance required between points.
+ * @param N The number of points to generate.
+ * @return std::vector<b2Vec2> A vector containing the generated points.
+ *
+ * @throws std::runtime_error If any polygon has fewer than 3 points or if it is impossible to generate N valid points.
+ */
+std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance, unsigned int N);
 
 
 /**
@@ -68,11 +151,64 @@ std::pair<float, float> compute_polygon_dimensions(const std::vector<b2Vec2>& po
  */
 float compute_polygon_area(const std::vector<b2Vec2>& poly);
 
+/**
+ * @brief Computes the centroid of a polygon.
+ *
+ * This function calculates the geometric center of the polygon using the shoelace formula.
+ *
+ * @param polygon A vector of b2Vec2 points defining the polygon.
+ * @return b2Vec2 The centroid of the polygon.
+ */
 b2Vec2 polygon_centroid(const std::vector<b2Vec2>& polygon);
+
+/**
+ * @brief Calculates the distance from a point to a line segment.
+ *
+ * This function computes the shortest distance from point p to the line segment defined by endpoints a and b.
+ *
+ * @param p The point from which the distance is measured.
+ * @param a The first endpoint of the line segment.
+ * @param b The second endpoint of the line segment.
+ * @return float The distance from point p to the line segment.
+ */
 float point_to_line_segment_distance(const b2Vec2& p, const b2Vec2& a, const b2Vec2& b);
+
+/**
+ * @brief Generates regularly spaced points within a polygon based on disk packing.
+ *
+ * This function places points in concentric rings (from the centroid outward) ensuring that each point is at least
+ * a minimum distance (minDistance) from others. Points are only accepted if they are inside the main polygon and outside any holes.
+ *
+ * @param polygons A vector of polygons, where the first polygon is the main area and subsequent polygons are holes.
+ * @param minDistance The minimum distance required between generated points.
+ * @param N The total number of points to generate.
+ * @return std::vector<b2Vec2> A vector of generated points.
+ *
+ * @throws std::runtime_error If the main polygon has fewer than 3 vertices or if it is impossible to place N points.
+ */
 std::vector<b2Vec2> generate_regular_disk_points_in_polygon(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance, unsigned int N);
 
+/**
+ * @brief Draws a polygon using an SDL renderer.
+ *
+ * This function renders a polygon by drawing red lines between consecutive vertices on the provided SDL renderer.
+ * It also closes the polygon by drawing a line between the last and first vertex.
+ *
+ * @param renderer Pointer to the SDL_Renderer to use for drawing.
+ * @param polygon A vector of b2Vec2 points defining the polygon.
+ */
 void draw_polygon(SDL_Renderer* renderer, const std::vector<b2Vec2>& polygon);
+
+/**
+ * @brief Saves the content of an SDL window to a PNG file.
+ *
+ * This function reads the pixels from the SDL renderer associated with a window and saves the image as a PNG file.
+ * It also ensures that the directory path for the output file exists.
+ *
+ * @param renderer Pointer to the SDL_Renderer used for capturing the window content.
+ * @param window Pointer to the SDL_Window from which to capture the content.
+ * @param filename The file path where the PNG image will be saved.
+ */
 void save_window_to_png(SDL_Renderer* renderer, SDL_Window* window, const std::string& filename);
 
 #endif // RENDER_H

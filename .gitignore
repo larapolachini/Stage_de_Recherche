@@ -77,3 +77,7 @@ examples/run_and_tumble/run_and_tumble
 # Valgrind
 callgrind.*
 vgcore.*
+
+# Doxygen
+html
+latex

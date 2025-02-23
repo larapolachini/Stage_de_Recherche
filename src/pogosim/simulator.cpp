@@ -24,7 +24,6 @@
 #undef main         // We defined main() as robot_main() in pogobot.h
 
 
-// TODO Move into Robot class?
 void set_current_robot(Robot& robot) {
     // Store values of previous robot
     if (current_robot != nullptr) {

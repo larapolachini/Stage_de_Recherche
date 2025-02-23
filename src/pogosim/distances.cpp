@@ -14,29 +14,71 @@ float euclidean_distance(const b2Vec2& a, const b2Vec2& b) {
     return std::sqrt(dx * dx + dy * dy);
 }
 
-// Spatial hashing helpers
+/**
+ * @brief Represents a cell in a spatial grid.
+ *
+ * A GridCell is defined by its integer coordinates (x, y) and is used in spatial
+ * hashing to partition a 2D space into discrete cells.
+ */
 struct GridCell {
-    int x, y;
+    int x, y; ///< The x and y coordinates of the grid cell.
+
+    /**
+     * @brief Compares two GridCell objects for equality.
+     *
+     * @param other The other GridCell to compare against.
+     * @return true if both the x and y coordinates are equal.
+     * @return false otherwise.
+     */
     bool operator==(const GridCell& other) const {
         return x == other.x && y == other.y;
     }
 };
 
+/**
+ * @brief Hash functor for GridCell.
+ *
+ * This structure provides a hash function for GridCell objects, allowing them to be used
+ * as keys in unordered associative containers.
+ */
 struct GridCellHash {
+    /**
+     * @brief Computes a hash value for a GridCell.
+     *
+     * Combines the hash of the x and y coordinates.
+     *
+     * @param cell The GridCell to hash.
+     * @return std::size_t The computed hash value.
+     */
     std::size_t operator()(const GridCell& cell) const {
-        // Simple hash combining
+        // Simple hash combining for x and y.
         return std::hash<int>()(cell.x) ^ (std::hash<int>()(cell.y) << 1);
     }
 };
 
-// Precompute the 9 offsets
+/**
+ * @brief Precomputed offsets for neighbor grid cells.
+ *
+ * This constant array contains the relative offsets for a cell's neighbors in a 3x3 grid,
+ * including the cell itself. It is used to quickly access adjacent cells during spatial queries.
+ */
 constexpr std::array<GridCell, 9> precomputedNeighborCells{
     GridCell{-1, -1}, GridCell{-1,  0}, GridCell{-1,  1},
     GridCell{ 0, -1}, GridCell{ 0,  0}, GridCell{ 0,  1},
     GridCell{ 1, -1}, GridCell{ 1,  0}, GridCell{ 1,  1},
 };
 
-// Convert a position to a grid cell index
+/**
+ * @brief Converts a 2D position to a grid cell index.
+ *
+ * This inline function maps the provided (x, y) coordinates into a GridCell based on
+ * the specified cell size. It uses std::floor to determine the appropriate cell index.
+ *
+ * @param x The x-coordinate of the position.
+ * @param y The y-coordinate of the position.
+ * @param cellSize The size of a single grid cell.
+ * @return GridCell The corresponding grid cell for the given position.
+ */
 inline GridCell getGridCell(float x, float y, float cellSize) {
     return {static_cast<int>(std::floor(x / cellSize)),
             static_cast<int>(std::floor(y / cellSize))};
