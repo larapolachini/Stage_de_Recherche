@@ -68,7 +68,7 @@ TODO
 examples/helloworld/helloworld
 examples/hanabi/hanabi
 examples/ssr/ssr
-examples/time_handling/time_handling
+examples/run_and_tumble/run_and_tumble
 
 # Apptainer
 *.sif
