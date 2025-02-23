@@ -107,7 +107,10 @@ The binary should be compiled correctly, and you can then use the usual commands
 ```shell
 make connect TTY=/dev/ttyUSB0
 ```
-Inside the robot prompt, type "enter" to obtain a new prompt line. After type the command "serialboot" to upload the code. Cf the [pogobot-SDK documentation](https://github.com/nekonaute/pogobot-sdk) for more details.
+Inside the robot prompt, type "enter" to obtain a new prompt line. 
+If you connect to the robot through a Progboard, you can use the command "serialboot" to upload the code. Cf the [pogobot-SDK documentation](https://github.com/nekonaute/pogobot-sdk) for more details.
+If you use the IR remote device, follow the instructions described [here](https://github.com/nekonaute/pogobot/blob/main/readme-irRemote.md).
+
 
 
 ### Simple way to create a new pogobot/pogosim project
@@ -151,6 +154,7 @@ make clean all  # To compile both the simulation and Pogobot binaries
 
 By default, the name of the created simulation binary corresponds to the name of the parent directory of the project. You can then launch it using:
 ```shell
+make clean sim
 ./template_prj -c conf/test.yaml        # If the parent directory is "template_prj"
 ```
 
