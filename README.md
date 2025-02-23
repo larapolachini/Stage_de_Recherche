@@ -186,6 +186,42 @@ Options:
 - Parameter "-P" displays a progress bar of the simulation, depending on the parameter value "SimulationTime" defined in the configuration file.
 
 
+### Access the pose and states of the robots in Python
+After a simulation is executed, it can periodically store the pose (position and orientation) and internal states of each robot into a data file.
+This feature can be enabled in the configuration file, with entries:
+```yaml
+enable_data_logging: true                   # Set to true to enable the generation of a data file
+data_filename: "frames/data.feather"        # Path of the generated data file
+save_data_period: 1.0       # In s          # Save data every 1.0 second
+```
+
+The data is stored as an Apache Arrow Feather file, a standard and convenient format to store large dataframes.
+As such, it can easily be imported in Python by using Pandas:
+```yaml
+import pandas as pd
+df = pd.read_feather("frames/data.feather")
+print(df)
+
+     time  robot_id  pogobot_ticks          x          y     angle
+0    1.00         0             64   6.130253   8.420820 -0.999992
+1    1.00         1             64   5.741853   0.787406  1.609105
+2    1.00         2             64   6.976273  10.846928  1.205084
+3    1.00         3             64   2.494493   9.393031  1.194923
+4    1.00         4             64  10.689711   7.483701  1.821597
+..    ...       ...            ...        ...        ...       ...
+895  6.05       145            380   2.619418   1.203837  3.132243
+896  6.05       146            380   5.100541   2.913250  0.923802
+897  6.05       147            380   6.158785  10.048936  2.966942
+898  6.05       148            380   6.318808   0.312880 -2.399829
+899  6.05       149            379   5.509576   7.346396 -0.368371
+
+[900 rows x 6 columns]
+```
+
+Custom columns can be added into this file by using the callback mechanism. See examples "hanabi" (simple) and "ssr" (complex) for more information.
+
+
+
 ## Install and use the simulator in an Apptainer/Singularity container
 The main image definition file for apptainer is based on Ubuntu 24.04 LTS ("pogosim-apptainer.def"). An alternative image based on Ubuntu 22.04 LTS can also be found ("pogosim-apptainer\_ubuntu22.04.def").
 
@@ -229,6 +265,17 @@ If you want to compile the pogosim library with debugging symbols and options (e
 ./build.sh Debug
 ```
 
+To generate Doxygen documentation:
+```shell
+doxygen
+```
+you can then open "html/index.html".
+To compile the latex report:
+```shell
+cd latex
+make
+```
+This will generate a PDF report named "latex/refman.pdf".
 
 ## Authors
 
