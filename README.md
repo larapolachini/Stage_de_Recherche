@@ -48,6 +48,18 @@ cd pogosim
 ./build.sh 
 ```
 
+### Launch example codes
+Example codes are compiled every time you launch the "./build.sh" script, alongside the rest of the Pogosim code.
+
+To launch examples code you can use the following commands:
+```shell
+./examples/helloworld/helloworld -c conf/test.yaml      # Hello world, just robots rotating left then right. The first robot prints "HELLO WORLD !" messages
+./examples/run_and_tumble/run_and_tumble -c conf/test.yaml      # A very simple implementation of the run-and-tumble algorithm for locomotion
+./examples/hanabi/hanabi -c conf/test.yaml      # A simple code to showcase the diffusion of information in a swarm. Immobile robots by default (uncomment "MOVING_ROBOTS" to make then move)
+./examples/ssr/ssr -c conf/ssr.yaml         # More complex example. "Simple" implementation of the SSR algorithm from https://arxiv.org/abs/2403.17147  You can test it for a disk and annulus arena (see conf/ssr.yaml to change the arena).
+```
+
+
 
 ## Quickstart
 
