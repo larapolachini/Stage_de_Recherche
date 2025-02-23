@@ -6,10 +6,10 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 MAKEFILE_DIR := $(notdir $(patsubst %/,%,$(dir $(MAKEFILE_PATH))))
 
 ##### Settings for the pogobot binary #####
-BUILD_DIR=./build
-POGO_SDK=../../pogobot-sdk
-POGOSIM_INCLUDE_DIR=../../src/
-POGOSIM_SRC_DIR=../../src/pogosim/
+BUILD_DIR?=./build
+POGO_SDK?=../../pogobot-sdk
+POGOSIM_INCLUDE_DIR?=../../src/
+POGOSIM_SRC_DIR?=../../src/pogosim/
 
 POGO_SDK_TOOLS=$(POGO_SDK)/tools
 POGO_SDK_INCS=$(POGO_SDK)/includes

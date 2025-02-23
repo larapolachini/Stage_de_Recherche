@@ -110,6 +110,51 @@ make connect TTY=/dev/ttyUSB0
 Inside the robot prompt, type "enter" to obtain a new prompt line. After type the command "serialboot" to upload the code. Cf the [pogobot-SDK documentation](https://github.com/nekonaute/pogobot-sdk) for more details.
 
 
+### Simple way to create a new pogobot/pogosim project
+Just copy the directory "template\_prj":
+```shell
+cp -R template_prj ~/my_new_pogo_prj
+```
+
+*Option 1*: Create simlinks to the necessary libraries:
+```shell
+cd ~/my_new_pogo_prj
+ln -s PATH/TO/pogosim       # https://github.com/Adacoma/pogosim
+ln -s PATH/TO/pogobot-sdk   # https://github.com/nekonaute/pogobot-sdk
+ln -s PATH/TO/pogo-utils    # If you use pogo-utils in your project. https://github.com/Adacoma/pogo-utils
+```
+
+*Option 2*: Set environment variables to link to necessary libraries:
+Add the following lines in the configuration file of your shell (e.g. ~/.bashrc for BASH or ~/.zshrc for ZSH):
+```shell
+export POGO_SDK=/ABSOLUTE/PATH/TO/pogobot-sdk
+export POGOSIM_INCLUDE_DIR=/ABSOLUTE/PATH/TO/pogosim/src
+export POGOUTILS_INCLUDE_DIR=/ABSOLUTE/PATH/TO/pogo-utils/src
+```
+
+*Option 3*: Edit the Makefile so that the following variables contain the paths to the necessary libraries:
+```shell
+POGO_SDK?=PATH/TO/pogobot-sdk
+POGOSIM_INCLUDE_DIR?=PATH/TO/pogosim/src
+POGOUTILS_INCLUDE_DIR?=PATH/TO/pogo-utils/src
+```
+
+
+After using any of these 3 options, you can compile the project:
+```shell
+make clean sim  # To compile the simulation
+# OR
+make clean bin  # To compile the binary for real Pogobots
+# OR
+make clean all  # To compile both the simulation and Pogobot binaries
+```
+
+By default, the name of the created simulation binary corresponds to the name of the parent directory of the project. You can then launch it using:
+```shell
+./template_prj -c conf/test.yaml        # If the parent directory is "template_prj"
+```
+
+
 ### Headless mode
 To launch your simulation in headless mode (while still exporting png files of the traces), use the "-g" command line parameter. E.g.:
 ```shell

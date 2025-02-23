@@ -7,9 +7,12 @@ MAKEFILE_DIR := $(notdir $(patsubst %/,%,$(dir $(MAKEFILE_PATH))))
 
 ##### Settings for the pogobot binary #####
 BUILD_DIR?=./build
-POGO_SDK?=../../pogobot-sdk
-POGOSIM_INCLUDE_DIR?=../../src/
-POGOSIM_SRC_DIR?=../../src/pogosim/
+POGO_SDK?=./pogobot-sdk
+POGOSIM_INCLUDE_DIR?=./pogosim/src
+POGOUTILS_INCLUDE_DIR?=./pogo-utils/src
+
+POGOSIM_SRC_DIR=$(POGOSIM_INCLUDE_DIR)/pogosim
+POGOUTILS_SRC_DIR=$(POGOUTILS_INCLUDE_DIR)/pogo-utils
 
 POGO_SDK_TOOLS=$(POGO_SDK)/tools
 POGO_SDK_INCS=$(POGO_SDK)/includes
@@ -29,12 +32,8 @@ endif
 
 TTY?=/dev/ttyUSB0
 
-#SRCS=$(wildcard *.c) $(wildcard $(POGOSIM_INCLUDE_DIR)/*.c)
-#SRCS := $(filter-out %/SDL*.c, $(wildcard *.c) $(wildcard $(POGOSIM_INCLUDE_DIR)/*.c))
-SRCS := $(filter-out SDL_FontCache.c, $(notdir $(wildcard *.c)) $(notdir $(wildcard $(POGOSIM_SRC_DIR)/*.c)))
+SRCS := $(filter-out SDL_FontCache.c, $(notdir $(wildcard *.c)) $(notdir $(wildcard $(POGOSIM_SRC_DIR)/*.c)) $(notdir $(wildcard $(POGOUTILS_SRC_DIR)/*.c)))
 OBJECTS=$(SRCS:.c=.o)
-#OBJECTS_BUILD = $(addprefix $(BUILD_DIR)/, $(OBJECTS))
-#OBJECTS_BUILD = $(patsubst %.c,build/bin/%.o,$(SRCS))
 OBJECTS_BUILD = $(patsubst %.c,build/bin/%.o,$(notdir $(SRCS)))
 DEP_FILES=$(patsubst %.c,build/bin/%.d,$(notdir $(SRCS)))
 
@@ -44,7 +43,7 @@ SIM_CC = cc
 SIM_CXX = c++
 SIM_CFLAGS = -Wall -MMD -MP -O2 -std=c11
 SIM_CXXFLAGS = -Wall -MMD -MP -O2 -std=c++20 `pkg-config --cflags spdlog` -pthread
-SIM_LDFLAGS = -Wl,--whole-archive -lpogosim -Wl,--no-whole-archive -lboost_system -lyaml-cpp `pkg-config --libs spdlog` -lSDL2 -lSDL2_gfx -lSDL2_ttf -lbox2d -lstdc++ -lfmt -lm -larrow 
+SIM_LDFLAGS = -Wl,--whole-archive -lpogosim -lpogo-utils -Wl,--no-whole-archive -lboost_system -lyaml-cpp `pkg-config --libs spdlog` -lSDL2 -lSDL2_gfx -lSDL2_ttf -lbox2d -lstdc++ -lfmt -lm -larrow 
 SIM_TARGET = $(MAKEFILE_DIR)
 
 SIM_SRCS_CXX = $(wildcard *.cpp)
@@ -82,7 +81,7 @@ $(SIM_TARGET): $(SIM_OBJECTS)
 
 bin: directories $(BUILD_DIR)/bin/firmware.bin
 
-INCLUDES+=-I. -I$(POGO_SDK_INCS) -I$(POGOSIM_INCLUDE_DIR)
+INCLUDES+=-I. -I$(POGO_SDK_INCS) -I$(POGOSIM_INCLUDE_DIR) -I$(POGOUTILS_INCLUDE_DIR)
 
 # pull in dependency info for *existing* .o files
 -include $(OBJECTS_BUILD:.o=.d) ${SIM_OBJECTS:.o=.d} $(DEP_FILES)
@@ -105,8 +104,12 @@ $(BUILD_DIR)/bin/firmware.elf: $(OBJECTS_BUILD)
 $(BUILD_DIR)/bin/%.o: %.c | $(BUILD_DIR)/bin
 	$(compile) -DREAL_ROBOT
 
-$(BUILD_DIR)/bin/%.o: $(POGOSIM_SRC_DIR)/%.c | $(BUILD_DIR)/bin
+$(BUILD_DIR)/bin/%.o: $(POGOSIM_SRC_DIR)/%.c |  $(BUILD_DIR)/bin
 	$(compile) -DREAL_ROBOT
+
+$(BUILD_DIR)/bin/%.o: $(POGOUTILS_SRC_DIR)/%.c |  $(BUILD_DIR)/bin
+	$(compile) -DREAL_ROBOT
+
 
 clean:
 	$(RM) -r $(BUILD_DIR) .*~ *~
