@@ -43,7 +43,7 @@ cd ../..
 
 Clone the pogosim repository, compile pogosim and install it:
 ```shell
-git clone https://github.com/leo-cazenille/pogosim.git
+git clone https://github.com/Adacoma/pogosim.git
 cd pogosim
 ./build.sh 
 ```
