@@ -95,7 +95,7 @@ void pogo_main_loop_step(void (*user_step)(void)) {
         uint32_t const step_max_duration = 1000000LL/main_loop_hz;
         if (elapsed_µs > step_max_duration) {
             //printf("[TIME] Error code: %u: TIME OVERFLOW ERROR! Step took %llu µs, should be less than %llu µs.", ERROR_TIME_OVERFLOW, elapsed_µs, step_max_duration);
-            printf("[TIME] Error code: %u: TIME OVERFLOW ERROR! Step took %lu ms, should be less than %lu ms.", ERROR_TIME_OVERFLOW, (uint32_t) (elapsed_µs/1000), (uint32_t) (step_max_duration/1000));
+            printf("[TIME] Error code: %u: TIME OVERFLOW ERROR! Step took %lu ms, should be less than %lu ms.\n", ERROR_TIME_OVERFLOW, (uint32_t) (elapsed_µs/1000), (uint32_t) (step_max_duration/1000));
             display_led_error_code(ERROR_TIME_OVERFLOW);
         }
 
