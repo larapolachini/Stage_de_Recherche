@@ -91,7 +91,7 @@ if(APPLE)
     target_compile_options(${PROJECT_NAME}
         PRIVATE
         $<$<CXX_COMPILER_ID:GNU,Clang>:
-            $<$<CONFIG:Release>:-Wall -Wextra -Wunused-parameter -O3 -march=native -DNDEBUG>
+        $<$<CONFIG:Release>:-Wall -Wextra -Wunused-parameter -O3 -march=native -DNDEBUG -DFPNG_NO_SSE>
             $<$<CONFIG:Debug>:-Wall -Wextra -Wunused-parameter -g -Og -DDEBUG>
         >
     )
