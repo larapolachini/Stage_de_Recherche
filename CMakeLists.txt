@@ -75,24 +75,12 @@ target_link_libraries(${PROJECT_NAME}
 #        $<$<CXX_COMPILER_ID:MSVC>:/W4 /O2 /arch:AVX2>
 #)
 
-target_compile_options(${PROJECT_NAME}
-    PRIVATE
-        $<$<CXX_COMPILER_ID:GNU,Clang>:
-            $<$<CONFIG:Release>:-Wall -Wextra -Wunused-parameter -O3 -msse4.1 -mpclmul -march=native -DNDEBUG>
-            $<$<CONFIG:Debug>:-Wall -Wextra -Wunused-parameter -g -Og -DDEBUG>
-        >
-        $<$<CXX_COMPILER_ID:MSVC>:
-            $<$<CONFIG:Release>:/W4 /O2 /arch:AVX2 /DNDEBUG>
-            $<$<CONFIG:Debug>:/W4 /Od /Zi /DDEBUG>
-        >
-)
-
 if(APPLE)
     target_compile_options(${PROJECT_NAME}
         PRIVATE
         $<$<CXX_COMPILER_ID:GNU,Clang>:
         $<$<CONFIG:Release>:-Wall -Wextra -Wunused-parameter -O3 -march=native -DNDEBUG -DFPNG_NO_SSE>
-            $<$<CONFIG:Debug>:-Wall -Wextra -Wunused-parameter -g -Og -DDEBUG>
+        $<$<CONFIG:Debug>:-Wall -Wextra -Wunused-parameter -g -Og -DDEBUG>
         >
     )
 else()
