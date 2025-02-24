@@ -87,6 +87,28 @@ target_compile_options(${PROJECT_NAME}
         >
 )
 
+if(APPLE)
+    target_compile_options(${PROJECT_NAME}
+        PRIVATE
+        $<$<CXX_COMPILER_ID:GNU,Clang>:
+            $<$<CONFIG:Release>:-Wall -Wextra -Wunused-parameter -O3 -march=native -DNDEBUG>
+            $<$<CONFIG:Debug>:-Wall -Wextra -Wunused-parameter -g -Og -DDEBUG>
+        >
+    )
+else()
+    target_compile_options(${PROJECT_NAME}
+        PRIVATE
+        $<$<CXX_COMPILER_ID:GNU,Clang>:
+            $<$<CONFIG:Release>:-Wall -Wextra -Wunused-parameter -O3 -msse4.1 -mpclmul -march=native -DNDEBUG>
+            $<$<CONFIG:Debug>:-Wall -Wextra -Wunused-parameter -g -Og -DDEBUG>
+        >
+        $<$<CXX_COMPILER_ID:MSVC>:
+            $<$<CONFIG:Release>:/W4 /O2 /arch:AVX2 /DNDEBUG>
+            $<$<CONFIG:Debug>:/W4 /Od /Zi /DDEBUG>
+        >
+    )
+endif()
+
 # Install rules
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # Shared libraries (.so, .dylib)
