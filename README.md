@@ -53,6 +53,7 @@ The installation requires brew to be installed on your computer. Cf: TODO.
 
 You can then install the necessary packages to compile Pogosim:
 ```shell
+brew install cmake boost sdl2 sdl2_image sdl2_gfx sdl2_ttf yaml-cpp spdlog box2d apache-arrow pkg-config
 ```
 
 Install Box2D 3.0.0:
