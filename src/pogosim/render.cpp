@@ -60,7 +60,7 @@ std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename,
         if (std::getline(ss, xStr, ',') && std::getline(ss, yStr)) {
             float x = std::stof(xStr);
             float y = std::stof(yStr);
-            currentPolygon.emplace_back(x, y);
+            currentPolygon.push_back({x, y});
         }
     }
     file.close();
@@ -89,7 +89,7 @@ std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename,
         for (const auto& point : poly) {
             float normX = (point.x - minX) / (maxX - minX);
             float normY = (point.y - minY) / (maxY - minY);
-            normPoly.emplace_back(normX, normY);
+            normPoly.push_back({normX, normY});
         }
         normalized_polygons.push_back(normPoly);
     }
@@ -119,7 +119,7 @@ std::vector<std::vector<b2Vec2>> read_poly_from_csv(const std::string& filename,
     for (const auto& poly : normalized_polygons) {
         std::vector<b2Vec2> scaledPoly;
         for (const auto& point : poly) {
-            scaledPoly.emplace_back(point.x * scale, point.y * scale);
+            scaledPoly.push_back({point.x * scale, point.y * scale});
         }
         scaled_polygons.push_back(scaledPoly);
     }
@@ -283,7 +283,7 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector
 
             // If the point is valid, add it to the list
             if (valid) {
-                points.emplace_back(x, y);
+                points.push_back({x, y});
                 attempts = 0;
             } else {
                 attempts++;
@@ -482,7 +482,7 @@ std::vector<b2Vec2> generate_regular_disk_points_in_polygon(
             if (tooClose) continue;
 
             // 7. Accept this point
-            result.emplace_back(px, py);
+            result.push_back({px, py});
             if (result.size() == N) break;
         }
     }
