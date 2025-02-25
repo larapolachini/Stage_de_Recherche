@@ -84,19 +84,17 @@ typedef struct {
     uint8_t b;
 } rgb_color;
 
-// Global variables (values accessible by all robots, so everything must be const)
-rgb_color const red =         {.name = "red",        .r = 25, .g = 0,  .b = 0};
-rgb_color const green =       {.name = "green",      .r = 0,  .g = 25, .b = 0};
-rgb_color const blue =        {.name = "blue",       .r = 0,  .g = 0,  .b = 25};
-rgb_color const magenta =     {.name = "magenta",    .r = 25, .g = 0,  .b = 25};
-rgb_color const yellow =      {.name = "yellow",     .r = 12, .g = 6,  .b = 0};
-rgb_color const cyan =        {.name = "cyan",       .r = 0,  .g = 25, .b = 25};
-rgb_color const orange =      {.name = "orange",     .r = 25, .g = 6,  .b = 0};
-rgb_color const purple =      {.name = "purple",     .r = 6,  .g = 0,  .b = 25};
-rgb_color const light_pink =  {.name = "light_pink", .r = 12, .g = 3,  .b = 12};
-rgb_color const mint_green =  {.name = "mint_green", .r = 6,  .g = 25, .b = 6};
-rgb_color const white =       {.name = "white",      .r = 25, .g = 25, .b = 25};
-
+#define red        ((rgb_color){ .name = "red", .r = 25, .g = 0, .b = 0 })
+#define green      ((rgb_color){ .name = "green", .r = 0, .g = 25, .b = 0 })
+#define blue       ((rgb_color){ .name = "blue", .r = 0, .g = 0, .b = 25 })
+#define magenta    ((rgb_color){ .name = "magenta", .r = 25, .g = 0, .b = 25 })
+#define yellow     ((rgb_color){ .name = "yellow", .r = 12, .g = 6, .b = 0 })
+#define cyan       ((rgb_color){ .name = "cyan", .r = 0, .g = 25, .b = 25 })
+#define orange     ((rgb_color){ .name = "orange", .r = 25, .g = 6, .b = 0 })
+#define purple     ((rgb_color){ .name = "purple", .r = 6, .g = 0, .b = 25 })
+#define light_pink ((rgb_color){ .name = "light_pink", .r = 12, .g = 3, .b = 12 })
+#define mint_green ((rgb_color){ .name = "mint_green", .r = 6, .g = 25, .b = 6 })
+#define white      ((rgb_color){ .name = "white", .r = 25, .g = 25, .b = 25 })
 
 
 // ********************************************************************************
@@ -104,7 +102,7 @@ rgb_color const white =       {.name = "white",      .r = 25, .g = 25, .b = 25};
 // ********************************************************************************
 
 // Const global variables (same values for all robots)
-rgb_color const rgb_colors[] = {red, green, blue, magenta, yellow, cyan, orange, purple, light_pink, mint_green}; // 10 hanabi colors
+static rgb_color const rgb_colors[] = { red, green, blue, magenta, yellow, cyan, orange, purple, light_pink, mint_green }; // 10 hanabi colors
 uint8_t const nb_rgb_colors = sizeof(rgb_colors) / sizeof(rgb_colors[0]);
 uint16_t const den_p_change_led_color = 20000; // probability to change led color independently (1/den_p_change_led_color) (p=3000 for 15 robots; p=20000 for 72 robots)
 
