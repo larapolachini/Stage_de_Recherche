@@ -31,6 +31,22 @@ list(FILTER SOURCES EXCLUDE REGEX "/(libs|tests|pogobot-sdk|examples)/.*$")
 # Create library target
 add_library(${PROJECT_NAME} ${SOURCES})
 
+if(APPLE)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+        # Apple Silicon (M1/M2/M3) - Homebrew uses /opt/homebrew
+        set(HOMEBREW_PREFIX "/opt/homebrew")
+    else()
+        # Intel Mac - Homebrew uses /usr/local
+        set(HOMEBREW_PREFIX "/usr/local")
+    endif()
+
+    set(SDL2_INCLUDE_DIRS "${HOMEBREW_PREFIX}/include/SDL2")
+    set(SDL2_LIB_DIR "${HOMEBREW_PREFIX}/lib")
+
+    include_directories(${SDL2_INCLUDE_DIRS})
+    link_directories(${SDL2_LIB_DIR})
+endif()
+
 # Include directories
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -80,7 +96,7 @@ if(APPLE)
         PRIVATE
         $<$<CXX_COMPILER_ID:GNU,AppleClang,Clang>:
         $<$<CONFIG:Release>:-Wall -Wextra -Wunused-parameter -O3 -march=native -DNDEBUG -DFPNG_NO_SSE>
-        $<$<CONFIG:Debug>:-Wall -Wextra -Wunused-parameter -g -Og -DDEBUG>
+        $<$<CONFIG:Debug>:-Wall -Wextra -Wunused-parameter -g -Og -DDEBUG -DFPNG_NO_SSE>
         >
     )
 else()
