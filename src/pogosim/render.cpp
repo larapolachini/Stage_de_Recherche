@@ -158,7 +158,7 @@ b2Vec2 generate_random_point_within_polygon(const std::vector<b2Vec2>& polygon) 
         float y = disY(gen);
 
         if (is_point_within_polygon(polygon, x, y)) {
-            return b2Vec2(x, y);
+            return b2Vec2{x, y};
         }
     }
 }
@@ -205,11 +205,11 @@ std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float off
         b2Vec2 edge2 = next - curr;
 
         // Normalize and find perpendiculars
-        b2Vec2 norm1 = b2Vec2(-edge1.y, edge1.x);
-        b2Vec2 norm2 = b2Vec2(-edge2.y, edge2.x);
+        b2Vec2 norm1 = b2Vec2{-edge1.y, edge1.x};
+        b2Vec2 norm2 = b2Vec2{-edge2.y, edge2.x};
 
-        norm1 *= (offset / b2Distance(b2Vec2(0, 0), edge1));
-        norm2 *= (offset / b2Distance(b2Vec2(0, 0), edge2));
+        norm1 *= (offset / b2Distance(b2Vec2{0, 0}, edge1));
+        norm2 *= (offset / b2Distance(b2Vec2{0, 0}, edge2));
 
         // Compute the inward offset point using normals
         b2Vec2 offsetPoint = curr + 0.5f * (norm1 + norm2);
@@ -273,7 +273,7 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector
             // Ensure the point does not overlap with any existing point
             if (valid) {
                 for (const auto& existingPoint : points) {
-                    if (euclidean_distance(existingPoint, b2Vec2(x, y)) < 2 * minDistance) {
+                    if (euclidean_distance(existingPoint, b2Vec2{x, y}) < 2 * minDistance) {
                         valid = false;
                         break;
                     }
@@ -345,7 +345,7 @@ b2Vec2 polygon_centroid(const std::vector<b2Vec2>& polygon) {
     signedArea *= 0.5;
     cx /= (6.0 * signedArea);
     cy /= (6.0 * signedArea);
-    return b2Vec2((float)cx, (float)cy);
+    return b2Vec2{(float)cx, (float)cy};
 }
 
 // Distance from point to line segment (used for computing min-dist from centroid to edges):
@@ -473,7 +473,7 @@ std::vector<b2Vec2> generate_regular_disk_points_in_polygon(
             //    (so circles of radius minDistance/2 won't overlap).
             bool tooClose = false;
             for (auto& p : result) {
-                if (euclidean_distance(p, b2Vec2(px, py)) < 2.0f * minDistance) {
+                if (euclidean_distance(p, b2Vec2{px, py}) < 2.0f * minDistance) {
                     tooClose = true;
                     break;
                 }

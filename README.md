@@ -48,6 +48,20 @@ cd pogosim
 ./build.sh 
 ```
 
+## Install on MacOSX
+The installation requires brew to be installed on your computer. Cf: TODO.
+
+You can then install the necessary packages to compile Pogosim:
+```shell
+```
+
+Install Box2D 3.0.0:
+```shell
+```
+
+
+
+
 ### Launch example codes
 Example codes are compiled every time you launch the "./build.sh" script, alongside the rest of the Pogosim code.
 
