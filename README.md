@@ -300,7 +300,7 @@ This will generate a PDF report named "latex/refman.pdf".
 ## Citing
 
 ```bibtex
-@misc{qdpy,
+@misc{pogosim,
     title = {pogosim: A simulator for Pogobot robots},
     author = {Cazenille, L., Bredeche, N.},
     year = {2025},
