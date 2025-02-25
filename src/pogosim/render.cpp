@@ -263,7 +263,8 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector
             bool valid = true;
 
             // Ensure the point is outside all other polygons
-            for (const auto& poly : std::span(polygons.begin() + 1, polygons.end())) {
+            for (size_t i = 1; i < polygons.size(); ++i) {
+                const auto& poly = polygons[i];
                 if (is_point_within_polygon(poly, x, y)) {
                     valid = false;
                     break;
