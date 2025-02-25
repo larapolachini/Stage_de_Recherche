@@ -7,11 +7,13 @@ MAKEFILE_DIR := $(notdir $(patsubst %/,%,$(dir $(MAKEFILE_PATH))))
 OS := $(shell uname)
 ifeq ($(OS), Darwin)  # macOS
     WHOLE_ARCHIVE_FLAG = -Wl,-force_load
-    NO_WHOLE_ARCHIVE_FLAG =
+	SIM_LD_FLAGS_BOX2D = -Wl,-force_load,/usr/local/lib/libbox2d.a
+	SIM_LD_FLAGS_POGOSIM = -Wl,-force_load,/usr/local/lib/libpogosim.a
     STDCPP_LIB = -lc++
 else  # Linux
+	SIM_LD_FLAGS_BOX2D = -lbox2d
+	SIM_LD_FLAGS_POGOSIM = -Wl,--whole-archive -lpogosim -Wl,--no-whole-archive
     WHOLE_ARCHIVE_FLAG = -Wl,--whole-archive
-    NO_WHOLE_ARCHIVE_FLAG = -Wl,--no-whole-archive
     STDCPP_LIB = -lstdc++
 endif
 
@@ -47,7 +49,7 @@ SIM_CC = cc
 SIM_CXX = c++
 SIM_CFLAGS = -Wall -MMD -MP -O2 -std=c11
 SIM_CXXFLAGS = -Wall -MMD -MP -O2 -std=c++20 $(shell pkg-config --cflags spdlog) -pthread
-SIM_LDFLAGS = $(WHOLE_ARCHIVE_FLAG) -L/usr/local/lib -lpogosim $(NO_WHOLE_ARCHIVE_FLAG) -lboost_system -lyaml-cpp \
+SIM_LDFLAGS = $(SIM_LD_FLAGS_BOX2D)  $(SIM_LD_FLAGS_POGOSIM) -lboost_system -lyaml-cpp \
               $(shell pkg-config --libs spdlog) \
               -lSDL2 -lSDL2_gfx -lSDL2_ttf -lbox2d $(STDCPP_LIB) -lfmt -lm -larrow
 
