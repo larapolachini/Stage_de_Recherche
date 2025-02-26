@@ -7,7 +7,7 @@ MAKEFILE_DIR := $(notdir $(patsubst %/,%,$(dir $(MAKEFILE_PATH))))
 OS := $(shell uname)
 ifeq ($(OS), Darwin)  # macOS
     WHOLE_ARCHIVE_FLAG = -Wl,-force_load
-	SIM_LD_FLAGS_BOX2D = -Wl,-force_load,/usr/local/lib/libbox2d.a
+	SIM_LD_FLAGS_BOX2D = -L/usr/local/lib -Wl,-force_load,/usr/local/lib/libbox2d.a
 	SIM_LD_FLAGS_POGOSIM = -Wl,-force_load,/usr/local/lib/libpogosim.a
     STDCPP_LIB = -lc++
 else  # Linux
