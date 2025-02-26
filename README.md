@@ -54,7 +54,19 @@ The installation requires brew to be installed on your computer, cf brew documen
 
 You can then install the necessary packages to compile Pogosim:
 ```shell
-brew install cmake boost sdl2 sdl2_image sdl2_gfx sdl2_ttf yaml-cpp spdlog box2d apache-arrow pkg-config
+brew install cmake boost sdl2 sdl2_image sdl2_gfx sdl2_ttf yaml-cpp spdlog apache-arrow pkg-config
+```
+
+Then compile and install Box2D 3.0:
+```shell
+git clone https://github.com/erincatto/box2d.git
+cd box2d
+git checkout 28adacf82377d4113f2ed00586141463244b9d10
+mkdir build && cd build
+cmake -DBOX2D_BUILD_DOCS=OFF -DGLFW_BUILD_WAYLAND=OFF -DCMAKE_INSTALL_PREFIX=/usr/local  ..
+cmake --build .
+sudo make install
+cd ../..
 ```
 
 Clone the pogosim repository, compile pogosim and install it:
