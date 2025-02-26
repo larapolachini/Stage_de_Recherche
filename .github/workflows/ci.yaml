@@ -87,7 +87,7 @@ jobs:
           cd build
           cmake -DBOX2D_BUILD_DOCS=OFF -DGLFW_BUILD_WAYLAND=OFF -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_LIBDIR=/usr/local/lib -DCMAKE_INSTALL_INCLUDEDIR=/usr/local/include ..
           cmake --build .
-          sudo make install
+          make install
           cd ../..
 
       # Step 2: Install dependencies (Windows)

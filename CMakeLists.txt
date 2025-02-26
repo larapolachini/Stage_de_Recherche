@@ -51,6 +51,7 @@ endif()
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
+        /usr/local/include
         ${Boost_INCLUDE_DIRS}
         ${SDL2_INCLUDE_DIRS}
         ${SDL2_gfx_INCLUDE_DIRS}
@@ -95,8 +96,8 @@ if(APPLE)
     target_compile_options(${PROJECT_NAME}
         PRIVATE
         $<$<CXX_COMPILER_ID:GNU,AppleClang,Clang>:
-        $<$<CONFIG:Release>:-Wall -Wextra -Wunused-parameter -Og -march=native -DNDEBUG -DFPNG_NO_SSE>
-        $<$<CONFIG:Debug>:-Wall -Wextra -Wunused-parameter -g -Og -DDEBUG -DFPNG_NO_SSE>
+        $<$<CONFIG:Release>:-Wall -Wextra -Wunused-parameter -Og -march=native -DNDEBUG -DFPNG_NO_SSE -L/usr/local/lib>
+        $<$<CONFIG:Debug>:-Wall -Wextra -Wunused-parameter -g -Og -DDEBUG -DFPNG_NO_SSE -L/usr/local/lib>
         >
     )
 else()
