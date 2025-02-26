@@ -48,18 +48,21 @@ cd pogosim
 ./build.sh 
 ```
 
-## Install on MacOSX
-The installation requires brew to be installed on your computer. Cf: TODO.
+## Install on MacOSX (experimental)
+The installation requires brew to be installed on your computer, cf brew documentation [here](https://brew.sh/).
+*NOTE*: This support is *experimental*. Please contact us if you find any bugs. 
 
 You can then install the necessary packages to compile Pogosim:
 ```shell
 brew install cmake boost sdl2 sdl2_image sdl2_gfx sdl2_ttf yaml-cpp spdlog box2d apache-arrow pkg-config
 ```
 
-Install Box2D 3.0.0:
+Clone the pogosim repository, compile pogosim and install it:
 ```shell
+git clone https://github.com/Adacoma/pogosim.git
+cd pogosim
+./build.sh 
 ```
-
 
 
 
