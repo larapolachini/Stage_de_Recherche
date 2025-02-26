@@ -854,18 +854,19 @@ int main(int argc, char** argv) {
         config.set("GUI", gui ? "true" : "false");
         config.set("progress_bar", progress ? "true" : "false");
 
+        // Create the simulation object
+        simulation = std::make_unique<Simulation>(config);
+        simulation->init_all();
+        simulation->init_callbacks();
+
+        // Launch simulation
+        simulation->main_loop();
+
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 
-    // Create the simulation object
-    simulation = std::make_unique<Simulation>(config);
-    simulation->init_all();
-    simulation->init_callbacks();
-
-    // Launch simulation
-    simulation->main_loop();
     return 0;
 }
 
