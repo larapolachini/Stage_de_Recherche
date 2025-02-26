@@ -410,16 +410,16 @@ void Simulation::handle_SDL_events() {
                     pause();
                     break;
                 case SDLK_UP:
-                    visualization_y += 10.0f;
+                    visualization_y += 10.0f * (1.f / mm_to_pixels);
                     break;
                 case SDLK_DOWN:
-                    visualization_y -= 10.0f;
+                    visualization_y -= 10.0f * (1.f / mm_to_pixels);
                     break;
                 case SDLK_LEFT:
-                    visualization_x += 10.0f;
+                    visualization_x += 10.0f * (1.f / mm_to_pixels);
                     break;
                 case SDLK_RIGHT:
-                    visualization_x -= 10.0f;
+                    visualization_x -= 10.0f * (1.f / mm_to_pixels);
                     break;
                 case SDLK_PLUS:
                     adjust_mm_to_pixels(0.1);
