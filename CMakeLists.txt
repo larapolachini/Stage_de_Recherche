@@ -47,6 +47,8 @@ if(APPLE)
     link_directories(${SDL2_LIB_DIR})
 endif()
 
+link_directories("/usr/local/lib")
+
 # Include directories
 target_include_directories(${PROJECT_NAME}
     PUBLIC
