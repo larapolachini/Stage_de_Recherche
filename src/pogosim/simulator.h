@@ -293,6 +293,13 @@ public:
     uint16_t get_current_light_value() const;
 
     /**
+     * @brief Retrieves the current configuration
+     *
+     * @return Configuration& configuration
+     */
+    Configuration& get_config();
+
+    /**
      * @brief Retrieves the data logger.
      *
      * @return DataLogger* Pointer to the DataLogger instance.

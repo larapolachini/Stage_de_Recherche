@@ -347,6 +347,12 @@ void Simulation::create_robots() {
         robot_main();
     }
 
+    // If there is a global_setup callback, call it
+    glogger->info("Global initialization...");
+    if(callback_global_setup != nullptr) {
+        callback_global_setup();
+    }
+
     // Setup all robots
     for (auto& robot : robots) {
         set_current_robot(robot);
@@ -751,6 +757,11 @@ uint16_t Simulation::get_current_light_value() const {
 
 DataLogger* Simulation::get_data_logger() {
     return data_logger.get();
+}
+
+
+Configuration& Simulation::get_config() {
+    return config;
 }
 
 

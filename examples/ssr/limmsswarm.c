@@ -16,14 +16,17 @@ REGISTER_USERDATA(USERDATA)
 //  On real robots, the compiler will automatically optimize the code to access member variables as if they were true globals.
 
 
-uint8_t const wait_for_min_nb_neighbors = 1;
+///////////////////// GLOBAL PARAMETERS SET BY CONFIG FILE /////////////////////
 
-fp_t const initial_s_max_val = 1.f;
-fp_t const inv_tau = 20.f;
+uint8_t wait_for_min_nb_neighbors = 1;
+fp_t initial_s_max_val = 1.f;
+fp_t inv_tau = 20.f;
+fp_t diffusion_convergence_threshold = 0.1;
+uint16_t diffusion_min_nb_points = 3;
+fp_t diffusion_min_abs_s = 0.e-05f;
 
-fp_t const diffusion_convergence_threshold = 0.1;
-uint16_t const diffusion_min_nb_points = 3;
-fp_t const diffusion_min_abs_s = 0.e-05f;
+
+///////////////////// GLOBAL CONSTANTS /////////////////////
 
 uint32_t const max_age = kiloticks_to_µs * 155;
 uint32_t const µs_initial_random_walk               = max_age * 100;
@@ -1090,6 +1093,23 @@ void loop(void) {
 
 
 #ifdef SIMULATOR
+// Function called once to initialize global values (e.g. configuration-specified constants)
+void global_setup() {
+    uint32_t tmp_wait_for_min_nb_neighbors;
+    init_uint32_from_configuration(&tmp_wait_for_min_nb_neighbors, "wait_for_min_nb_neighbors", 1);
+    wait_for_min_nb_neighbors = (uint8_t) tmp_wait_for_min_nb_neighbors;
+
+    init_float_from_configuration(&initial_s_max_val, "initial_s_max_val", 1.f);
+    init_float_from_configuration(&inv_tau, "inv_tau", 20.0f);
+    init_float_from_configuration(&diffusion_convergence_threshold, "diffusion_convergence_threshold", 0.1f);
+
+    uint32_t tmp_diffusion_min_nb_points;
+    init_uint32_from_configuration(&tmp_diffusion_min_nb_points, "diffusion_min_nb_points", 3);
+    diffusion_min_nb_points = (uint8_t) tmp_wait_for_min_nb_neighbors;
+
+    init_float_from_configuration(&diffusion_min_abs_s, "diffusion_min_abs_s", 0.e-05f);
+}
+
 // Function called once by the simulator to specify user-defined data fields to add to the exported data files
 void create_data_schema() {
     data_add_column_int8("current_behavior");
@@ -1117,10 +1137,14 @@ void export_data() {
 
 
 int main(void) {
-    pogobot_init();
+    pogobot_init();     // Initialization routine for the robots
+    // Specify the user_init and user_step functions
     pogobot_start(setup, loop);
-    SET_CALLBACK(callback_create_data_schema, create_data_schema);
-    SET_CALLBACK(callback_export_data, export_data);
+    // Specify the callback functions. Only called by the simulator.
+    //  In particular, they serve to add data fields to the exported data files
+    SET_CALLBACK(callback_global_setup, global_setup);              // Called once to initialize global values (e.g. configuration-specified constants)
+    SET_CALLBACK(callback_create_data_schema, create_data_schema);  // Called once on each robot to specify the data format
+    SET_CALLBACK(callback_export_data, export_data);                // Called at each configuration-specified period (e.g. every second) on each robot to register exported data
     return 0;
 }
 

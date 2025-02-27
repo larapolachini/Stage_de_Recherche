@@ -1025,6 +1025,10 @@ void data_set_value_double(char const* name, double value);
 void data_set_value_string(char const* name, char const* value);
 void data_set_value_bool(char const* name, bool value);
 
+void init_float_from_configuration(float* var, char const* name, float const default_value);
+void init_int32_from_configuration(int32_t* var, char const* name, int32_t const default_value);
+void init_uint32_from_configuration(uint32_t* var, char const* name, uint32_t const default_value);
+
 #ifdef __cplusplus
 }
 #endif

@@ -26,6 +26,7 @@
 
 extern void (*callback_create_data_schema)(void);
 extern void (*callback_export_data)(void);
+extern void (*callback_global_setup)(void);
 
 #else // Compiling for real robots
 

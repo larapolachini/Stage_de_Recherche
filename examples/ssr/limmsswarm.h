@@ -56,7 +56,7 @@ typedef float fp_t;
 
 #include "pogobase.h"
 
-extern fp_t const initial_s_max_val;
+extern fp_t initial_s_max_val;
 
 #ifdef SIMULATOR
 #define printf0(fmt, ...) if (pogobot_helper_getid() == 0) { printf(fmt, ##__VA_ARGS__ ); }

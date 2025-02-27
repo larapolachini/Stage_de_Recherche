@@ -338,8 +338,8 @@ int main(void) {
 
     // Specify the callback functions. Only called by the simulator.
     //  In particular, they serve to add data fields to the exported data files
-    SET_CALLBACK(callback_create_data_schema, create_data_schema);
-    SET_CALLBACK(callback_export_data, export_data);
+    SET_CALLBACK(callback_create_data_schema, create_data_schema);  // Called once on each robot to specify the data format
+    SET_CALLBACK(callback_export_data, export_data);                // Called at each configuration-specified period (e.g. every second) on each robot to register exported data
     return 0;
 }
 

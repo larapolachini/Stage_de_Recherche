@@ -502,6 +502,19 @@ void data_set_value_bool(char const* name, bool value) {
 }
 
 
+void init_float_from_configuration(float* var, char const* name, float const default_value) {
+    *var = std::stof(simulation->get_config().get(name, std::to_string(default_value)));
+}
+
+void init_int32_from_configuration(int32_t* var, char const* name, int32_t const default_value) {
+    *var = std::stoi(simulation->get_config().get(name, std::to_string(default_value)));
+}
+
+void init_uint32_from_configuration(uint32_t* var, char const* name, uint32_t const default_value) {
+    *var = std::stoi(simulation->get_config().get(name, std::to_string(default_value)));
+}
+
+
 // MODELINE "{{{1
 // vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
 // vim:foldmethod=marker
