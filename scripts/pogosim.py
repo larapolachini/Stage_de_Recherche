@@ -7,6 +7,9 @@ import shutil
 import yaml
 import pandas as pd
 import argparse
+import logging
+
+import utils
 
 # Import Pool from multiprocessing for the default backend.
 from multiprocessing import Pool
@@ -32,7 +35,7 @@ class PogobotLauncher:
         # Set a unique seed for this instance.
         config['seed'] = seed
 
-        # Disable frame export
+        # Disable frame export.
         config['save_video_period'] = -1
 
         # Create a directory for frame files inside the temporary directory.
@@ -58,6 +61,7 @@ class PogobotLauncher:
     def launch_simulator_static(config_path, simulator_binary):
         # Build the simulator command and run it.
         command = [simulator_binary, "-c", config_path, "-nr", "-g", "-q"]
+        logging.debug(f"Executing command: {' '.join(command)}")
         subprocess.run(command, check=True)
 
     @staticmethod
@@ -67,7 +71,7 @@ class PogobotLauncher:
         temp_dir = tempfile.mkdtemp(prefix=f"sim_instance_{i}_", dir=temp_base_path)
         # Modify the configuration file with a unique seed and output paths.
         config_path = PogobotLauncher.modify_config_static(base_config_path, temp_dir, seed=i)
-        print(f"Launching instance {i} with config {config_path} in {temp_dir}")
+        logging.debug(f"Launching instance {i} with config {config_path} in {temp_dir}")
         # Launch the simulator and wait for it to finish.
         PogobotLauncher.launch_simulator_static(config_path, simulator_binary)
 
@@ -79,25 +83,25 @@ class PogobotLauncher:
                 df = pd.read_feather(feather_path)
                 # Add a column "run" corresponding to the instance number.
                 df['run'] = i
-                print(f"Instance {i}: Loaded data from {feather_path}")
+                logging.debug(f"Instance {i}: Loaded data from {feather_path}")
             except Exception as e:
-                print(f"Instance {i}: Error reading feather file {feather_path}: {e}")
+                logging.error(f"Instance {i}: Error reading feather file {feather_path}: {e}")
         else:
-            print(f"Instance {i}: Feather file not found: {feather_path}")
+            logging.warning(f"Instance {i}: Feather file not found: {feather_path}")
         return (temp_dir, df)
 
     def combine_feather_files(self, dataframes):
         if dataframes:
             combined_df = pd.concat(dataframes, ignore_index=True)
             combined_df.to_feather(self.combined_output_path)
-            print(f"Combined data saved to {self.combined_output_path}")
+            logging.info(f"Combined data saved to {self.combined_output_path}")
         else:
-            print("No dataframes were loaded to combine.")
+            logging.error("No dataframes were loaded to combine.")
 
     def clean_temp_dirs(self):
         for d in self.temp_dirs:
             shutil.rmtree(d)
-            print(f"Cleaned up temporary directory: {d}")
+            logging.debug(f"Cleaned up temporary directory: {d}")
 
     def launch_all(self):
         # Prepare the arguments for each simulation instance.
@@ -114,7 +118,7 @@ class PogobotLauncher:
             try:
                 import ray
             except ImportError:
-                print("Ray is not installed. Please install ray to use the 'ray' backend.")
+                logging.error("Ray is not installed. Please install ray to use the 'ray' backend.")
                 sys.exit(1)
             # Initialize ray.
             ray.init(ignore_reinit_error=True)
@@ -124,7 +128,7 @@ class PogobotLauncher:
             results = ray.get(futures)
             ray.shutdown()
         else:
-            print(f"Unknown backend: {self.backend}")
+            logging.error(f"Unknown backend: {self.backend}")
             sys.exit(1)
 
         # Separate the temporary directories and the loaded DataFrames.
@@ -137,9 +141,9 @@ class PogobotLauncher:
         if not self.keep_temp:
             self.clean_temp_dirs()
         else:
-            print("Keeping temporary directories:")
+            logging.info("Keeping temporary directories:")
             for d in self.temp_dirs:
-                print(d)
+                logging.info(d)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -155,16 +159,18 @@ def main():
 
     args = parser.parse_args()
 
+    utils.init_logging()
+
     # Create the temporary base directory if it doesn't exist.
     if not os.path.exists(args.temp_base_path):
         os.makedirs(args.temp_base_path, exist_ok=True)
-        print(f"Created temporary base directory: {args.temp_base_path}")
+        logging.debug(f"Created temporary base directory: {args.temp_base_path}")
 
     # Ensure the directory for the combined output file exists.
     combined_output_dir = os.path.dirname(args.combined_output_path)
     if combined_output_dir and not os.path.exists(combined_output_dir):
         os.makedirs(combined_output_dir, exist_ok=True)
-        print(f"Created combined output directory: {combined_output_dir}")
+        logging.info(f"Created combined output directory: {combined_output_dir}")
 
     launcher = PogobotLauncher(
         args.num_instances,
