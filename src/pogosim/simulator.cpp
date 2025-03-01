@@ -765,8 +765,9 @@ Configuration& Simulation::get_config() {
 }
 
 
-bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose, bool& do_not_show_robot_msg, bool& gui, bool& progress) {
+bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& verbose, bool& quiet, bool& do_not_show_robot_msg, bool& gui, bool& progress) {
     verbose = false;
+    quiet = false;
     do_not_show_robot_msg = false;
     gui = true;
     progress = false;
@@ -786,6 +787,8 @@ bool parse_arguments(int argc, char* argv[], std::string& config_file, bool& ver
             gui = false;
         } else if (arg == "-v" || arg == "--verbose") {
             verbose = true;
+        } else if (arg == "-q" || arg == "--quiet") {
+            quiet = true;
         } else if (arg == "-nr" || arg == "--do-not-show-robot-msg") {
             do_not_show_robot_msg = true;
         } else if (arg == "-P" || arg == "--progress") {
@@ -811,6 +814,7 @@ void print_help() {
               << "  -c, --config <file>             Specify the configuration file.\n"
               << "  -g, --no-GUI                    Disable GUI mode.\n"
               << "  -v, --verbose                   Enable verbose mode.\n"
+              << "  -q, --verbose                   Enable quiet mode (ouput only warning and errors on terminal).\n"
               << "  -nr, --do-not-show-robot-msg    Suppress robot messages.\n"
               << "  -P, --progress                  Show progress output.\n"
               << "  -V, --version                   Show version information.\n"
@@ -821,21 +825,28 @@ void print_help() {
 int main(int argc, char** argv) {
     std::string config_file;
     bool verbose = false;
+    bool quiet = false;
     bool do_not_show_robot_msg = false;
     bool gui = true;
     bool progress = false;
 
     // Parse command-line arguments
-    if (!parse_arguments(argc, argv, config_file, verbose, do_not_show_robot_msg, gui, progress)) {
-        std::cerr << "Usage: " << argv[0] << " -c CONFIG_FILE [-v] [-nr] [-g] [-P] [-V]" << std::endl;
+    if (!parse_arguments(argc, argv, config_file, verbose, quiet, do_not_show_robot_msg, gui, progress)) {
+        std::cerr << "Usage: " << argv[0] << " -c CONFIG_FILE [-v/-q] [-nr] [-g] [-P] [-V]" << std::endl;
         return 1;
     }
 
     // Init logging
     init_logger();
 
-    // Enable verbose mode if requested
-    if (verbose) {
+    if (quiet) {
+        // Quiet mode, only output warnings and error on terminal
+        auto glogger_console_sink = glogger->sinks().front();
+        glogger_console_sink->set_level(spdlog::level::warn);
+        auto robotlogger_console_sink = robotlogger->sinks().front();
+        robotlogger_console_sink->set_level(spdlog::level::warn);
+    } else if (verbose) {
+        // Enable verbose mode if requested
         glogger->info("Verbose mode enabled.");
         glogger->set_level(spdlog::level::debug);
         robotlogger->set_level(spdlog::level::debug);
