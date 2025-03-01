@@ -7,18 +7,21 @@ import shutil
 import yaml
 import pandas as pd
 import argparse
+
+# Import Pool from multiprocessing for the default backend.
 from multiprocessing import Pool
 
 class PogobotLauncher:
-    def __init__(self, num_instances, base_config_path, combined_output_path, simulator_binary, temp_base_path, keep_temp=False):
+    def __init__(self, num_instances, base_config_path, combined_output_path, simulator_binary, temp_base_path, backend="multiprocessing", keep_temp=False):
         self.num_instances = num_instances
         self.base_config_path = base_config_path
         self.combined_output_path = combined_output_path
         self.simulator_binary = simulator_binary
         self.temp_base_path = temp_base_path
+        self.backend = backend
         self.keep_temp = keep_temp
         self.temp_dirs = []
-        self.dataframes = []  # Will hold the individual DataFrames loaded by each worker
+        self.dataframes = []  # Will hold DataFrames loaded from each run
 
     @staticmethod
     def modify_config_static(base_config_path, output_dir, seed):
@@ -28,6 +31,9 @@ class PogobotLauncher:
 
         # Set a unique seed for this instance.
         config['seed'] = seed
+
+        # Disable frame export
+        config['save_video_period'] = -1
 
         # Create a directory for frame files inside the temporary directory.
         frames_dir = os.path.join(output_dir, "frames")
@@ -51,7 +57,7 @@ class PogobotLauncher:
     @staticmethod
     def launch_simulator_static(config_path, simulator_binary):
         # Build the simulator command and run it.
-        command = [simulator_binary, "-c", config_path, "-nr", "-g"]
+        command = [simulator_binary, "-c", config_path, "-nr", "-g", "-q"]
         subprocess.run(command, check=True)
 
     @staticmethod
@@ -99,9 +105,27 @@ class PogobotLauncher:
             (i, self.base_config_path, self.simulator_binary, self.temp_base_path)
             for i in range(self.num_instances)
         ]
-        # Use a multiprocessing Pool to launch instances in parallel.
-        with Pool(processes=self.num_instances) as pool:
-            results = pool.map(PogobotLauncher.worker, args_list)
+
+        if self.backend == "multiprocessing":
+            # Use a multiprocessing Pool.
+            with Pool(processes=self.num_instances) as pool:
+                results = pool.map(PogobotLauncher.worker, args_list)
+        elif self.backend == "ray":
+            try:
+                import ray
+            except ImportError:
+                print("Ray is not installed. Please install ray to use the 'ray' backend.")
+                sys.exit(1)
+            # Initialize ray.
+            ray.init(ignore_reinit_error=True)
+            # Convert the worker function into a Ray remote function.
+            ray_worker = ray.remote(PogobotLauncher.worker)
+            futures = [ray_worker.remote(args) for args in args_list]
+            results = ray.get(futures)
+            ray.shutdown()
+        else:
+            print(f"Unknown backend: {self.backend}")
+            sys.exit(1)
 
         # Separate the temporary directories and the loaded DataFrames.
         self.temp_dirs = [result[0] for result in results]
@@ -119,13 +143,14 @@ class PogobotLauncher:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Launch multiple simulator instances in parallel, combine their data, and optionally keep temporary directories."
+        description="Launch multiple simulator instances in parallel (using multiprocessing or ray), combine their data, and optionally keep temporary directories."
     )
     parser.add_argument("num_instances", type=int, help="Number of simulator instances to launch")
     parser.add_argument("base_config_path", type=str, help="Path to the base YAML configuration file")
     parser.add_argument("combined_output_path", type=str, help="Path to save the combined Feather file")
     parser.add_argument("simulator_binary", type=str, help="Path to the simulator binary")
     parser.add_argument("temp_base_path", type=str, help="Base path for temporary directories")
+    parser.add_argument("--backend", choices=["multiprocessing", "ray"], default="multiprocessing", help="Parallelism backend to use (default: multiprocessing)")
     parser.add_argument("--keep-temp", action="store_true", help="Keep temporary directories after simulation")
 
     args = parser.parse_args()
@@ -147,6 +172,7 @@ def main():
         args.combined_output_path,
         args.simulator_binary,
         args.temp_base_path,
+        backend=args.backend,
         keep_temp=args.keep_temp
     )
     launcher.launch_all()
