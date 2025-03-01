@@ -60,6 +60,7 @@ frames/
 *.gif
 pogobot-sdk
 TODO
+tmp/
 
 # Output data files
 *.feather
