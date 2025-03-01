@@ -81,3 +81,6 @@ vgcore.*
 # Doxygen
 html
 latex
+
+# Python
+__pycache__
