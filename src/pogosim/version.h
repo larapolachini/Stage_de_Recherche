@@ -4,4 +4,4 @@
 
 #define POGOLIB_RELEASE_VERSION "v2.6"
 
-#define POGOSIM_VERSION "v0.8.5"
+#define POGOSIM_VERSION "v0.9.0"
