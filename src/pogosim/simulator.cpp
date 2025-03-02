@@ -252,6 +252,7 @@ void Simulation::init_config() {
     adjust_mm_to_pixels(std::stof(config.get("mm_to_pixels", "1.0")));
     robot_radius = std::stof(config.get("robot_radius", "10.0"));
     comm_radius = std::stof(config.get("commRadius", "90"));
+    show_comm = string_to_bool(config.get("showComms", "false"));
 
     enable_gui = string_to_bool(config.get("GUI", "true"));
     GUI_speed_up = std::stof(config.get("GUI_speed_up", "1.0"));
@@ -413,6 +414,7 @@ void Simulation::help_message() {
     glogger->info(" - F1: Help message");
     glogger->info(" - F3: Slow down the simulation");
     glogger->info(" - F4: Speed up the simulation");
+    glogger->info(" - F5: Show the communication channels");
     glogger->info(" - ESC: quit the simulation");
     glogger->info(" - SPACE: pause the simulation");
     glogger->info(" - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates");
@@ -438,6 +440,9 @@ void Simulation::handle_SDL_events() {
                     break;
                 case SDLK_F4:
                     speed_up();
+                    break;
+                case SDLK_F5:
+                    show_comm = !show_comm;
                     break;
                 case SDLK_ESCAPE:
                     running = false;
@@ -596,7 +601,7 @@ void Simulation::render_all() {
     //membrane.render(renderer, worldId);
 
     for (auto const& robot : robots) {
-        robot.render(renderer, worldId);
+        robot.render(renderer, worldId, show_comm);
     }
     //SDL_RenderPresent(renderer);
 

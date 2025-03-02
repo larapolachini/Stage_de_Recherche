@@ -164,8 +164,9 @@ public:
      *
      * @param renderer Pointer to the SDL_Renderer.
      * @param worldId The Box2D world identifier (unused in rendering).
+     * @param show_comm Whether to show communication channels from this robot to its neighbors
      */
-    void render(SDL_Renderer* renderer, b2WorldId worldId) const;
+    void render(SDL_Renderer* renderer, b2WorldId worldId, bool show_comm = false) const;
 
     /**
      * @brief Updates the motor speed of the robot and recalculates its velocities.

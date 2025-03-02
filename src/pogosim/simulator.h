@@ -48,6 +48,7 @@ class Simulation {
     bool enable_gui = true;               ///< Flag to enable or disable the GUI.
     bool paused = false;                  ///< Flag indicating whether the simulation is paused.
     bool running = true;                  ///< Flag indicating whether the simulation is running.
+    bool show_comm = false;               ///< Flag indicating whether to show the communication channels between robots.
 
     double t = 0.0f;                      ///< Simulation time (in seconds).
 

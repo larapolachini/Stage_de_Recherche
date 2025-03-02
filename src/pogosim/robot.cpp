@@ -141,7 +141,7 @@ inline uint8_t adjust_color(uint8_t const value) {
     }
 }
 
-void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) const {
+void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId, bool show_comm) const {
     // Get robot's position in the physics world
     b2Vec2 position = b2Body_GetPosition(bodyId);
 
@@ -153,7 +153,7 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
 //    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Gray color for robot body
 //    SDL_RenderDrawCircle(renderer, static_cast<int>(screenX), static_cast<int>(screenY), radius);
     auto const circle_pos = visualization_position(screenX, screenY);
-    circleRGBA(renderer, circle_pos.x, circle_pos.y, radius * mm_to_pixels, 0, 0, 0, 255);
+    circleRGBA(renderer, circle_pos.x, circle_pos.y, radius * mm_to_pixels, 0, 0, 0, 200);
 
     // Get the robot's orientation as a rotation (cosine/sine pair)
     b2Rot rotation = b2Body_GetRotation(bodyId);
@@ -170,6 +170,15 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
 //    }
     auto const orientation_pos = visualization_position(orientationX, orientationY);
     thickLineRGBA(renderer, circle_pos.x, circle_pos.y, orientation_pos.x, orientation_pos.y, 4, 0, 0, 255, 150);
+
+    // Draw communication channels
+    if (show_comm) {
+        for (Robot* robot : neighbors) {
+            b2Vec2 const r_pos = robot->get_position();
+            auto const r_circle_pos = visualization_position(r_pos.x * VISUALIZATION_SCALE, r_pos.y * VISUALIZATION_SCALE);
+            thickLineRGBA(renderer, circle_pos.x, circle_pos.y, r_circle_pos.x, r_circle_pos.y, 4, 0, 150, 0, 150);
+        }
+    }
 
     // Define relative positions for LEDs around the robot based on orientation
     std::vector<b2Vec2> ledOffsets = {
