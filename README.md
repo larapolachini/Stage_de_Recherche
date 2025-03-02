@@ -77,6 +77,7 @@ cd pogosim
 ```
 
 
+## Quickstart
 
 ### Launch example codes
 Example codes are compiled every time you launch the "./build.sh" script, alongside the rest of the Pogosim code.
@@ -88,71 +89,6 @@ To launch examples code you can use the following commands:
 ./examples/hanabi/hanabi -c conf/test.yaml      # A simple code to showcase the diffusion of information in a swarm. Immobile robots by default (uncomment "MOVING_ROBOTS" to make then move)
 ./examples/ssr/ssr -c conf/ssr.yaml         # More complex example. "Simple" implementation of the SSR algorithm from https://arxiv.org/abs/2403.17147  You can test it for a disk and annulus arena (see conf/ssr.yaml to change the arena).
 ```
-
-
-
-## Quickstart
-
-Just copy paste one of the example codes from the directory "examples/" to the main directory of your project. E.g. using the Hanabi example as a base:
-```shell
-cp -R examples/hanabi ~/my_pogobot_project
-
-# Copy a baseline configuration file
-mkdir -p ~/my_pogobot_project/conf   # Directory to store the yaml configuration files for this new project
-cp conf/test.yaml ~/my_pogobot_project/conf
-
-# Remove the old hanabi binary, if it was present
-cd ~/my_pogobot_project
-rm hanabi
-```
-
-Then to compile a binary for the simulator:
-```shell
-cd ~/my_pogobot_project
-make clean && make -j 10 sim   # Or just "make clean sim" to compile without parallelization 
-```
-
-Which can then be launched through:
-```shell
-./hanabi -c conf/test.yaml
-```
-
-
-### Controlling the GUI
-Here is a list of shortcuts that can be used to control the GUI:
- - F1: Help message
- - F3: Slow down the simulation
- - F4: Speed up the simulation
- - ESC: quit the simulation
- - SPACE: pause the simulation
- - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates
- - Right-Click + Mouse move: move the visualisation coordinates
- - PLUS, MINUS or Mouse Wheel: Zoom up or down
- - 0: Reset the zoom and visualization coordinates
-
-
-### Compile a binary for the real Pogobots
-Download the [pogobot-SDK](https://github.com/nekonaute/pogobot-sdk) somewhere:
-```shell
-git clone https://github.com/nekonaute/pogobot-sdk.git
-```
-
-Edit "~/my\_pogobot\_project/Makefile" to set the path of the pogobot-sdk: change the value of variable "POGO\_SDK".
-
-Use the following commands to compile the binary:
-```shell
-cd ~/my_pogobot_project
-make clean && make bin
-```
-
-The binary should be compiled correctly, and you can then use the usual commands to upload it to a robot. E.g. through:
-```shell
-make connect TTY=/dev/ttyUSB0
-```
-Inside the robot prompt, type "enter" to obtain a new prompt line. 
-If you connect to the robot through a Progboard, you can use the command "serialboot" to upload the code. Cf the [pogobot-SDK documentation](https://github.com/nekonaute/pogobot-sdk) for more details.
-If you use the IR remote device, follow the instructions described [here](https://github.com/nekonaute/pogobot/blob/main/readme-irRemote.md).
-
 
 
 ### Simple way to create a new pogobot/pogosim project
@@ -199,6 +135,43 @@ By default, the name of the created simulation binary corresponds to the name of
 make clean sim
 ./template_prj -c conf/test.yaml        # If the parent directory is "template_prj"
 ```
+
+
+### Controlling the GUI
+Here is a list of shortcuts that can be used to control the GUI:
+ - F1: Help message
+ - F3: Slow down the simulation
+ - F4: Speed up the simulation
+ - ESC: quit the simulation
+ - SPACE: pause the simulation
+ - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates
+ - Right-Click + Mouse move: move the visualisation coordinates
+ - PLUS, MINUS or Mouse Wheel: Zoom up or down
+ - 0: Reset the zoom and visualization coordinates
+
+
+### Compile a binary for the real Pogobots
+Download the [pogobot-SDK](https://github.com/nekonaute/pogobot-sdk) somewhere:
+```shell
+git clone https://github.com/nekonaute/pogobot-sdk.git
+```
+
+Edit "~/my\_pogobot\_project/Makefile" to set the path of the pogobot-sdk: change the value of variable "POGO\_SDK".
+
+Use the following commands to compile the binary:
+```shell
+cd ~/my_pogobot_project
+make clean && make bin
+```
+
+The binary should be compiled correctly, and you can then use the usual commands to upload it to a robot. E.g. through:
+```shell
+make connect TTY=/dev/ttyUSB0
+```
+Inside the robot prompt, type "enter" to obtain a new prompt line. 
+If you connect to the robot through a Progboard, you can use the command "serialboot" to upload the code. Cf the [pogobot-SDK documentation](https://github.com/nekonaute/pogobot-sdk) for more details.
+If you use the IR remote device, follow the instructions described [here](https://github.com/nekonaute/pogobot/blob/main/readme-irRemote.md).
+
 
 
 ### Headless mode
