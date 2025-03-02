@@ -62,9 +62,6 @@ void pogo_main_loop_step(void (*user_step)(void)) {
     // Update millisecond clock
     pogobot_stopwatch_reset(&timer_main_loop);
 
-    // Check if we received a system message (e.g. rc_stop)
-    // TODO
-
     // Messages I/O (send & receive)
     if (msg_tx_fn) {
         if (rand() % 100 < percent_msgs_sent_per_ticks) {
@@ -73,6 +70,7 @@ void pogo_main_loop_step(void (*user_step)(void)) {
                 ++nb_msgs_sent;
         }
     }
+
     if (msg_rx_fn) {
         pogobot_infrared_update(); // infrared checks for received data. Then, messages are decoded and insered in a FIFO.
         // Identify number of messages to handle, depending on the message processing frequency

@@ -1,38 +1,39 @@
 ---
 
+# Format of the generated dataframes, one for each configuration
 result_filename_format: "result_{nBots}_{arena_file}.feather"
 
 window_width: 600       # In pixels
 window_height: 600      # In pixels
 
-arena_file: ["arenas/disk.csv", "arenas/arena8.csv"]
+arena_file: ["arenas/disk.csv", "arenas/arena8.csv"]        # Test the results on two arenas
 arena_surface: 1.0e6    # In mm²
 
 delete_old_files: true
-enable_data_logging: true
+enable_data_logging: true       # Not used in batch runs
 data_filename: "frames/data.feather"
 enable_console_logging: true
 console_filename: "frames/console.txt"
 
 seed: 0
-nBots: [150, 250]
+nBots: [100, 200]           # Test configurations with two total numbers of robots
 initial_robot_formation: random
 simulationTime: 500.0   # In s
 robot_radius: 26.5      # In mm
 commRadius: 133.0       # In mm, from center of a focal robot to the center of a neighboring robot
 msgSuccessRate: 0.9
 showComms: false
-GUI: true
+GUI: false              # GUI is disabled in batch runs
 
 timeStep: 0.01          # In s
-GUI_speed_up: 10.0
+GUI_speed_up: 10.0      # Not used in batch runs
 
 initial_light_value: 32767
 photo_start_at: 1.0         # In s
 photo_start_duration: 1.0   # In s
 
 save_data_period: 1.0       # In s
-save_video_period: -1
+save_video_period: -1       # Video generation is disabled in batch runs
 
 # MODELINE "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
