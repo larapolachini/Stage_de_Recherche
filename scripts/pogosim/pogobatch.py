@@ -10,7 +10,7 @@ import shutil
 import logging
 import pandas as pd
 
-import utils
+from . import utils
 
 # Import Pool from multiprocessing for the default backend.
 from multiprocessing import Pool

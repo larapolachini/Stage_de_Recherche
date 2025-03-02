@@ -85,3 +85,5 @@ latex
 
 # Python
 __pycache__
+*.egg-info
+dist/
