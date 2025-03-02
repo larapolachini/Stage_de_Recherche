@@ -142,6 +142,7 @@ Here is a list of shortcuts that can be used to control the GUI:
  - F1: Help message
  - F3: Slow down the simulation
  - F4: Speed up the simulation
+ - F5: Show the communication channels
  - ESC: quit the simulation
  - SPACE: pause the simulation
  - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates
