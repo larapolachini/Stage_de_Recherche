@@ -14,7 +14,14 @@ typedef enum {
     PHASE_TUMBLE  // Tumble phase: rotate to change direction.
 } PhaseState;
 
-// "Global" variables should be inserted within the USERDATA struct.
+// "Global" variables set by the YAML configuration file (in simulation) by the function global_setup, or with a fixed values (in experiments). These values should be seen as constants shared by all robots.
+uint32_t run_duration_min    = 200;
+uint32_t run_duration_max    = 1200;
+uint32_t tumble_duration_min = 100;
+uint32_t tumble_duration_max = 1100;
+
+
+// Normal "Global" variables should be inserted within the USERDATA struct.
 // /!\  In simulation, don't declare non-const global variables outside this struct, elsewise they will be shared among all agents (and this is not realistic).
 
 /**
@@ -50,23 +57,23 @@ REGISTER_USERDATA(USERDATA);
 /**
  * @brief Generates a random duration for the run phase.
  *
- * The run phase duration is randomly chosen between 3000 and 5000 milliseconds.
+ * The run phase duration is randomly chosen
  *
  * @return uint32_t Random run duration in milliseconds.
  */
 static uint32_t get_run_duration(void) {
-    return 200 + (rand() % 1001);  // 500 to 2500 ms.
+    return run_duration_min + (rand() % (run_duration_max - run_duration_min + 1));
 }
 
 /**
  * @brief Generates a random duration for the tumble phase.
  *
- * The tumble phase duration is randomly chosen between 500 and 1500 milliseconds.
+ * The tumble phase duration is randomly chosen
  *
  * @return uint32_t Random tumble duration in milliseconds.
  */
 static uint32_t get_tumble_duration(void) {
-    return 100 + (rand() % 1001);   // 100 to 600 ms.
+    return tumble_duration_min + (rand() % (tumble_duration_max - tumble_duration_min + 1));
 }
 
 /**
@@ -171,6 +178,16 @@ void user_step(void) {
 }
 
 /**
+ * @brief Function called once to initialize global values (e.g. configuration-specified constants)
+ */
+void global_setup() {
+    init_uint32_from_configuration(&run_duration_min, "run_duration_min", 200);
+    init_uint32_from_configuration(&run_duration_max, "run_duration_max", 1200);
+    init_uint32_from_configuration(&tumble_duration_min, "tumble_duration_min", 100);
+    init_uint32_from_configuration(&tumble_duration_max, "tumble_duration_max", 1100);
+}
+
+/**
  * @brief Program entry point.
  *
  * This function initializes the robot system and starts the main execution loop by
@@ -187,6 +204,9 @@ int main(void) {
 
     // Start the robot's main loop with the defined user_init and user_step functions.
     pogobot_start(user_init, user_step);
+
+    // Specify the callback functions. Only called by the simulator.
+    SET_CALLBACK(callback_global_setup, global_setup);              // Called once to initialize global values (e.g. configuration-specified constants)
     return 0;
 }
 

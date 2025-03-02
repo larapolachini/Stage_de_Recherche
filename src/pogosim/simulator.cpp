@@ -329,10 +329,40 @@ void Simulation::create_robots() {
         throw std::runtime_error("Impossible to create robots (number may be too high for the provided arena): " + std::string(e.what()));
     }
 
+    // Retrieve locomotion configuration
+    float const robot_linear_damping = std::stof(config.get("robot_linear_damping", "0.0"));
+    float const robot_angular_damping = std::stof(config.get("robot_angular_damping", "0.0"));
+    float const robot_density = std::stof(config.get("robot_density", "10.0"));
+    float const robot_friction = std::stof(config.get("robot_friction", "0.3"));
+    float const robot_restition = std::stof(config.get("robot_restition", "0.5"));
+    float const robot_collision_radius = std::stof(config.get("robot_collision_radius", "0.0"));
+    float const robot_linear_noise_stddev = std::stof(config.get("robot_linear_noise_stddev", "1.0"));
+    float const robot_angular_noise_stddev = std::stof(config.get("robot_angular_noise_stddev", "0.2"));
+
+    // Set robot collision shape
+    std::string const robot_collision_shape_str = to_lowercase(config.get("robot_collision_shape", "Circle"));
+    ShapeType robot_collision_shape;
+    if (robot_collision_shape_str == "circle") {
+        robot_collision_shape = ShapeType::Circle;
+    } else if (robot_collision_shape_str == "ellipse") {
+        robot_collision_shape = ShapeType::Ellipse;
+    } else if (robot_collision_shape_str == "polygon") {
+        robot_collision_shape = ShapeType::Polygon;
+        throw std::runtime_error("robot_collision_shape == 'polygon' is not implemented yet! Select 'circle' or 'ellipse' instead.");
+    } else {
+        throw std::runtime_error("Unknown value for configuration parameter 'robot_collision_shape'. Select 'circle' or 'ellipse'.");
+    }
+
+    // Create all robots
     for (size_t i = 0; i < nb_robots; ++i) {
         //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius);
         auto const point = points[i];
-        robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId, msg_success_rate);
+        robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId, msg_success_rate,
+                robot_linear_damping, robot_angular_damping,
+                robot_density, robot_friction, robot_restition,
+                robot_collision_shape, robot_collision_radius,
+                std::vector<b2Vec2>(),
+                robot_linear_noise_stddev, robot_angular_noise_stddev);
         //float x = minX + std::rand() % static_cast<int>(maxX - minX);
         //float y = minY + std::rand() % static_cast<int>(maxY - minY);
         //robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);

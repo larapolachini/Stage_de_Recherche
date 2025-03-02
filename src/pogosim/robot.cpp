@@ -25,11 +25,20 @@ uint64_t sim_starting_time_microseconds;
 
 /************* SIMULATED ROBOTS *************/ // {{{1
 
-Robot::Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius, b2WorldId worldId, float _msg_success_rate)
-        : id(_id), radius(_radius), msg_success_rate(_msg_success_rate) {
+Robot::Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius,
+             b2WorldId worldId, float _msg_success_rate,
+             float _linearDamping, float _angularDamping,
+             float _density, float _friction, float _restitution,
+             ShapeType _shapeType, float _yRadius,
+             const std::vector<b2Vec2>& _polygonVertices,
+             float _linear_noise_stddev, float _angular_noise_stddev)
+    : id(_id), radius(_radius), msg_success_rate(_msg_success_rate), linearDamping(_linearDamping), angularDamping(_angularDamping),
+        linear_noise_stddev(_linear_noise_stddev), angular_noise_stddev(_angular_noise_stddev) {
     data = malloc(_userdatasize);
-    create_body(worldId, x, y);
+    create_body(worldId, x, y,
+                _density, _friction, _restitution, _shapeType, _yRadius, _polygonVertices);
 }
+
 
 //Robot::~Robot() {
 //    free(data);
@@ -37,34 +46,88 @@ Robot::Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius
 //}
 
 
-void Robot::create_body(b2WorldId worldId, float x, float y) {
-    // Create the body
+void Robot::create_body(b2WorldId worldId, float x, float y,
+                        float density, float friction, float restitution,
+                        ShapeType shapeType, float yRadius,
+                        const std::vector<b2Vec2>& polygonVertices) {
+    // Create the body definition.
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
-    bodyDef.position = {x / VISUALIZATION_SCALE, y / VISUALIZATION_SCALE};
+    bodyDef.position = { x / VISUALIZATION_SCALE, y / VISUALIZATION_SCALE };
     bodyDef.linearDamping = 1000.0f;
     bodyDef.angularDamping = 1000.0f;
-    bodyDef.isBullet = false; // Enable bullet mode
+    bodyDef.isBullet = false;
     bodyId = b2CreateBody(worldId, &bodyDef);
 
-    // Create the circle shape
-    b2Circle circle;
-    circle.center = {0.0f, 0.0f};
-    circle.radius = radius / VISUALIZATION_SCALE; // Scaled radius
-
+    // Set up a shape definition with common physical properties.
     b2ShapeDef shapeDef = b2DefaultShapeDef();
-    shapeDef.density = 10.0f;
-    shapeDef.friction = 0.3f;
-    shapeDef.restitution = 0.5f; // Bounciness
-    shapeDef.enablePreSolveEvents = true; // Enable CCD
-    shapeId = b2CreateCircleShape(bodyId, &shapeDef, &circle);
+    shapeDef.density = density;
+    shapeDef.friction = friction;
+    shapeDef.restitution = restitution;
+    shapeDef.enablePreSolveEvents = true;
 
-    // Assign initial velocity
-    //b2Vec2 velocity = {0.0, 0.0}; // {(std::rand() % 200 - 100) / 20.0f, (std::rand() % 200 - 100) / 20.0f};
-    b2Vec2 velocity = {1.0, 1.0}; // {(std::rand() % 200 - 100) / 20.0f, (std::rand() % 200 - 100) / 20.0f};
+    // Create the shape based on the specified shape type.
+    switch (shapeType) {
+        case ShapeType::Circle: {
+            b2Circle circle;
+            circle.center = { 0.0f, 0.0f };
+            circle.radius = radius / VISUALIZATION_SCALE;
+            shapeId = b2CreateCircleShape(bodyId, &shapeDef, &circle);
+            break;
+        }
+        case ShapeType::Ellipse: {
+            // For an ellipse, use _yRadius if provided; otherwise default to the circle's radius.
+            float effectiveYRadius = (yRadius > 0.0f ? yRadius : radius);
+            const int vertexCount = 16; // Number of vertices to approximate the ellipse.
+            std::vector<b2Vec2> ellipseVertices;
+            ellipseVertices.reserve(vertexCount);
+            for (int i = 0; i < vertexCount; i++) {
+                float angle = (2.0f * 3.14159265f * i) / vertexCount;
+                float vx = (radius * std::cos(angle)) / VISUALIZATION_SCALE;
+                float vy = (effectiveYRadius * std::sin(angle)) / VISUALIZATION_SCALE;
+                ellipseVertices.push_back({ vx, vy });
+            }
+            // Create a temporary b2Polygon and fill it with the ellipse vertices.
+            b2Polygon poly;
+            poly.count = static_cast<int32_t>(ellipseVertices.size());
+            for (int i = 0; i < poly.count; ++i) {
+                poly.vertices[i] = ellipseVertices[i];
+            }
+            shapeId = b2CreatePolygonShape(bodyId, &shapeDef, &poly);
+            break;
+        }
+        case ShapeType::Polygon: {
+            if (!polygonVertices.empty()) {
+                // Create a temporary b2Polygon and fill it with the provided vertices.
+                b2Polygon poly;
+                poly.count = static_cast<int32_t>(polygonVertices.size());
+                for (int i = 0; i < poly.count; ++i) {
+                    poly.vertices[i] = polygonVertices[i];
+                }
+                shapeId = b2CreatePolygonShape(bodyId, &shapeDef, &poly);
+            } else {
+                // Fallback: if no vertices are provided, default to a circle.
+                b2Circle circle;
+                circle.center = { 0.0f, 0.0f };
+                circle.radius = radius / VISUALIZATION_SCALE;
+                shapeId = b2CreateCircleShape(bodyId, &shapeDef, &circle);
+            }
+            break;
+        }
+        default: {
+            // Fallback to circle for any unrecognized shape type.
+            b2Circle circle;
+            circle.center = { 0.0f, 0.0f };
+            circle.radius = radius / VISUALIZATION_SCALE;
+            shapeId = b2CreateCircleShape(bodyId, &shapeDef, &circle);
+            break;
+        }
+    }
+
+    // Assign an initial velocity.
+    b2Vec2 velocity = { 1.0f, 1.0f };
     b2Body_SetLinearVelocity(bodyId, velocity);
 }
-
 
 // Inline function to calculate the normalized color values
 inline uint8_t adjust_color(uint8_t const value) {
@@ -159,27 +222,47 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) c
 
 
 void Robot::set_motor(motor_id motor, int speed) {
-    // Update motors speed
+    // Update motor speeds
     if (motor == motorL) {
         left_motor_speed = speed;
     } else if (motor == motorR) {
         right_motor_speed = speed;
     }
-    //glogger->debug("set motor: {} {}", left_motor_speed, right_motor_speed);
+    // glogger->debug("set motor: {} {}", left_motor_speed, right_motor_speed);
 
-    // No damping
-    b2Body_SetLinearDamping(bodyId, 0.0);
-    b2Body_SetAngularDamping(bodyId, 0.0);
+    // Set damping values using those provided during construction.
+    b2Body_SetLinearDamping(bodyId, linearDamping);
+    b2Body_SetAngularDamping(bodyId, angularDamping);
 
-    // Update linear velocity of the agent
+    // Compute the desired linear velocity based on motor speeds.
     b2Rot const rot = b2Body_GetRotation(bodyId);
-    float const v = 1.0f * (left_motor_speed / static_cast<float>(motorFull) + right_motor_speed / static_cast<float>(motorFull)) / 2.0f;
-    b2Vec2 const linear_velocity = {rot.c * v, rot.s * v};
-    //b2Vec2 const velocity = {left_motor_speed / VISUALIZATION_SCALE, right_motor_speed / VISUALIZATION_SCALE};
+    float const v = 1.0f * (left_motor_speed / static_cast<float>(motorFull) +
+                            right_motor_speed / static_cast<float>(motorFull)) / 2.0f;
+    b2Vec2 linear_velocity = {rot.c * v, rot.s * v};
+
+    // Add Gaussian noise to linear velocity if the standard deviation is greater than 0.0.
+    if (linear_noise_stddev > 0.0f) {
+        // Use a static generator so that it persists across calls.
+        static std::default_random_engine rng(std::random_device{}());
+        std::normal_distribution<float> dist(0.0f, linear_noise_stddev);
+        linear_velocity.x += dist(rng);
+        linear_velocity.y += dist(rng);
+    }
     b2Body_SetLinearVelocity(bodyId, linear_velocity);
-    //float const angular_velocity = 1.0f / (motorFull * 0.5) * (right_motor_speed - left_motor_speed);
-    float const angular_velocity = 1.0f / (static_cast<float>(motorFull) * 0.5) * (left_motor_speed - right_motor_speed);
+
+    // Compute the desired angular velocity based on motor speed difference.
+    float angular_velocity = 1.0f / (static_cast<float>(motorFull) * 0.5f) *
+                             (left_motor_speed - right_motor_speed);
+
+    // Add Gaussian noise to angular velocity if the standard deviation is greater than 0.0.
+    if (angular_noise_stddev > 0.0f) {
+        static std::default_random_engine rng(std::random_device{}());
+        std::normal_distribution<float> dist(0.0f, angular_noise_stddev);
+        angular_velocity += dist(rng);
+    }
     b2Body_SetAngularVelocity(bodyId, angular_velocity);
+
+    //glogger->debug("velocity: lin={},{}  ang={}  noise={},{}", linear_velocity.x, linear_velocity.y, angular_velocity, linear_noise_stddev, angular_noise_stddev);
 }
 
 
@@ -223,10 +306,10 @@ float Robot::get_angle() const {
 
 void Robot::send_to_neighbors(short_message_t *const message) {
     // Reconstruct a long message from the short message
-    message_t m; 
+    message_t m;
     m.header._packet_type = message->header._packet_type;
     m.header._emitting_power_list = 0; // power all to 0 shouldn't emit something
-    m.header._sender_id = 0xFF; 
+    m.header._sender_id = 0xFF;
     m.header._sender_ir_index = 0xF; // index not possible
     m.header._receiver_ir_index = 0;
     m.header.payload_length = message->header.payload_length;

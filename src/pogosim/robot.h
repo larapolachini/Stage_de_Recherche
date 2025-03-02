@@ -25,29 +25,60 @@ std::string log_current_robot();
 
 
 /**
+ * @brief Enumeration to select the shape type of the robot's body.
+ */
+enum class ShapeType {
+    Circle,   /**< Use a circular shape. */
+    Ellipse,  /**< Use an elliptical shape (approximated by a polygon). */
+    Polygon   /**< Use an arbitrary polygon shape defined by vertices. */
+};
+
+
+/**
  * @brief Class representing a simulated robot.
  *
  * The Robot class encapsulates the properties and behaviors of a simulated robot,
  * including physical properties, timing, LED control, messaging, and rendering.
  */
 class Robot {
+
 public:
+
     /**
      * @brief Constructs a Robot object.
      *
      * Initializes a new robot with the specified identifier, user data size, initial position,
-     * radius, associated Box2D world, and message success rate. Memory for user data is allocated,
-     * and the physical body is created.
+     * radius, associated Box2D world, and message success rate. It also allows customization
+     * of the body's physical properties (linear and angular damping, density, friction, and restitution)
+     * as well as the choice of body shape. The shape can be a circle, an ellipse (using a secondary radius),
+     * or an arbitrary polygon defined by a vector of vertices.
      *
      * @param _id Unique robot identifier.
      * @param _userdatasize Size of the memory block allocated for user data.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
-     * @param _radius The robot's radius.
+     * @param _radius The primary radius of the robot.
      * @param worldId The Box2D world identifier.
      * @param _msg_success_rate Probability (0.0 to 1.0) of successfully sending a message (default is 0.5).
+     * @param _linearDamping Linear damping value for the physical body (default is 0.0f).
+     * @param _angularDamping Angular damping value for the physical body (default is 0.0f).
+     * @param _density Density of the body shape (default is 10.0f).
+     * @param _friction Friction coefficient of the body shape (default is 0.3f).
+     * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
+     * @param _shapeType Type of shape to use for the physical body (default is ShapeType::Circle).
+     * @param _yRadius Secondary radius for an ellipse; if 0, defaults to _radius (only used for ShapeType::Ellipse).
+     * @param _polygonVertices Vector of vertices defining the polygon shape (only used for ShapeType::Polygon).
+     * @param _linear_noise_stddev Standard deviation of the gaussian noise to apply to linear velocity, or 0.0 for deterministic velocity
+     * @param _angular_noise_stddev Standard deviation of the gaussian noise to apply to angular velocity, or 0.0 for deterministic velocity
      */
-    Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius, b2WorldId worldId, float _msg_success_rate = 0.5);
+    Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius,
+          b2WorldId worldId, float _msg_success_rate = 0.5,
+          float _linearDamping = 0.0f, float _angularDamping = 0.0f,
+          float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
+          ShapeType _shapeType = ShapeType::Circle, float _yRadius = 0.0f,
+          const std::vector<b2Vec2>& _polygonVertices = std::vector<b2Vec2>(),
+          float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f);
+
 
     //virtual ~Robot();
 
@@ -125,17 +156,6 @@ public:
     float left_motor_speed  = 0; ///< Current speed of the left motor.
     float right_motor_speed = 0; ///< Current speed of the right motor.
 
-    /**
-     * @brief Creates the robot's physical body in the simulation.
-     *
-     * Constructs a dynamic body in the Box2D world at the specified position, defines its shape as a circle,
-     * and assigns an initial velocity.
-     *
-     * @param worldId The Box2D world identifier.
-     * @param x The x-coordinate for the body's position.
-     * @param y The y-coordinate for the body's position.
-     */
-    void create_body(b2WorldId worldId, float x, float y);
 
     /**
      * @brief Renders the robot on the given SDL renderer.
@@ -148,13 +168,16 @@ public:
     void render(SDL_Renderer* renderer, b2WorldId worldId) const;
 
     /**
-     * @brief Sets the speed of the specified motor.
+     * @brief Updates the motor speed of the robot and recalculates its velocities.
      *
-     * Updates the left or right motor speed based on the motor identifier and adjusts the robot's
-     * linear and angular velocities accordingly.
+     * This method sets the motor speed (left or right) and then computes the robot's
+     * linear and angular velocities. It applies the damping values
+     * that were provided in the constructor. If the noise standard deviations
+     * (for linear or angular velocities) are greater than 0.0, a Gaussian noise component is added
+     * to the respective velocity.
      *
-     * @param motor The motor identifier (e.g., motorL or motorR).
-     * @param speed The desired motor speed.
+     * @param motor The identifier of the motor to update.
+     * @param speed The new speed value for the selected motor.
      */
     void set_motor(motor_id motor, int speed);
 
@@ -204,6 +227,35 @@ public:
 
     // Message success rate
     float msg_success_rate = 0.5; ///< Probability of successfully sending a message.
+
+private:
+
+    /**
+     * @brief Creates the robot's physical body in the simulation.
+     *
+     * Constructs a dynamic body in the Box2D world at the specified position, defines its shape
+     * based on the provided shape type, and assigns an initial velocity. Depending on the shape type,
+     * the body can be created as a circle, an ellipse (approximated by a polygon), or an arbitrary polygon.
+     *
+     * @param worldId The Box2D world identifier.
+     * @param x The x-coordinate for the body's position.
+     * @param y The y-coordinate for the body's position.
+     * @param density Density of the shape.
+     * @param friction Friction coefficient of the shape.
+     * @param restitution Restitution (bounciness) of the shape.
+     * @param shapeType The type of shape to create (Circle, Ellipse, or Polygon).
+     * @param yRadius Secondary radius for an ellipse; if 0, defaults to the circle's radius (used for Ellipse).
+     * @param polygonVertices Vector of vertices for the polygon shape (used for Polygon).
+     */
+    void create_body(b2WorldId worldId, float x, float y,
+                     float density, float friction, float restitution,
+                     ShapeType shapeType, float yRadius,
+                     const std::vector<b2Vec2>& polygonVertices);
+
+    float linearDamping;
+    float angularDamping;
+    float linear_noise_stddev;
+    float angular_noise_stddev;
 };
 
 
