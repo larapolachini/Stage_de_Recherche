@@ -337,8 +337,8 @@ void Simulation::create_robots() {
     float const robot_friction = std::stof(config.get("robot_friction", "0.3"));
     float const robot_restition = std::stof(config.get("robot_restition", "0.5"));
     float const robot_collision_radius = std::stof(config.get("robot_collision_radius", "0.0"));
-    float const robot_linear_noise_stddev = std::stof(config.get("robot_linear_noise_stddev", "1.0"));
-    float const robot_angular_noise_stddev = std::stof(config.get("robot_angular_noise_stddev", "0.2"));
+    float const robot_linear_noise_stddev = std::stof(config.get("robot_linear_noise_stddev", "0.0"));
+    float const robot_angular_noise_stddev = std::stof(config.get("robot_angular_noise_stddev", "0.0"));
 
     // Set robot collision shape
     std::string const robot_collision_shape_str = to_lowercase(config.get("robot_collision_shape", "Circle"));
