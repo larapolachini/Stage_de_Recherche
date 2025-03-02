@@ -10,7 +10,8 @@ import shutil
 import logging
 import pandas as pd
 
-from . import utils
+from pogosim import utils
+from pogosim import __version__
 
 # Import Pool from multiprocessing for the default backend.
 from multiprocessing import Pool
@@ -306,14 +307,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="Batch run multiple PogobotLauncher instances sequentially for every combination of parameters specified in a multi-value YAML config."
     )
-    parser.add_argument("multi_config_file", type=str,
+    parser.add_argument("-c", "--config", type=str, default="",
                         help="Path to the YAML configuration file with multiple choices (lists) for some parameters.")
     parser.add_argument("-r", "--runs", type=int, default=1,
                         help="Number of simulator runs to launch per configuration combination (default: 1).")
-    parser.add_argument("-S", "--simulator-binary", type=str, required=True,
+    parser.add_argument("-S", "--simulator-binary", type=str, default="",
                         help="Path to the simulator binary.")
-    parser.add_argument("-t", "--temp-base", type=str, required=True,
-                        help="Base directory for temporary directories and YAML config files used by PogobotLauncher.")
+    parser.add_argument("-t", "--temp-base", type=str, default="tmp",
+                        help="Base directory for temporary directories and YAML config files used by PogobotLauncher (default: 'tmp').")
     parser.add_argument("-o", "--output-dir", type=str, default=".",
                         help="Directory where the combined output Feather files will be saved (default: current directory).")
     parser.add_argument("--backend", choices=["multiprocessing", "ray"], default="multiprocessing",
@@ -321,10 +322,19 @@ def main():
     parser.add_argument("--keep-temp", action="store_true",
                         help="Keep temporary directories after simulation runs.")
     parser.add_argument("-v", "--verbose", default=False, action="store_true", help="Verbose mode")
+    parser.add_argument("-V", "--version", default=False, action="store_true", help="Return version")
     args = parser.parse_args()
 
+    if args.version:
+        print(f"Pogosim version {__version__}")
+        sys.exit(0)
+
+    if not len(args.config) or not len(args.simulator_binary):
+        parser.print_usage()
+        sys.exit(1)
+
     runner = PogobotBatchRunner(
-        multi_config_file=args.multi_config_file,
+        multi_config_file=args.config,
         runs=args.runs,
         simulator_binary=args.simulator_binary,
         temp_base=args.temp_base,
