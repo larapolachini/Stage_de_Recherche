@@ -228,7 +228,7 @@ Options:
 - Parameter "-P" displays a progress bar of the simulation, depending on the parameter value "SimulationTime" defined in the configuration file.
 
 
-### Access the pose and states of the robots in Python
+## Access the pose and states of the robots in Python
 After a simulation is executed, it can periodically store the pose (position and orientation) and internal states of each robot into a data file.
 This feature can be enabled in the configuration file, with entries:
 ```yaml
@@ -262,6 +262,68 @@ print(df)
 
 Custom columns can be added into this file by using the callback mechanism. See examples "hanabi" (simple) and "ssr" (complex) for more information.
 
+
+## Launch several runs in Parallel, with different configuration options
+We provide Python scripts that can launch several runs of Pogosim in parallel, and compile the results from all runs into a single dataframe.
+
+To install it, use the following command:
+```shell
+pip install pogosim
+```
+
+Or, just you want to compile it yourself:
+```shell
+cd scripts
+./setup.py sdist bdist_wheel
+pip install -U .
+cd ..
+```
+
+Afterwards, you can use the pogobatch script to launch several runs of simulation in parallel (or in a cluster), with a given configuration:
+```shell
+pogobatch -c conf/test.yaml -S ./examples/hanabi/hanabi -r 10 -t tmp -o results
+```
+This command with launch 10 runs of the Hanabi example using configuration file conf/test.yaml. Temporary files of the runs will be stored in the "tmp" directory.
+After all runs are completed, the script will compile a dataframe of all results and save it into "results/result.feather". It can then be opened as described in previous section. An additional column "run" is added to the dataframe to distinguish results from the different runs.
+
+It is also possible to launch the pogobatch script on several variations of a given configuration, e.g. with a list of different numbers of robots or arena. The list of possibly configuration combination is specified in the configuration file, by using list of values rather than single values.
+E.g.:
+```yaml
+arena_file: ["arenas/disk.csv", "arenas/arena8.csv"]        # Test the results on two arenas
+nBots: [100, 200]           # Test configurations with two total numbers of robots
+
+# Format of the generated dataframes, one for each configuration
+result_filename_format: "result_{nBots}_{arena_file}.feather"
+```
+These configuration entries specify that either 100 or 200 robots should be considered, on arenas "disk" and "8", resulting in 4 possibly configurations. The configuration entry "result\_filename\_format" corresponds to the name of a given configuration combination.
+See "conf/batch/test.yaml" for a complete example.
+
+You can use pogobatch script on this compounded configuration file to launch several runs on each configuration combination:
+```shell
+pogobatch -c conf/batch/test.yaml -S ./examples/hanabi/hanabi -r 10 -t tmp -o results
+
+Created output directory: results
+Found 4 combination(s) to run.
+Task: Config file pogosim/tmp/combo_h917gmch.yaml -> Output: results/result_100_disk.feather
+Task: Config file pogosim/tmp/combo_a8n9ajc_.yaml -> Output: results/result_200_disk.feather
+Task: Config file pogosim/tmp/combo_9km0o_46.yaml -> Output: results/result_100_arena8.feather
+Task: Config file pogosim/tmp/combo_zs36a3tv.yaml -> Output: results/result_200_arena8.feather
+Launching PogobotLauncher for config: pogosim/tmp/combo_h917gmch.yaml with output: results/result_100_disk.feather
+Combined data saved to results/result_100_disk.feather
+Launching PogobotLauncher for config: pogosim/tmp/combo_a8n9ajc_.yaml with output: results/result_200_disk.feather
+Combined data saved to results/result_200_disk.feather
+Launching PogobotLauncher for config: pogosim/tmp/combo_9km0o_46.yaml with output: results/result_100_arena8.feather
+Combined data saved to results/result_100_arena8.feather
+Launching PogobotLauncher for config: pogosim/tmp/combo_zs36a3tv.yaml with output: results/result_200_arena8.feather
+Combined data saved to results/result_200_arena8.feather
+Batch run completed. Generated output files:
+ - results/result_100_disk.feather
+ - results/result_200_disk.feather
+ - results/result_100_arena8.feather
+ - results/result_200_arena8.feather
+```
+
+If you want to implement more complex deployment behaviors, you can write your own Python scripts and extend the class "pogosim.pogobatch.PogobotBatchRunner".
 
 
 ## Install and use the simulator in an Apptainer/Singularity container
