@@ -186,7 +186,7 @@ void Simulation::create_walls() {
     float const width = (window_width - 2 * 30) / VISUALIZATION_SCALE; // Width adjusted for 30-pixel offset
     float const height = (window_height - 2 * 30) / VISUALIZATION_SCALE; // Height adjusted for 30-pixel offset
     float const friction = 0.03f;
-    float const restition = 10.8f; // Bounciness
+    float const restitution = 10.8f; // Bounciness
 
     // Define the static body for each wall
     b2BodyDef wallBodyDef = b2DefaultBodyDef();
@@ -199,7 +199,7 @@ void Simulation::create_walls() {
     b2Polygon bottomShape = b2MakeBox(width / 2, WALL_THICKNESS / 2);
     b2ShapeDef bottomShapeDef = b2DefaultShapeDef();
     bottomShapeDef.friction = friction;
-    bottomShapeDef.restitution = restition;
+    bottomShapeDef.restitution = restitution;
     b2CreatePolygonShape(bottomWall, &bottomShapeDef, &bottomShape);
 
     // Top wall
@@ -208,7 +208,7 @@ void Simulation::create_walls() {
     b2Polygon topShape = b2MakeBox(width / 2, WALL_THICKNESS / 2);
     b2ShapeDef topShapeDef = b2DefaultShapeDef();
     topShapeDef.friction = friction;
-    topShapeDef.restitution = restition;
+    topShapeDef.restitution = restitution;
     b2CreatePolygonShape(topWall, &topShapeDef, &topShape);
 
     // Left wall
@@ -217,7 +217,7 @@ void Simulation::create_walls() {
     b2Polygon leftShape = b2MakeBox(WALL_THICKNESS / 2, height / 2);
     b2ShapeDef leftShapeDef = b2DefaultShapeDef();
     leftShapeDef.friction = friction;
-    leftShapeDef.restitution = restition;
+    leftShapeDef.restitution = restitution;
     b2CreatePolygonShape(leftWall, &leftShapeDef, &leftShape);
 
     // Right wall
@@ -226,7 +226,7 @@ void Simulation::create_walls() {
     b2Polygon rightShape = b2MakeBox(WALL_THICKNESS / 2, height / 2);
     b2ShapeDef rightShapeDef = b2DefaultShapeDef();
     rightShapeDef.friction = friction;
-    rightShapeDef.restitution = restition;
+    rightShapeDef.restitution = restitution;
     b2CreatePolygonShape(rightWall, &rightShapeDef, &rightShape);
 }
 
@@ -335,7 +335,7 @@ void Simulation::create_robots() {
     float const robot_angular_damping = std::stof(config.get("robot_angular_damping", "0.0"));
     float const robot_density = std::stof(config.get("robot_density", "10.0"));
     float const robot_friction = std::stof(config.get("robot_friction", "0.3"));
-    float const robot_restition = std::stof(config.get("robot_restition", "0.5"));
+    float const robot_restitution = std::stof(config.get("robot_restitution", "0.5"));
     float const robot_collision_radius = std::stof(config.get("robot_collision_radius", "0.0"));
     float const robot_linear_noise_stddev = std::stof(config.get("robot_linear_noise_stddev", "0.0"));
     float const robot_angular_noise_stddev = std::stof(config.get("robot_angular_noise_stddev", "0.0"));
@@ -360,7 +360,7 @@ void Simulation::create_robots() {
         auto const point = points[i];
         robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId, msg_success_rate,
                 robot_linear_damping, robot_angular_damping,
-                robot_density, robot_friction, robot_restition,
+                robot_density, robot_friction, robot_restitution,
                 robot_collision_shape, robot_collision_radius,
                 std::vector<b2Vec2>(),
                 robot_linear_noise_stddev, robot_angular_noise_stddev);

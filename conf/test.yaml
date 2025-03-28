@@ -40,7 +40,7 @@ robot_linear_damping: 0.3
 robot_angular_damping: 0.3
 robot_density: 10.0
 robot_friction: 0.3
-robot_restition: 0.5
+robot_restitution: 0.5
 robot_collision_shape: Circle
 robot_collision_radius: 0.00
 robot_linear_noise_stddev: 0.5
