@@ -4,6 +4,7 @@
 #include <random>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include "utils.h"
 #include "distances.h"
