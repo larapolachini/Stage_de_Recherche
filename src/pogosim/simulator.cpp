@@ -253,6 +253,7 @@ void Simulation::init_config() {
     robot_radius = std::stof(config.get("robot_radius", "10.0"));
     comm_radius = std::stof(config.get("commRadius", "90"));
     show_comm = string_to_bool(config.get("showComms", "false"));
+    show_lateral_leds = string_to_bool(config.get("show_lateral_LEDs", "true"));
 
     enable_gui = string_to_bool(config.get("GUI", "true"));
     GUI_speed_up = std::stof(config.get("GUI_speed_up", "1.0"));
@@ -414,7 +415,8 @@ void Simulation::help_message() {
     glogger->info(" - F1: Help message");
     glogger->info(" - F3: Slow down the simulation");
     glogger->info(" - F4: Speed up the simulation");
-    glogger->info(" - F5: Show the communication channels");
+    glogger->info(" - F5: Show/Hide the communication channels");
+    glogger->info(" - F6: Show/Hide the lateral LEDs");
     glogger->info(" - ESC: quit the simulation");
     glogger->info(" - SPACE: pause the simulation");
     glogger->info(" - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates");
@@ -443,6 +445,9 @@ void Simulation::handle_SDL_events() {
                     break;
                 case SDLK_F5:
                     show_comm = !show_comm;
+                    break;
+                case SDLK_F6:
+                    show_lateral_leds = !show_lateral_leds;
                     break;
                 case SDLK_ESCAPE:
                     running = false;
@@ -601,7 +606,7 @@ void Simulation::render_all() {
     //membrane.render(renderer, worldId);
 
     for (auto const& robot : robots) {
-        robot.render(renderer, worldId, show_comm);
+        robot.render(renderer, worldId, show_comm, show_lateral_leds);
     }
     //SDL_RenderPresent(renderer);
 

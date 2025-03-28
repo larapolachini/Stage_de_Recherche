@@ -141,7 +141,7 @@ inline uint8_t adjust_color(uint8_t const value) {
     }
 }
 
-void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId, bool show_comm) const {
+void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId, bool show_comm, bool show_lateral_leds) const {
     // Get robot's position in the physics world
     b2Vec2 position = b2Body_GetPosition(bodyId);
 
@@ -181,13 +181,21 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId, b
     }
 
     // Define relative positions for LEDs around the robot based on orientation
-    std::vector<b2Vec2> ledOffsets = {
-        {0, 0},                        // Above the robot center
-        {0, -radius / 2},              // Up
-        {radius / 2, 0},               // Right
-        {0, radius / 2},               // Down
-        {-radius / 2, 0}               // Left
-    };
+    std::vector<b2Vec2> ledOffsets;
+
+    if (show_lateral_leds) {
+        ledOffsets = {
+            {0, 0},                        // Above the robot center
+            {0, -radius / 2},              // Up
+            {radius / 2, 0},               // Right
+            {0, radius / 2},               // Down
+            {-radius / 2, 0}               // Left
+        };
+    } else {
+        ledOffsets = {
+            {0, 0}                         // Above the robot center
+        };
+    }
 
     // Rotate LED offsets based on robot orientation
     std::vector<b2Vec2> rotatedLedOffsets;

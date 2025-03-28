@@ -23,6 +23,7 @@ robot_radius: 26.5      # In mm
 commRadius: 133.0       # In mm, from center of a focal robot to the center of a neighboring robot
 msgSuccessRate: 0.9
 showComms: false
+show_lateral_LEDs: true
 GUI: true
 
 # Time
