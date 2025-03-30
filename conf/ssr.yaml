@@ -25,7 +25,8 @@ showComms: false
 GUI: true
 
 timeStep: 0.01          # In s
-GUI_speed_up: 10.0
+GUI_speed_up: 0.5
+temporal_noise_stddev: 0   # In µs
 
 initial_light_value: 32767
 photo_start_at: 1.0         # In s

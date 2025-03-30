@@ -70,6 +70,7 @@ public:
      * @param _polygonVertices Vector of vertices defining the polygon shape (only used for ShapeType::Polygon).
      * @param _linear_noise_stddev Standard deviation of the gaussian noise to apply to linear velocity, or 0.0 for deterministic velocity
      * @param _angular_noise_stddev Standard deviation of the gaussian noise to apply to angular velocity, or 0.0 for deterministic velocity
+     * @param _temporal_noise_stddev Standard deviation of the gaussian noise to apply to time on each robot, or 0.0 for deterministic time
      */
     Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius,
           b2WorldId worldId, float _msg_success_rate = 0.5,
@@ -77,7 +78,8 @@ public:
           float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
           ShapeType _shapeType = ShapeType::Circle, float _yRadius = 0.0f,
           const std::vector<b2Vec2>& _polygonVertices = std::vector<b2Vec2>(),
-          float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f);
+          float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f,
+          float _temporal_noise_stddev = 0.0f);
 
 
     //virtual ~Robot();
@@ -98,7 +100,7 @@ public:
      */
     void launch_user_step();
 
-    std::chrono::time_point<std::chrono::system_clock> current_time; ///< Current system time.
+    //std::chrono::time_point<std::chrono::system_clock> current_time; ///< Current system time.
     uint64_t current_time_microseconds = 0LL;                        ///< Current time in microseconds.
 
     // C-code accessible values
@@ -227,8 +229,18 @@ public:
      */
     void send_to_neighbors(message_t *const message);
 
+    
+    /**
+     * @brief Simulate a sleep on a single robot.
+     *
+     * @param microseconds Number of microseconds to sleep for
+     */
+    void sleep_µs(uint64_t microseconds);
+
     // Message success rate
     float msg_success_rate = 0.5; ///< Probability of successfully sending a message.
+
+    float temporal_noise = 0;
 
 private:
 
@@ -258,6 +270,7 @@ private:
     float angularDamping;
     float linear_noise_stddev;
     float angular_noise_stddev;
+    float temporal_noise_stddev;
 };
 
 

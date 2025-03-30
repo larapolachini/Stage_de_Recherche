@@ -52,6 +52,7 @@ void user_step(void) {
     }
 
     if ((uint32_t)(current_time_milliseconds() / 10000) % 2 == 0) {
+    //if ((pogobot_ticks / 1000) % 2 == 0) {
         pogobot_led_setColor(0,0,255);
         pogobot_motor_set(motorL, motorFull);
         pogobot_motor_set(motorR, motorStop);

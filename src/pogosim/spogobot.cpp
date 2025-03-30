@@ -27,7 +27,7 @@ void time_reference_t::reset() {
     if (current_robot != nullptr)
         current_robot->register_stop_watch(this);
 
-    start_time = get_current_time_microseconds();
+    start_time = current_robot->current_time_microseconds;
     auto const duration = start_time - sim_starting_time_microseconds;
     hardware_value_at_time_origin = duration;
     elapsed_ms = 0;
@@ -35,7 +35,7 @@ void time_reference_t::reset() {
 
 void time_reference_t::enable() {
     enabled = true;
-    start_time = get_current_time_microseconds();
+    start_time = current_robot->current_time_microseconds;
     //glogger->debug("ENABLE!! {}", start_time);
 }
 
@@ -46,8 +46,7 @@ void time_reference_t::disable() {
 }
 
 uint32_t time_reference_t::get_elapsed_microseconds() {
-    //start_time = get_current_time_microseconds();
-    auto const duration = get_current_time_microseconds() - start_time;
+    auto const duration = current_robot->current_time_microseconds - start_time;
     elapsed_ms += duration;
     return elapsed_ms;
 }
@@ -62,7 +61,9 @@ void time_reference_t::offset_origin_microseconds(uint64_t microseconds) {
 }
 
 
+// XXX Move to robot.cpp ?
 uint64_t get_current_time_microseconds() {
+//    return current_robot->current_time_microseconds;
     // Get the current time in microseconds since epoch
     auto const now = std::chrono::system_clock::now();
     auto const duration = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
@@ -365,7 +366,7 @@ void pogobot_timer_init( time_reference_t *timer, int32_t microseconds_to_go ) {
 }
 
 int32_t pogobot_timer_get_remaining_microseconds( time_reference_t *timer ) {
-    uint32_t const now = get_current_time_microseconds();
+    uint32_t const now = current_robot->current_time_microseconds;
     int32_t const remain = now - timer->start_time;
     return remain;
 }
@@ -379,9 +380,7 @@ void pogobot_timer_wait_for_expiry( time_reference_t *timer ) {
     if (remain <= 0)
         return;
     // Simulate sleep
-    for (auto* sw : current_robot->stop_watches) {
-        sw->add_elapsed_microseconds(static_cast<uint64_t>(remain));
-    }
+    current_robot->sleep_µs(remain);
 }
 
 void pogobot_timer_offset_origin_microseconds( time_reference_t *timer, int32_t microseconds_offset ) {
@@ -396,10 +395,7 @@ void pogobot_timer_offset_origin_microseconds( time_reference_t *timer, int32_t 
 void msleep(int milliseconds) {
     //std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
     glogger->debug("{} Sleeping for {} ms", log_current_robot(), milliseconds);
-    if (milliseconds <= 0) return;
-    for (auto* sw : current_robot->stop_watches) {
-        sw->add_elapsed_microseconds(static_cast<uint64_t>(milliseconds) * 1000);
-    }
+    current_robot->sleep_µs(static_cast<uint64_t>(milliseconds) * 1000);
 }
 
 // Helper function to convert va_list arguments to a string

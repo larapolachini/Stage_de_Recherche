@@ -30,6 +30,7 @@ GUI: true
 simulationTime: 500.0       # In s
 timeStep: 0.01              # In s
 GUI_speed_up: 10.0
+temporal_noise_stddev: 0   # In µs
 
 # Light and photo_start
 initial_light_value: 32767

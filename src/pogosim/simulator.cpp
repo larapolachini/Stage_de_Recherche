@@ -53,7 +53,7 @@ void set_current_robot(Robot& robot) {
     pogobot_ticks                 = robot.pogobot_ticks;
     main_loop_hz                  = robot.main_loop_hz;
     max_nb_processed_msg_per_tick = robot.max_nb_processed_msg_per_tick;
-    msg_rx_fn                 = robot.msg_rx_fn;
+    msg_rx_fn                     = robot.msg_rx_fn;
     msg_tx_fn                     = robot.msg_tx_fn;
     error_codes_led_idx           = robot.error_codes_led_idx;
     _global_timer                 = robot._global_timer;
@@ -340,6 +340,7 @@ void Simulation::create_robots() {
     float const robot_collision_radius = std::stof(config.get("robot_collision_radius", "0.0"));
     float const robot_linear_noise_stddev = std::stof(config.get("robot_linear_noise_stddev", "0.0"));
     float const robot_angular_noise_stddev = std::stof(config.get("robot_angular_noise_stddev", "0.0"));
+    float const temporal_noise_stddev = std::stof(config.get("temporal_noise_stddev", "0.0"));
 
     // Set robot collision shape
     std::string const robot_collision_shape_str = to_lowercase(config.get("robot_collision_shape", "Circle"));
@@ -364,7 +365,8 @@ void Simulation::create_robots() {
                 robot_density, robot_friction, robot_restitution,
                 robot_collision_shape, robot_collision_radius,
                 std::vector<b2Vec2>(),
-                robot_linear_noise_stddev, robot_angular_noise_stddev);
+                robot_linear_noise_stddev, robot_angular_noise_stddev,
+                temporal_noise_stddev);
         //float x = minX + std::rand() % static_cast<int>(maxX - minX);
         //float y = minY + std::rand() % static_cast<int>(maxY - minY);
         //robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);
@@ -720,7 +722,8 @@ void Simulation::main_loop() {
         for (auto& robot : robots) {
             set_current_robot(robot);
             // Check if the robot has waited enough time
-            if (t * 1000.0f >= _current_time_milliseconds) {
+            //glogger->debug("Debug main loop. t={}  robot.current_time_microseconds={}", t * 1000000.0f, robot.current_time_microseconds);
+            if (t * 1000000.0f >= robot.current_time_microseconds) {
                 robot.launch_user_step();
             }
             // Check if dt is enough to simulate the main loop frequency of this robot

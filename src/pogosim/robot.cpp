@@ -31,9 +31,10 @@ Robot::Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius
              float _density, float _friction, float _restitution,
              ShapeType _shapeType, float _yRadius,
              const std::vector<b2Vec2>& _polygonVertices,
-             float _linear_noise_stddev, float _angular_noise_stddev)
+             float _linear_noise_stddev, float _angular_noise_stddev,
+             float _temporal_noise_stddev)
     : id(_id), radius(_radius), msg_success_rate(_msg_success_rate), linearDamping(_linearDamping), angularDamping(_angularDamping),
-        linear_noise_stddev(_linear_noise_stddev), angular_noise_stddev(_angular_noise_stddev) {
+        linear_noise_stddev(_linear_noise_stddev), angular_noise_stddev(_angular_noise_stddev), temporal_noise_stddev(_temporal_noise_stddev) {
     data = malloc(_userdatasize);
     create_body(worldId, x, y,
                 _density, _friction, _restitution, _shapeType, _yRadius, _polygonVertices);
@@ -127,6 +128,13 @@ void Robot::create_body(b2WorldId worldId, float x, float y,
     // Assign an initial velocity.
     b2Vec2 velocity = { 1.0f, 1.0f };
     b2Body_SetLinearVelocity(bodyId, velocity);
+
+    // Identify the level of temporal noise on this robot
+    if (temporal_noise_stddev > 0) {
+        //std::normal_distribution<float> dist(0.0f, temporal_noise_stddev);
+        std::uniform_real_distribution<float> dist(0.0f, temporal_noise_stddev);
+        temporal_noise = dist(rnd_gen);
+    }
 }
 
 // Inline function to calculate the normalized color values
@@ -397,10 +405,9 @@ void Robot::set_motor(motor_id motor, int speed) {
     // Add Gaussian noise to linear velocity if the standard deviation is greater than 0.0.
     if (linear_noise_stddev > 0.0f) {
         // Use a static generator so that it persists across calls.
-        static std::default_random_engine rng(std::random_device{}());
         std::normal_distribution<float> dist(0.0f, linear_noise_stddev);
-        linear_velocity.x += dist(rng);
-        linear_velocity.y += dist(rng);
+        linear_velocity.x += dist(rnd_gen);
+        linear_velocity.y += dist(rnd_gen);
     }
     b2Body_SetLinearVelocity(bodyId, linear_velocity);
 
@@ -410,9 +417,8 @@ void Robot::set_motor(motor_id motor, int speed) {
 
     // Add Gaussian noise to angular velocity if the standard deviation is greater than 0.0.
     if (angular_noise_stddev > 0.0f) {
-        static std::default_random_engine rng(std::random_device{}());
         std::normal_distribution<float> dist(0.0f, angular_noise_stddev);
-        angular_velocity += dist(rng);
+        angular_velocity += dist(rnd_gen);
     }
     b2Body_SetAngularVelocity(bodyId, angular_velocity);
 
@@ -429,7 +435,7 @@ void Robot::launch_user_step() {
 }
 
 void Robot::update_time() {
-    current_time_microseconds = get_current_time_microseconds() - sim_starting_time_microseconds;
+    current_time_microseconds += temporal_noise;
 }
 
 void Robot::register_stop_watch(time_reference_t* sw) {
@@ -483,6 +489,11 @@ void Robot::send_to_neighbors(message_t *const message) {
             robot->messages.push(*message);
         }
     }
+}
+
+void Robot::sleep_µs(uint64_t microseconds) {
+    if (microseconds <= 0) return;
+    current_time_microseconds += microseconds;
 }
 
 
