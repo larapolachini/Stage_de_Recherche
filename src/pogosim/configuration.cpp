@@ -5,26 +5,43 @@
 #include <unordered_map>
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 #include "configuration.h"
 
 
-// Load configuration from a YAML file
+// Helper function to flatten a YAML node recursively into dot-separated keys.
+namespace {
+    void flattenYAML(const YAML::Node& node, const std::string& prefix, std::unordered_map<std::string, std::string>& result) {
+        if (node.IsScalar()) {
+            result[prefix] = node.as<std::string>();
+        } else if (node.IsMap()) {
+            for (auto it = node.begin(); it != node.end(); ++it) {
+                std::string key = it->first.as<std::string>();
+                std::string newPrefix = prefix.empty() ? key : prefix + "." + key;
+                flattenYAML(it->second, newPrefix, result);
+            }
+        } else if (node.IsSequence()) {
+            for (std::size_t i = 0; i < node.size(); i++) {
+                std::string newPrefix = prefix + "[" + std::to_string(i) + "]";
+                flattenYAML(node[i], newPrefix, result);
+            }
+        }
+    }
+}
+
 void Configuration::load(const std::string& file_name) {
     try {
         YAML::Node yaml_config = YAML::LoadFile(file_name);
-
-        for (const auto& item : yaml_config) {
-            std::string key = item.first.as<std::string>();
-            std::string value = item.second.as<std::string>();
-            config_map[key] = value;
-        }
+        // Clear any existing configuration
+        config_map.clear();
+        // Recursively flatten the YAML structure
+        flattenYAML(yaml_config, "", config_map);
     } catch (const YAML::Exception& e) {
         throw std::runtime_error("Error reading the YAML file: " + std::string(e.what()));
     }
 }
 
-// Get a configuration value by key
 std::string Configuration::get(const std::string& key, const std::string& default_value) const {
     auto it = config_map.find(key);
     if (it != config_map.end()) {
@@ -33,16 +50,14 @@ std::string Configuration::get(const std::string& key, const std::string& defaul
     return default_value;
 }
 
-void Configuration::set(std::string const& key, std::string const& value) {
+void Configuration::set(const std::string& key, const std::string& value) {
     config_map[key] = value;
 }
 
-// Check if a key exists in the configuration
 bool Configuration::contains(const std::string& key) const {
     return config_map.find(key) != config_map.end();
 }
 
-// Return all configuration parameters
 std::string Configuration::summary() const {
     std::ostringstream oss;
     oss << "Configuration Parameters:\n";
