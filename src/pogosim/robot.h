@@ -2,6 +2,7 @@
 #define ROBOT_H
 
 #include <vector>
+#include <cmath>
 #include <set>
 #include <queue>
 #include <chrono>
@@ -35,6 +36,95 @@ enum class ShapeType {
 
 
 /**
+ * @brief Abstract base class for message success rate calculations.
+ *
+ * This class defines the interface for calculating message success rates.
+ */
+class MsgSuccessRate {
+public:
+    /**
+     * @brief Computes the message success rate.
+     *
+     * @param payload_size The payload size.
+     * @param p_send The sending parameter.
+     * @param cluster_size The cluster size.
+     * @return The computed success rate.
+     */
+    virtual double operator()(double payload_size, double p_send, double cluster_size) const = 0;
+
+    /**
+     * @brief Virtual destructor.
+     */
+    virtual ~MsgSuccessRate() = default;
+};
+
+/**
+ * @brief Class for dynamic message success rate calculation using a configurable formula.
+ *
+ * The success rate is calculated as:
+ * \f[
+ * \text{success rate} = \frac{1}{1 + (\alpha \cdot \text{payload\_size}^{\beta} \cdot \text{p\_send}^{\gamma} \cdot \text{cluster\_size}^{\delta})}
+ * \f]
+ */
+class DynamicMsgSuccessRate : public MsgSuccessRate {
+public:
+    /**
+     * @brief Constructs a new DynamicMsgSuccessRate object.
+     *
+     * @param alpha The multiplicative constant (default is 0.000009).
+     * @param beta The exponent for payload_size (default is 2.6436).
+     * @param gamma The exponent for p_send (default is 2.3933).
+     * @param delta The exponent for cluster_size (default is 1.2571).
+     */
+    DynamicMsgSuccessRate(double alpha = 0.000009, double beta = 2.6436, double gamma = 2.3933, double delta = 1.2571);
+
+    /**
+     * @brief Computes the dynamic success rate.
+     *
+     * @param payload_size The payload size.
+     * @param p_send The sending parameter.
+     * @param cluster_size The cluster size.
+     * @return The computed success rate.
+     */
+    double operator()(double payload_size, double p_send, double cluster_size) const override;
+
+private:
+    double alpha_; ///< The multiplicative constant.
+    double beta_;  ///< Exponent for payload size.
+    double gamma_; ///< Exponent for sending parameter.
+    double delta_; ///< Exponent for cluster size.
+};
+
+/**
+ * @brief Class for constant message success rate calculation.
+ *
+ * This class always returns a constant success rate value regardless of the inputs.
+ */
+class ConstMsgSuccessRate : public MsgSuccessRate {
+public:
+    /**
+     * @brief Constructs a new ConstMsgSuccessRate object.
+     *
+     * @param value The constant success rate value.
+     */
+    explicit ConstMsgSuccessRate(double value);
+
+    /**
+     * @brief Returns the constant success rate.
+     *
+     * @param payload_size The payload size (ignored).
+     * @param p_send The sending parameter (ignored).
+     * @param cluster_size The cluster size (ignored).
+     * @return The constant success rate.
+     */
+    double operator()(double payload_size, double p_send, double cluster_size) const override;
+
+private:
+    double const_value_; ///< The constant success rate value.
+};
+
+
+/**
  * @brief Class representing a simulated robot.
  *
  * The Robot class encapsulates the properties and behaviors of a simulated robot,
@@ -59,7 +149,7 @@ public:
      * @param y Initial y-coordinate in the simulation.
      * @param _radius The primary radius of the robot.
      * @param worldId The Box2D world identifier.
-     * @param _msg_success_rate Probability (0.0 to 1.0) of successfully sending a message (default is 0.5).
+     * @param _msg_success_rate std::unique_ptr<MsgSuccessRate> describing the probability of successfully sending a message.
      * @param _linearDamping Linear damping value for the physical body (default is 0.0f).
      * @param _angularDamping Angular damping value for the physical body (default is 0.0f).
      * @param _density Density of the body shape (default is 10.0f).
@@ -73,7 +163,7 @@ public:
      * @param _temporal_noise_stddev Standard deviation of the gaussian noise to apply to time on each robot, or 0.0 for deterministic time
      */
     Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius,
-          b2WorldId worldId, float _msg_success_rate = 0.5,
+          b2WorldId worldId, std::unique_ptr<MsgSuccessRate> _msg_success_rate = std::make_unique<ConstMsgSuccessRate>(0.5),
           float _linearDamping = 0.0f, float _angularDamping = 0.0f,
           float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
           ShapeType _shapeType = ShapeType::Circle, float _yRadius = 0.0f,
@@ -238,7 +328,7 @@ public:
     void sleep_µs(uint64_t microseconds);
 
     // Message success rate
-    float msg_success_rate = 0.5; ///< Probability of successfully sending a message.
+    std::unique_ptr<MsgSuccessRate> msg_success_rate; ///< Probability of successfully sending a message.
 
     float temporal_noise = 0;
 

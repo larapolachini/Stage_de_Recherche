@@ -22,18 +22,38 @@ Robot* current_robot;
 uint64_t sim_starting_time_microseconds;
 
 
+/************* DynamicMsgSuccessRate *************/ // {{{1
+
+DynamicMsgSuccessRate::DynamicMsgSuccessRate(double alpha, double beta, double gamma, double delta)
+    : alpha_(alpha), beta_(beta), gamma_(gamma), delta_(delta) {}
+
+double DynamicMsgSuccessRate::operator()(double payload_size, double p_send, double cluster_size) const {
+    return 1.0 / (1.0 + (alpha_ * std::pow(payload_size, beta_) *
+                                  std::pow(p_send, gamma_) *
+                                  std::pow(cluster_size, delta_)));
+}
+
+/************* ConstMsgSuccessRate *************/ // {{{1
+
+ConstMsgSuccessRate::ConstMsgSuccessRate(double value)
+    : const_value_(value) {}
+
+double ConstMsgSuccessRate::operator()(double /*payload_size*/, double /*p_send*/, double /*cluster_size*/) const {
+    return const_value_;
+}
+
 
 /************* SIMULATED ROBOTS *************/ // {{{1
 
 Robot::Robot(uint16_t _id, size_t _userdatasize, float x, float y, float _radius,
-             b2WorldId worldId, float _msg_success_rate,
+             b2WorldId worldId, std::unique_ptr<MsgSuccessRate> _msg_success_rate,
              float _linearDamping, float _angularDamping,
              float _density, float _friction, float _restitution,
              ShapeType _shapeType, float _yRadius,
              const std::vector<b2Vec2>& _polygonVertices,
              float _linear_noise_stddev, float _angular_noise_stddev,
              float _temporal_noise_stddev)
-    : id(_id), radius(_radius), msg_success_rate(_msg_success_rate), linearDamping(_linearDamping), angularDamping(_angularDamping),
+    : id(_id), radius(_radius), msg_success_rate(std::move(_msg_success_rate)), linearDamping(_linearDamping), angularDamping(_angularDamping),
         linear_noise_stddev(_linear_noise_stddev), angular_noise_stddev(_angular_noise_stddev), temporal_noise_stddev(_temporal_noise_stddev) {
     data = malloc(_userdatasize);
     create_body(worldId, x, y,
@@ -482,10 +502,14 @@ void Robot::send_to_neighbors(message_t *const message) {
     // Define a uniform real distribution between 0.0 and 1.0
     std::uniform_real_distribution<float> dis(0.0f, 1.0f);
 
+    double const payload_size = static_cast<double>(message->header.payload_length); 
+    double const p_send = static_cast<double>(percent_msgs_sent_per_ticks) / 100.0;
+    double const cluster_size = static_cast<double>(neighbors.size() + 1);
+
     for (Robot* robot : neighbors) {
         float const prob = dis(rnd_gen);
         //glogger->debug("MESSAGE !! with prob {} / {}: {} -> {}", prob, msg_success_rate, message->header._sender_id, robot->id);
-        if (prob <= msg_success_rate && robot->messages.size() < 100) { // XXX Maxsize should be an option
+        if (prob <= (*msg_success_rate)(payload_size, p_send, cluster_size) && robot->messages.size() < 100) { // XXX Maxsize should be an option
             robot->messages.push(*message);
         }
     }

@@ -312,7 +312,7 @@ void Simulation::init_SDL() {
 void Simulation::create_robots() {
     std::string const initial_robot_formation = to_lowercase(config.get("initial_robot_formation", "random"));
     uint32_t const nb_robots = std::stoi(config.get("nBots", "100"));
-    float const msg_success_rate = std::stof(config.get("msgSuccessRate", "0.50"));
+    float const msg_success_rate_val = std::stof(config.get("msgSuccessRate", "0.50"));
     glogger->info("Creating {} robots", nb_robots);
     if (!nb_robots)
         throw std::runtime_error("Number of robots is 0 (nBot=0 in configuration).");
@@ -342,6 +342,13 @@ void Simulation::create_robots() {
     float const robot_angular_noise_stddev = std::stof(config.get("robot_angular_noise_stddev", "0.0"));
     float const temporal_noise_stddev = std::stof(config.get("temporal_noise_stddev", "0.0"));
 
+    // Retrieve msg_success_rate configuration
+    float const dynamic_msg_success_rate__enable = string_to_bool(config.get("dynamic_msg_success_rate.enable", "true"));
+    float const dynamic_msg_success_rate__alpha  = std::stof(config.get("dynamic_msg_success_rate.alpha", "0.000009"));
+    float const dynamic_msg_success_rate__beta   = std::stof(config.get("dynamic_msg_success_rate.beta",  "2.6436"));
+    float const dynamic_msg_success_rate__gamma  = std::stof(config.get("dynamic_msg_success_rate.gamma", "2.3933"));
+    float const dynamic_msg_success_rate__delta  = std::stof(config.get("dynamic_msg_success_rate.delta", "1.2571"));
+
     // Set robot collision shape
     std::string const robot_collision_shape_str = to_lowercase(config.get("robot_collision_shape", "Circle"));
     ShapeType robot_collision_shape;
@@ -358,9 +365,21 @@ void Simulation::create_robots() {
 
     // Create all robots
     for (size_t i = 0; i < nb_robots; ++i) {
+        // Create a success rate object
+        std::unique_ptr<MsgSuccessRate> msg_success_rate;
+        if (dynamic_msg_success_rate__enable) {
+            msg_success_rate = std::make_unique<DynamicMsgSuccessRate>(
+                    dynamic_msg_success_rate__alpha,
+                    dynamic_msg_success_rate__beta,
+                    dynamic_msg_success_rate__gamma,
+                    dynamic_msg_success_rate__delta);
+        } else {
+            msg_success_rate = std::make_unique<ConstMsgSuccessRate>(msg_success_rate_val);
+        }
+
         //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius);
         auto const point = points[i];
-        robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId, msg_success_rate,
+        robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId, std::move(msg_success_rate),
                 robot_linear_damping, robot_angular_damping,
                 robot_density, robot_friction, robot_restitution,
                 robot_collision_shape, robot_collision_radius,

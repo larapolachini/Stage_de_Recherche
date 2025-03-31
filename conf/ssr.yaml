@@ -20,9 +20,17 @@ initial_robot_formation: random
 simulationTime: 360.0  # In s
 robot_radius: 26.5      # In mm
 commRadius: 133.0       # In mm, from center of a focal robot to the center of a neighboring robot
-msgSuccessRate: 0.95
 showComms: false
 GUI: true
+
+# Use msg success rate follows this formula: "1 / (1 + (alpha * payload_size**beta * p_send**gamma * cluster_size**delta))"
+dynamic_msg_success_rate:
+    enable: true
+    alpha: 0.000009
+    beta: 2.6436
+    gamma: 2.3933
+    delta: 1.2571
+msgSuccessRate: 0.9   # Used if dynamic_msg_success_rate.enable is false
 
 timeStep: 0.01          # In s
 GUI_speed_up: 0.5
