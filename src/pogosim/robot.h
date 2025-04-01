@@ -45,12 +45,12 @@ public:
     /**
      * @brief Computes the message success rate.
      *
-     * @param payload_size The payload size.
+     * @param msg_size The message size.
      * @param p_send The sending parameter.
      * @param cluster_size The cluster size.
      * @return The computed success rate.
      */
-    virtual double operator()(double payload_size, double p_send, double cluster_size) const = 0;
+    virtual double operator()(double msg_size, double p_send, double cluster_size) const = 0;
 
     /**
      * @brief Virtual destructor.
@@ -63,7 +63,7 @@ public:
  *
  * The success rate is calculated as:
  * \f[
- * \text{success rate} = \frac{1}{1 + (\alpha \cdot \text{payload\_size}^{\beta} \cdot \text{p\_send}^{\gamma} \cdot \text{cluster\_size}^{\delta})}
+ * \text{success rate} = \frac{1}{1 + (\alpha \cdot \text{msg\_size}^{\beta} \cdot \text{p\_send}^{\gamma} \cdot \text{cluster\_size}^{\delta})}
  * \f]
  */
 class DynamicMsgSuccessRate : public MsgSuccessRate {
@@ -71,26 +71,26 @@ public:
     /**
      * @brief Constructs a new DynamicMsgSuccessRate object.
      *
-     * @param alpha The multiplicative constant (default is 0.000009).
-     * @param beta The exponent for payload_size (default is 2.6436).
-     * @param gamma The exponent for p_send (default is 2.3933).
-     * @param delta The exponent for cluster_size (default is 1.2571).
+     * @param alpha The multiplicative constant (default is 0.000004).
+     * @param beta The exponent for msg_size (default is 2.8096).
+     * @param gamma The exponent for p_send (default is 2.3807).
+     * @param delta The exponent for cluster_size (default is 1.2457).
      */
-    DynamicMsgSuccessRate(double alpha = 0.000009, double beta = 2.6436, double gamma = 2.3933, double delta = 1.2571);
+    DynamicMsgSuccessRate(double alpha = 0.000004, double beta = 2.8096, double gamma = 2.3807, double delta = 1.2457);
 
     /**
      * @brief Computes the dynamic success rate.
      *
-     * @param payload_size The payload size.
+     * @param msg_size The msg size.
      * @param p_send The sending parameter.
      * @param cluster_size The cluster size.
      * @return The computed success rate.
      */
-    double operator()(double payload_size, double p_send, double cluster_size) const override;
+    double operator()(double msg_size, double p_send, double cluster_size) const override;
 
 private:
     double alpha_; ///< The multiplicative constant.
-    double beta_;  ///< Exponent for payload size.
+    double beta_;  ///< Exponent for msg size.
     double gamma_; ///< Exponent for sending parameter.
     double delta_; ///< Exponent for cluster size.
 };
@@ -112,12 +112,12 @@ public:
     /**
      * @brief Returns the constant success rate.
      *
-     * @param payload_size The payload size (ignored).
+     * @param msg_size The msg size (ignored).
      * @param p_send The sending parameter (ignored).
      * @param cluster_size The cluster size (ignored).
      * @return The constant success rate.
      */
-    double operator()(double payload_size, double p_send, double cluster_size) const override;
+    double operator()(double msg_size, double p_send, double cluster_size) const override;
 
 private:
     double const_value_; ///< The constant success rate value.
@@ -319,7 +319,7 @@ public:
      */
     void send_to_neighbors(message_t *const message);
 
-    
+
     /**
      * @brief Simulate a sleep on a single robot.
      *

@@ -343,11 +343,11 @@ void Simulation::create_robots() {
     float const temporal_noise_stddev = std::stof(config.get("temporal_noise_stddev", "0.0"));
 
     // Retrieve msg_success_rate configuration
-    float const dynamic_msg_success_rate__enable = string_to_bool(config.get("dynamic_msg_success_rate.enable", "true"));
-    float const dynamic_msg_success_rate__alpha  = std::stof(config.get("dynamic_msg_success_rate.alpha", "0.000009"));
-    float const dynamic_msg_success_rate__beta   = std::stof(config.get("dynamic_msg_success_rate.beta",  "2.6436"));
-    float const dynamic_msg_success_rate__gamma  = std::stof(config.get("dynamic_msg_success_rate.gamma", "2.3933"));
-    float const dynamic_msg_success_rate__delta  = std::stof(config.get("dynamic_msg_success_rate.delta", "1.2571"));
+    float const dynamic_msg_success_rate__enable = string_to_bool(config.get("dynamic_msg_success_rate.enable", "false"));
+    float const dynamic_msg_success_rate__alpha  = std::stof(config.get("dynamic_msg_success_rate.alpha", "0.000004"));
+    float const dynamic_msg_success_rate__beta   = std::stof(config.get("dynamic_msg_success_rate.beta",  "2.8096"));
+    float const dynamic_msg_success_rate__gamma  = std::stof(config.get("dynamic_msg_success_rate.gamma", "2.3807"));
+    float const dynamic_msg_success_rate__delta  = std::stof(config.get("dynamic_msg_success_rate.delta", "1.2457"));
 
     // Set robot collision shape
     std::string const robot_collision_shape_str = to_lowercase(config.get("robot_collision_shape", "Circle"));

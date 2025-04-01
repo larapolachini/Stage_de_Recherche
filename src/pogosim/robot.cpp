@@ -27,8 +27,8 @@ uint64_t sim_starting_time_microseconds;
 DynamicMsgSuccessRate::DynamicMsgSuccessRate(double alpha, double beta, double gamma, double delta)
     : alpha_(alpha), beta_(beta), gamma_(gamma), delta_(delta) {}
 
-double DynamicMsgSuccessRate::operator()(double payload_size, double p_send, double cluster_size) const {
-    return 1.0 / (1.0 + (alpha_ * std::pow(payload_size, beta_) *
+double DynamicMsgSuccessRate::operator()(double msg_size, double p_send, double cluster_size) const {
+    return 1.0 / (1.0 + (alpha_ * std::pow(msg_size, beta_) *
                                   std::pow(p_send, gamma_) *
                                   std::pow(cluster_size, delta_)));
 }
@@ -38,7 +38,7 @@ double DynamicMsgSuccessRate::operator()(double payload_size, double p_send, dou
 ConstMsgSuccessRate::ConstMsgSuccessRate(double value)
     : const_value_(value) {}
 
-double ConstMsgSuccessRate::operator()(double /*payload_size*/, double /*p_send*/, double /*cluster_size*/) const {
+double ConstMsgSuccessRate::operator()(double /*msg_size*/, double /*p_send*/, double /*cluster_size*/) const {
     return const_value_;
 }
 
@@ -503,13 +503,14 @@ void Robot::send_to_neighbors(message_t *const message) {
     std::uniform_real_distribution<float> dis(0.0f, 1.0f);
 
     double const payload_size = static_cast<double>(message->header.payload_length); 
+    double const msg_size = payload_size + (message->header._packet_type == ir_t_short ? sizeof(message_short_header_t) : sizeof(message_header_t));
     double const p_send = static_cast<double>(percent_msgs_sent_per_ticks) / 100.0;
     double const cluster_size = static_cast<double>(neighbors.size() + 1);
 
     for (Robot* robot : neighbors) {
         float const prob = dis(rnd_gen);
         //glogger->debug("MESSAGE !! with prob {} / {}: {} -> {}", prob, msg_success_rate, message->header._sender_id, robot->id);
-        if (prob <= (*msg_success_rate)(payload_size, p_send, cluster_size) && robot->messages.size() < 100) { // XXX Maxsize should be an option
+        if (prob <= (*msg_success_rate)(msg_size, p_send, cluster_size) && robot->messages.size() < 100) {
             robot->messages.push(*message);
         }
     }
