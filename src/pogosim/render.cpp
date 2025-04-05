@@ -393,17 +393,17 @@ std::vector<b2Vec2> generate_regular_disk_points_in_polygon(
     b2Vec2 center = polygon_centroid(mainPolygon);
 
     // 3. Find approximate largest inscribed circle radius
-    //    by taking min distance from centroid to each edge minus minDistance.
-    float minEdgeDist = std::numeric_limits<float>::max();
+    //    by taking max distance from centroid to each edge minus minDistance.
+    float maxEdgeDist = std::numeric_limits<float>::min();
     for (size_t i = 0; i < mainPolygon.size(); ++i) {
         const b2Vec2& a = mainPolygon[i];
         const b2Vec2& b = mainPolygon[(i + 1) % mainPolygon.size()];
         float dist = point_to_line_segment_distance(center, a, b);
-        if (dist < minEdgeDist) {
-            minEdgeDist = dist;
+        if (dist > maxEdgeDist) {
+            maxEdgeDist = dist;
         }
     }
-    float radius = minEdgeDist - minDistance;
+    float radius = maxEdgeDist - minDistance;
     if (radius <= 0.0f) {
         throw std::runtime_error("Polygon is too small or minDistance too large to fit any disk.");
     }

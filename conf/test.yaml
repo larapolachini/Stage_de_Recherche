@@ -17,10 +17,10 @@ save_video_period: 1.0      # In s
 frames_name: "frames/f{:010.4f}.png"
 
 seed: 0
-nBots: 150
-initial_robot_formation: random
+nBots: 200 #0
+initial_robot_formation: random # disk
 robot_radius: 26.5      # In mm
-commRadius: 80.0       # In mm, from border of a focal robot to the border of a neighboring robot
+commRadius: 80.0        # In mm, from border of a focal robot to the border of a neighboring robot
 showComms: false
 show_lateral_LEDs: true
 GUI: true
