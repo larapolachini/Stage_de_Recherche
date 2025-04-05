@@ -146,7 +146,18 @@ uint32_t pogobot_infrared_sendRawLongMessage( message_t *const message ) {
     // This will be necessary later to have robots detect each other and their
     // relative orientations.
 
-    current_robot->send_to_neighbors(message);
+    ir_direction dir = ir_all;
+    if (get_infrared_emitter_dir(ir_front, message->header._emitting_power_list) > 0) {
+        dir = ir_front;
+    } else if (get_infrared_emitter_dir(ir_right, message->header._emitting_power_list) > 0) {
+        dir = ir_right;
+    } else if (get_infrared_emitter_dir(ir_back, message->header._emitting_power_list) > 0) {
+        dir = ir_back;
+    } else if (get_infrared_emitter_dir(ir_left, message->header._emitting_power_list) > 0) {
+        dir = ir_left;
+    }
+
+    current_robot->send_to_neighbors(dir, message);
     return 0;
 }
 
@@ -157,7 +168,7 @@ uint32_t pogobot_infrared_sendRawShortMessage( ir_direction dir, short_message_t
 
     message->header._packet_type = ir_t_short; // User packets have type 3.
 
-    current_robot->send_to_neighbors(message);
+    current_robot->send_to_neighbors(dir, message);
     return 0;
 }
 

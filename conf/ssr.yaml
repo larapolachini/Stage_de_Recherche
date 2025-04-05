@@ -19,7 +19,7 @@ initial_robot_formation: random
 #initial_robot_formation: disk
 simulationTime: 360.0  # In s
 robot_radius: 26.5      # In mm
-commRadius: 133.0       # In mm, from center of a focal robot to the center of a neighboring robot
+commRadius: 80.0       # In mm, from border of a focal robot to the border of a neighboring robot
 showComms: false
 GUI: true
 

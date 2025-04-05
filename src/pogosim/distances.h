@@ -30,12 +30,13 @@ float euclidean_distance(const b2Vec2& a, const b2Vec2& b);
  * for other robots, and updates the robot's neighbor list if the Euclidean distance (squared)
  * is within the allowed maximum distance.
  *
+ * @param dir Direction in which messages are sent (i.e. the ID number of the IR emitter)
  * @param robots A vector of Robot objects. Each Robot must implement a method get_position()
  *               returning a b2Vec2, and contain a public member "neighbors" (e.g., a vector)
  *               that can store pointers to neighboring Robot objects.
  * @param maxDistance The maximum distance within which two robots are considered neighbors.
  */
-void find_neighbors(std::vector<Robot>& robots, float maxDistance);
+void find_neighbors(ir_direction dir, std::vector<Robot>& robots, float maxDistance);
 
 #endif // DISTANCES_H
 

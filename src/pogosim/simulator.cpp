@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <spdlog/spdlog.h>
 #include <filesystem>
+#include <algorithm>
 
 #include <cmath>
 #include <vector>
@@ -539,7 +540,22 @@ void Simulation::handle_SDL_events() {
 
 
 void Simulation::compute_neighbors() {
-    find_neighbors(robots, comm_radius / VISUALIZATION_SCALE);
+    for (int i = 0; i < IR_RX_COUNT; i++ ) {
+        find_neighbors((ir_direction)i, robots, (comm_radius + robot_radius) / VISUALIZATION_SCALE);
+    }
+
+    // Merge neighbors (without duplicates) from all IR emitters/receivers into the direction ir_all
+    for (Robot& a : robots) {
+        for (std::size_t i = 0; i < IR_RX_COUNT; ++i) {
+            for (Robot* r : a.neighbors[i]) {
+                // Check if r is already in neighbors[ir_all]
+                if (std::find(a.neighbors[ir_all].begin(), a.neighbors[ir_all].end(), r) == a.neighbors[ir_all].end()) {
+                    a.neighbors[ir_all].push_back(r);
+                }
+            }
+        }
+    }
+
     //glogger->debug("Robot 0 has {} neighbors.", robots[0].neighbors.size());
 }
 

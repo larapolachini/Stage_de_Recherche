@@ -13,6 +13,7 @@
 #include "spogobot.h"
 #include "pogosim.h"
 #include "simulator.h"
+#include "colormaps.h"
 
 
 /************* GLOBALS *************/ // {{{1
@@ -169,101 +170,6 @@ inline uint8_t adjust_color(uint8_t const value) {
     }
 }
 
-//void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId, bool show_comm, bool show_lateral_leds) const {
-//    // Get robot's position in the physics world
-//    b2Vec2 position = b2Body_GetPosition(bodyId);
-//
-//    // Convert to screen coordinates
-//    float screenX = position.x * VISUALIZATION_SCALE;
-//    float screenY = position.y * VISUALIZATION_SCALE;
-//
-//    // Draw circle representing the robot's body
-////    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Gray color for robot body
-////    SDL_RenderDrawCircle(renderer, static_cast<int>(screenX), static_cast<int>(screenY), radius);
-//    auto const circle_pos = visualization_position(screenX, screenY);
-//    circleRGBA(renderer, circle_pos.x, circle_pos.y, radius * mm_to_pixels, 0, 0, 0, 200);
-//
-//    // Get the robot's orientation as a rotation (cosine/sine pair)
-//    b2Rot rotation = b2Body_GetRotation(bodyId);
-//    float cosAngle = rotation.c;
-//    float sinAngle = rotation.s;
-//
-//    // Draw line indicating robot orientation with increased width
-//    float const orientationX = screenX + cosAngle * radius * 2.0; // Increase length of orientation line
-//    float const orientationY = screenY + sinAngle * radius * 2.0;
-////    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 150); // Blue/transparent color for orientation line
-////    for (int offset = -2; offset <= 2; ++offset) {
-////        SDL_RenderDrawLine(renderer, screenX + offset, screenY, orientationX + offset, orientationY);
-////        SDL_RenderDrawLine(renderer, screenX, screenY + offset, orientationX, orientationY + offset);
-////    }
-//    auto const orientation_pos = visualization_position(orientationX, orientationY);
-//    thickLineRGBA(renderer, circle_pos.x, circle_pos.y, orientation_pos.x, orientation_pos.y, 4, 0, 0, 255, 150);
-//
-//    // Draw communication channels
-//    if (show_comm) {
-//        for (Robot* robot : neighbors) {
-//            b2Vec2 const r_pos = robot->get_position();
-//            auto const r_circle_pos = visualization_position(r_pos.x * VISUALIZATION_SCALE, r_pos.y * VISUALIZATION_SCALE);
-//            thickLineRGBA(renderer, circle_pos.x, circle_pos.y, r_circle_pos.x, r_circle_pos.y, 4, 0, 150, 0, 150);
-//        }
-//    }
-//
-//    // Define relative positions for LEDs around the robot based on orientation
-//    std::vector<b2Vec2> ledOffsets;
-//
-//    if (show_lateral_leds) {
-//        ledOffsets = {
-//            {0, 0},                        // Above the robot center
-//            {0, -radius / 2},              // Up
-//            {radius / 2, 0},               // Right
-//            {0, radius / 2},               // Down
-//            {-radius / 2, 0}               // Left
-//        };
-//    } else {
-//        ledOffsets = {
-//            {0, 0}                         // Above the robot center
-//        };
-//    }
-//
-//    // Rotate LED offsets based on robot orientation
-//    std::vector<b2Vec2> rotatedLedOffsets;
-//    for (const auto& offset : ledOffsets) {
-//        float rotatedX = cosAngle * offset.x - sinAngle * offset.y;
-//        float rotatedY = sinAngle * offset.x + cosAngle * offset.y;
-//        rotatedLedOffsets.push_back({rotatedX, rotatedY});
-//    }
-//
-//    // Draw each LED
-//    for (size_t i = 0; i < leds.size() && i < rotatedLedOffsets.size(); ++i) {
-//        color_t const& ledColor = leds[i]; // Get LED color
-//        uint8_t const r = adjust_color(ledColor.r);
-//        uint8_t const g = adjust_color(ledColor.g);
-//        uint8_t const b = adjust_color(ledColor.b);
-//
-//        //// Convert LED color to SDL color
-//        ////SDL_SetRenderDrawColor(renderer, ledColor.r / 25.0f * 255.0f, ledColor.g / 25.0f * 255.0f, ledColor.b / 25.0f * 255.0f, 255);
-//        ////SDL_SetRenderDrawColor(renderer, ledColor.r, ledColor.g, ledColor.b, 255);
-//        //SDL_SetRenderDrawColor(renderer,
-//        //        ledColor.r > 25 ? 230 : static_cast<float>(ledColor.r) / 25.0f * 210.0f,
-//        //        ledColor.g > 25 ? 230 : static_cast<float>(ledColor.g) / 25.0f * 210.0f,
-//        //        ledColor.b > 25 ? 230 : static_cast<float>(ledColor.b) / 25.0f * 210.0f, 255);
-//
-//        // Calculate screen coordinates for the LED
-//        float ledScreenX = screenX + rotatedLedOffsets[i].x * 2.0;
-//        float ledScreenY = screenY + rotatedLedOffsets[i].y * 2.0;
-//
-//        // Draw LED as a small circle
-//        auto const led_pos = visualization_position(ledScreenX, ledScreenY);
-//        if (i == 0) {
-//            //SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius - 2);
-//            filledCircleRGBA(renderer, led_pos.x, led_pos.y, (radius - 2) * mm_to_pixels, r, g, b, 255);
-//        } else {
-//            //SDL_RenderDrawCircle(renderer, static_cast<int>(ledScreenX), static_cast<int>(ledScreenY), radius / 2.5);
-//            filledCircleRGBA(renderer, led_pos.x, led_pos.y, (radius / 2.5) * mm_to_pixels, r, g, b, 255);
-//        }
-//    }
-//}
-
 
 void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId, bool show_comm, bool show_lateral_leds) const {
     // Get robot's position in the physics world
@@ -393,10 +299,20 @@ void Robot::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId, b
 
     // Draw communication channels if needed
     if (show_comm) {
-        for (Robot* robot : neighbors) {
-            b2Vec2 const r_pos = robot->get_position();
-            auto const r_circle_pos = visualization_position(r_pos.x * VISUALIZATION_SCALE, r_pos.y * VISUALIZATION_SCALE);
-            thickLineRGBA(renderer, circle_pos.x, circle_pos.y, r_circle_pos.x, r_circle_pos.y, 4, 0, 150, 0, 150);
+        for (int i = 0; i < IR_RX_COUNT; i++ ) {
+            // Find IR emitter position
+            //b2Vec2 ir_position = get_IR_emitter_position((ir_direction)i, 1.f / VISUALIZATION_SCALE);
+            b2Vec2 ir_position = get_position();
+            auto const ir_pos = visualization_position(ir_position.x * VISUALIZATION_SCALE, ir_position.y * VISUALIZATION_SCALE);
+            // Get color from colormap
+            uint8_t r, g, b;
+            qualitative_colormap(i, &r, &g, &b);
+            // Draw communication channels
+            for (Robot* robot : neighbors[i]) {
+                b2Vec2 const r_pos = robot->get_position();
+                auto const r_circle_pos = visualization_position(r_pos.x * VISUALIZATION_SCALE, r_pos.y * VISUALIZATION_SCALE);
+                thickLineRGBA(renderer, ir_pos.x, ir_pos.y, r_circle_pos.x, r_circle_pos.y, 4, r, g, b, 150);
+            }
         }
     }
 }
@@ -478,13 +394,36 @@ b2Vec2 Robot::get_position() const {
     return b2Body_GetPosition(bodyId);
 }
 
+b2Vec2 Robot::get_IR_emitter_position(ir_direction dir) const {
+    b2Vec2 pos = b2Body_GetPosition(bodyId);
+
+    // Get the robot's orientation as a rotation (cosine/sine pair)
+    b2Rot rotation = b2Body_GetRotation(bodyId);
+    float cosAngle = rotation.c;
+    float sinAngle = rotation.s;
+
+    std::vector<b2Vec2> irOffsets = {
+        {0, -radius},      // Front (in simulation units)
+        {radius, 0},       // Right
+        {0, radius},       // Back
+        {-radius, 0},      // Left
+        {0, 0}             // Middle
+    };
+
+    // Rotate IR offset based on robot orientation
+    auto const& offset = irOffsets[dir];
+    pos.x += cosAngle * offset.x / VISUALIZATION_SCALE - sinAngle * offset.y / VISUALIZATION_SCALE;
+    pos.y += sinAngle * offset.x / VISUALIZATION_SCALE + cosAngle * offset.y / VISUALIZATION_SCALE;
+    return pos;
+}
+
 float Robot::get_angle() const {
     b2Rot const rotation = b2Body_GetRotation(bodyId);
     return std::atan2(rotation.s, rotation.c);
 }
 
 
-void Robot::send_to_neighbors(short_message_t *const message) {
+void Robot::send_to_neighbors(ir_direction dir, short_message_t *const message) {
     // Reconstruct a long message from the short message
     message_t m;
     m.header._packet_type = message->header._packet_type;
@@ -495,19 +434,19 @@ void Robot::send_to_neighbors(short_message_t *const message) {
     m.header.payload_length = message->header.payload_length;
     memcpy( m.payload, message->payload, m.header.payload_length);
 
-    send_to_neighbors(&m);
+    send_to_neighbors(dir, &m);
 }
 
-void Robot::send_to_neighbors(message_t *const message) {
+void Robot::send_to_neighbors(ir_direction dir, message_t *const message) {
     // Define a uniform real distribution between 0.0 and 1.0
     std::uniform_real_distribution<float> dis(0.0f, 1.0f);
 
     double const payload_size = static_cast<double>(message->header.payload_length); 
     double const msg_size = payload_size + (message->header._packet_type == ir_t_short ? sizeof(message_short_header_t) : sizeof(message_header_t));
     double const p_send = static_cast<double>(percent_msgs_sent_per_ticks) / 100.0;
-    double const cluster_size = static_cast<double>(neighbors.size() + 1);
+    double const cluster_size = static_cast<double>(neighbors[dir].size() + 1);
 
-    for (Robot* robot : neighbors) {
+    for (Robot* robot : neighbors[dir]) {
         float const prob = dis(rnd_gen);
         //glogger->debug("MESSAGE !! with prob {} / {}: {} -> {}", prob, msg_success_rate, message->header._sender_id, robot->id);
         if (prob <= (*msg_success_rate)(msg_size, p_send, cluster_size) && robot->messages.size() < 100) {

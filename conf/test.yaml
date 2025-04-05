@@ -20,7 +20,7 @@ seed: 0
 nBots: 150
 initial_robot_formation: random
 robot_radius: 26.5      # In mm
-commRadius: 133.0       # In mm, from center of a focal robot to the center of a neighboring robot
+commRadius: 80.0       # In mm, from border of a focal robot to the border of a neighboring robot
 showComms: false
 show_lateral_LEDs: true
 GUI: true

@@ -84,6 +84,8 @@ void pogobot_init(void);
         ( ( back ) << ( 2 * pogobot_infrared_emitter_width_bits ) ) |          \
         ( ( left ) << ( 3 * pogobot_infrared_emitter_width_bits ) )
 
+#define get_infrared_emitter_dir(dir, emitting_power_list) (((emitting_power_list) >> ((pogobot_infrared_emitter_width_bits) * (dir))) & 0x03)
+
 enum
 {
     pogobot_infrared_emitting_power_list_front_full =

@@ -285,6 +285,15 @@ public:
     b2Vec2 get_position() const;
 
     /**
+     * @brief Retrieves the IR emitters current positions
+     *
+     * Returns the position of one of the robot's IR emitter as a Box2D vector.
+     *
+     * @return b2Vec2 The current position.
+     */
+    b2Vec2 get_IR_emitter_position(ir_direction dir) const;
+
+    /**
      * @brief Retrieves the robot's current orientation angle.
      *
      * Computes and returns the orientation angle (in radians) of the robot's body.
@@ -297,7 +306,7 @@ public:
     std::vector<color_t> leds = std::vector<color_t>(5, {0, 0, 0}); ///< LED colors for the robot.
 
     // Neighbors and messaging
-    std::vector<Robot*> neighbors;  ///< Pointers to neighboring robots.
+    std::vector<std::vector<Robot*>> neighbors{ir_all+1};  ///< Pointers to neighboring robots.
     std::queue<message_t> messages; ///< Queue of incoming messages.
 
     /**
@@ -305,9 +314,10 @@ public:
      *
      * Converts a short message to a full message and forwards it to all neighboring robots.
      *
+     * @param dir Direction in which the message is sent (i.e. the number of the IR emitter)
      * @param message Pointer to the short_message_t to send.
      */
-    void send_to_neighbors(short_message_t *const message);
+    void send_to_neighbors(ir_direction dir, short_message_t *const message);
 
     /**
      * @brief Sends a message to neighboring robots.
@@ -315,9 +325,10 @@ public:
      * Iterates over neighboring robots and, based on a random probability and the message success rate,
      * enqueues the message in each neighbor's message queue.
      *
+     * @param dir Direction in which the message is sent (i.e. the number of the IR emitter)
      * @param message Pointer to the message_t to send.
      */
-    void send_to_neighbors(message_t *const message);
+    void send_to_neighbors(ir_direction dir, message_t *const message);
 
 
     /**

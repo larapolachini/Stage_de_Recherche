@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Structure representing a color with red, green, and blue components.
  */
@@ -49,6 +53,10 @@ void qualitative_colormap(uint8_t const value, uint8_t *r, uint8_t *g, uint8_t *
  * @param b Pointer to a uint8_t variable where the blue component of the computed color will be stored.
  */
 void rainbow_colormap(uint8_t const value, uint8_t *r, uint8_t *g, uint8_t *b);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // COLORMAPS_H
 
