@@ -18,7 +18,7 @@ frames_name: "frames/f{:010.4f}.png"
 
 seed: 0
 nBots: 30
-initial_robot_formation: random # disk
+initial_robot_formation: random # Can be "random" (all robots are placed randomly in the arena), or "disk" (robots are placed uniformly in a disk shape at the center of the arena)
 robot_radius: 26.5      # In mm
 commRadius: 80.0        # In mm, from border of a focal robot to the border of a neighboring robot
 showComms: false

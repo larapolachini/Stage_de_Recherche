@@ -103,7 +103,7 @@ void Simulation::create_membranes() {
 
 
 void Simulation::create_arena() {
-    std::string const csv_file = resolve_path(config.get("arena_file", "test.csv"));
+    std::string const csv_file = resolve_path(config["arena_file"].get(std::string("test.csv")));
 
     float const friction = 0.05f;
     float const restitution = 1.8f; // Bounciness
@@ -244,23 +244,23 @@ void Simulation::init_box2d() {
 void Simulation::init_config() {
     glogger->info("Welcome to the Pogosim simulator, version {}", POGOSIM_VERSION);
 
-    window_width = std::stoi(config.get("window_width", "800"));
-    window_height = std::stoi(config.get("window_height", "800"));
+    window_width = config["window_width"].get(800);
+    window_height = config["window_height"].get(800);
 
-    arena_surface = std::stof(config.get("arena_surface", "1e6"));
+    arena_surface = config["arena_surface"].get(1e6f);
 
     mm_to_pixels = 0.0f;
-    adjust_mm_to_pixels(std::stof(config.get("mm_to_pixels", "1.0")));
-    robot_radius = std::stof(config.get("robot_radius", "10.0"));
-    comm_radius = std::stof(config.get("commRadius", "90"));
-    show_comm = string_to_bool(config.get("showComms", "false"));
-    show_lateral_leds = string_to_bool(config.get("show_lateral_LEDs", "true"));
+    adjust_mm_to_pixels(config["mm_to_pixels"].get(1.0f));
+    robot_radius = config["robot_radius"].get(10.0f);
+    comm_radius = config["commRadius"].get(90);
+    show_comm = config["showComms"].get(false);
+    show_lateral_leds = config["show_lateral_LEDs"].get(true);
 
-    enable_gui = string_to_bool(config.get("GUI", "true"));
-    GUI_speed_up = std::stof(config.get("GUI_speed_up", "1.0"));
-    current_light_value = std::stoi(config.get("initial_light_value", "32767"));
-    photo_start_at = std::stof(config.get("photo_start_at", "1.0"));
-    photo_start_duration = std::stof(config.get("photo_start_duration", "1.0"));
+    enable_gui = config["GUI"].get(true);
+    GUI_speed_up = config["GUI_speed_up"].get(1.0f);
+    current_light_value = config["initial_light_value"].get(32767);
+    photo_start_at = config["photo_start_at"].get(1.0f);
+    photo_start_duration = config["photo_start_duration"].get(1.0f);
 
     std::srand(std::time(nullptr));
 }
@@ -311,9 +311,9 @@ void Simulation::init_SDL() {
 
 
 void Simulation::create_robots() {
-    std::string const initial_robot_formation = to_lowercase(config.get("initial_robot_formation", "random"));
-    uint32_t const nb_robots = std::stoi(config.get("nBots", "100"));
-    float const msg_success_rate_val = std::stof(config.get("msgSuccessRate", "0.50"));
+    std::string const initial_robot_formation = to_lowercase(config["initial_robot_formation"].get(std::string("random")));
+    uint32_t const nb_robots = config["nBots"].get(100);
+    float const msg_success_rate_val = config["msgSuccessRate"].get(0.50f);
     glogger->info("Creating {} robots", nb_robots);
     if (!nb_robots)
         throw std::runtime_error("Number of robots is 0 (nBot=0 in configuration).");
@@ -333,25 +333,25 @@ void Simulation::create_robots() {
     }
 
     // Retrieve locomotion configuration
-    float const robot_linear_damping = std::stof(config.get("robot_linear_damping", "0.0"));
-    float const robot_angular_damping = std::stof(config.get("robot_angular_damping", "0.0"));
-    float const robot_density = std::stof(config.get("robot_density", "10.0"));
-    float const robot_friction = std::stof(config.get("robot_friction", "0.3"));
-    float const robot_restitution = std::stof(config.get("robot_restitution", "0.5"));
-    float const robot_collision_radius = std::stof(config.get("robot_collision_radius", "0.0"));
-    float const robot_linear_noise_stddev = std::stof(config.get("robot_linear_noise_stddev", "0.0"));
-    float const robot_angular_noise_stddev = std::stof(config.get("robot_angular_noise_stddev", "0.0"));
-    float const temporal_noise_stddev = std::stof(config.get("temporal_noise_stddev", "0.0"));
+    float const robot_linear_damping = config["robot_linear_damping"].get(0.0f);
+    float const robot_angular_damping = config["robot_angular_damping"].get(0.0f);
+    float const robot_density = config["robot_density"].get(10.0f);
+    float const robot_friction = config["robot_friction"].get(0.3f);
+    float const robot_restitution = config["robot_restitution"].get(0.5f);
+    float const robot_collision_radius = config["robot_collision_radius"].get(0.0f);
+    float const robot_linear_noise_stddev = config["robot_linear_noise_stddev"].get(0.0f);
+    float const robot_angular_noise_stddev = config["robot_angular_noise_stddev"].get(0.0f);
+    float const temporal_noise_stddev = config["temporal_noise_stddev"].get(0.0f);
 
     // Retrieve msg_success_rate configuration
-    float const dynamic_msg_success_rate__enable = string_to_bool(config.get("dynamic_msg_success_rate.enable", "false"));
-    float const dynamic_msg_success_rate__alpha  = std::stof(config.get("dynamic_msg_success_rate.alpha", "0.000004"));
-    float const dynamic_msg_success_rate__beta   = std::stof(config.get("dynamic_msg_success_rate.beta",  "2.8096"));
-    float const dynamic_msg_success_rate__gamma  = std::stof(config.get("dynamic_msg_success_rate.gamma", "2.3807"));
-    float const dynamic_msg_success_rate__delta  = std::stof(config.get("dynamic_msg_success_rate.delta", "1.2457"));
+    float const dynamic_msg_success_rate__enable = config["dynamic_msg_success_rate"]["enable"].get(false);
+    float const dynamic_msg_success_rate__alpha  = config["dynamic_msg_success_rate"]["alpha"].get(0.000004f);
+    float const dynamic_msg_success_rate__beta   = config["dynamic_msg_success_rate"]["beta"].get(2.8096f);
+    float const dynamic_msg_success_rate__gamma  = config["dynamic_msg_success_rate"]["gamma"].get(2.3807f);
+    float const dynamic_msg_success_rate__delta  = config["dynamic_msg_success_rate"]["delta"].get(1.2457f);
 
     // Set robot collision shape
-    std::string const robot_collision_shape_str = to_lowercase(config.get("robot_collision_shape", "Circle"));
+    std::string const robot_collision_shape_str = to_lowercase(config["robot_collision_shape"].get(std::string("circle")));
     ShapeType robot_collision_shape;
     if (robot_collision_shape_str == "circle") {
         robot_collision_shape = ShapeType::Circle;
@@ -499,7 +499,7 @@ void Simulation::handle_SDL_events() {
                     visualization_x = 0.0f;
                     visualization_y = 0.0f;
                     mm_to_pixels = 0.0f;
-                    adjust_mm_to_pixels(std::stof(config.get("mm_to_pixels", "1.0")));
+                    adjust_mm_to_pixels(config["mm_to_pixels"].get(1.0f));
                     break;
             }
 
@@ -565,10 +565,10 @@ void Simulation::init_callbacks() {
 }
 
 void Simulation::init_data_logger() {
-    enable_data_logging = string_to_bool(config.get("enable_data_logging", "true"));
+    enable_data_logging = config["enable_data_logging"].get(true);
     if (!enable_data_logging)
         return;
-    std::string data_filename = config.get("data_filename", "data.feather");
+    std::string data_filename = config["data_filename"].get(std::string("data.feather"));
     if (data_filename.size() == 0) {
         throw std::runtime_error("'enable_data_logging' is set to true, but 'data_filename' is empty.");
     }
@@ -594,10 +594,10 @@ void Simulation::init_data_logger() {
 }
 
 void Simulation::init_console_logger() {
-    bool const enable_console_logging = string_to_bool(config.get("enable_console_logging", "false"));
+    bool const enable_console_logging = config["enable_console_logging"].get(false);
     if (!enable_console_logging)
         return;
-    std::string const console_filename = config.get("console_filename", "console.txt");
+    std::string const console_filename = config["console_filename"].get(std::string("console.txt"));
     if (console_filename.size() == 0) {
         throw std::runtime_error("'enable_console_logging' is set to true, but 'console_filename' is empty.");
     }
@@ -661,10 +661,10 @@ void Simulation::render_all() {
 
 void Simulation::export_frames() {
     // If wanted, export to PNG
-    float const save_video_period = std::stof(config.get("save_video_period", "-1.0"));
-    std::string const frames_name = config.get("frames_name", "frames/f{:010.4f}.png");
+    float const save_video_period = config["save_video_period"].get(-1.0f);
+    std::string const frames_name = config["frames_name"].get(std::string("frames/f{:010.4f}.png"));
     if (save_video_period > 0.0 && frames_name.size()) {
-        //float const time_step_duration = std::stof(config.get("timeStep", "0.01667"));
+        //float const time_step_duration = config["timeStep"].get(0.01667f);
         if (t >= last_frame_saved_t + save_video_period) {
             last_frame_saved_t = t;
             std::string formatted_filename = std::vformat(frames_name, std::make_format_args(t));
@@ -696,7 +696,7 @@ void Simulation::photo_start() {
     if (photo_start_at >= 0 && t >= photo_start_at && t < photo_start_at + photo_start_duration) {
         current_light_value = 0;
     } else {
-        current_light_value = std::stoi(config.get("initial_light_value", "32767"));
+        current_light_value = config["initial_light_value"].get(32767);
     }
 }
 
@@ -705,18 +705,18 @@ void Simulation::main_loop() {
     // Delete old data, if needed
     delete_old_data();
 
-    bool const progress_bar = string_to_bool(config.get("progress_bar", "false"));
-    double const simulation_time = std::stof(config.get("simulationTime", "100.0"));
+    bool const progress_bar = config["progress_bar"].get(false);
+    double const simulation_time = config["simulationTime"].get(100.0f);
     glogger->info("Launching the main simulation loop.");
 
     // Print an help message with the GUI keyboard shortcuts
     if (enable_gui)
         help_message();
 
-    double const save_data_period = std::stof(config.get("save_data_period", "1.0"));
-    double const save_video_period = std::stof(config.get("save_video_period", "-1.0"));
-    double time_step_duration = std::stof(config.get("timeStep", "0.01"));
-    //double const GUI_time_step_duration = std::stof(config.get("GUItimeStep", "0.01667"));
+    double const save_data_period = config["save_data_period"].get(1.0f);
+    double const save_video_period = config["save_video_period"].get(-1.0f);
+    double time_step_duration = config["timeStep"].get(0.01f);
+    //double const GUI_time_step_duration = config["GUItimeStep"].get(0.01667f);
     double GUI_frame_period;
 
     //sim_starting_time = std::chrono::system_clock::now();
@@ -819,9 +819,9 @@ void Simulation::main_loop() {
 }
 
 void Simulation::delete_old_data() {
-    bool const delete_old_files = string_to_bool(config.get("delete_old_files", "false"));
+    bool const delete_old_files = config["delete_old_files"].get(false);
     if (delete_old_files) {
-        std::string const frames_name = config.get("frames_name", "frames/f{:06.4f}.png");
+        std::string const frames_name = config["frames_name"].get(std::string("frames/f{:06.4f}.png"));
         std::filesystem::path filePath(frames_name);
         std::filesystem::path directory = filePath.parent_path();
         glogger->info("Deleting old data files in directory: {}", directory.string());

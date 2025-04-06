@@ -3,70 +3,119 @@
 
 #include "pogosim.h"
 
+#include <yaml-cpp/yaml.h>
+#include <string>
+#include <stdexcept>
+#include <sstream>
+#include <vector>
+#include <utility>
+
 /**
- * @brief Class for managing configuration parameters.
+ * @brief Class for managing hierarchical configuration parameters.
  *
- * The Configuration class provides methods to load configuration parameters from a YAML file,
- * access individual configuration values, modify configurations, and generate a summary of all parameters.
+ * The Configuration class wraps a YAML::Node, preserving the nested structure of the configuration.
+ * It provides direct access to sub-parts of the configuration via the [] operator and allows iteration
+ * over sub-entries.
  */
 class Configuration {
-private:
-    /// Internal storage for configuration key-value pairs.
-    std::unordered_map<std::string, std::string> config_map;
 public:
+    /// Default constructor creates an empty configuration.
+    Configuration();
+
+    /// Construct Configuration from an existing YAML::Node.
+    Configuration(const YAML::Node &node);
+
     /**
      * @brief Loads configuration parameters from a YAML file.
      *
-     * Reads the YAML file specified by @a file_name and populates the internal configuration map
-     * with key-value pairs. If an error occurs during file reading or parsing, a std::runtime_error is thrown.
-     *
      * @param file_name The path to the YAML configuration file.
-     *
      * @throws std::runtime_error if the YAML file cannot be read or parsed.
      */
     void load(const std::string& file_name);
 
     /**
-     * @brief Retrieves the configuration value for a given key.
+     * @brief Access a sub-configuration.
      *
-     * Returns the value associated with the specified @a key. If the key is not present, the provided
-     * @a default_value is returned.
+     * Returns a Configuration object wrapping the sub-node corresponding to the provided key.
      *
-     * @param key The configuration key to look up.
-     * @param default_value The value to return if the key is not found. Defaults to an empty string.
-     * @return std::string The value corresponding to the key, or @a default_value if not found.
+     * @param key The key for the sub-configuration.
+     * @return Configuration The sub-configuration.
      */
-    std::string get(const std::string& key, const std::string& default_value = "") const;
+    Configuration operator[](const std::string& key) const;
 
     /**
-     * @brief Sets a configuration parameter.
+     * @brief Retrieves the configuration value cast to type T.
      *
-     * Assigns the specified @a value to the given configuration @a key.
+     * If the current node is defined, attempts to cast it to type T; otherwise returns default_value.
      *
-     * @param key The configuration key.
-     * @param value The value to associate with the key.
+     * @tparam T The expected type.
+     * @param default_value The default value to return if the node is not defined or conversion fails.
+     * @return T The value of the node cast to type T.
      */
-    void set(std::string const& key, std::string const& value);
+    template<typename T>
+    T get(const T& default_value = T()) const;
 
     /**
-     * @brief Checks if a configuration key exists.
+     * @brief Sets the configuration entry for the given key.
      *
-     * Determines whether the internal configuration map contains the specified @a key.
+     * If the current node is not a map, it is converted to one.
      *
-     * @param key The configuration key to check.
-     * @return true if the key exists; false otherwise.
+     * @tparam T The type of the value.
+     * @param key The key where the value should be set.
+     * @param value The value to set.
      */
-    bool contains(const std::string& key) const;
+    template<typename T>
+    void set(const std::string& key, const T& value);
 
     /**
-     * @brief Generates a summary of all configuration parameters.
+     * @brief Checks if the current node is defined.
      *
-     * Creates a human-readable string listing all key-value pairs stored in the configuration.
+     * @return true if the node exists and is valid; false otherwise.
+     */
+    bool exists() const;
+
+    /**
+     * @brief Provides a summary of the configuration.
      *
-     * @return std::string A summary of the configuration parameters.
+     * @return A string representation of the configuration.
      */
     std::string summary() const;
+
+    /**
+     * @brief Returns the children (sub-entries) of the current node.
+     *
+     * If the current node is a map or sequence, returns a vector of pairs where each pair consists of
+     * the key (or index as a string) and the corresponding Configuration.
+     * If the node is not a container, returns an empty vector.
+     *
+     * @return std::vector<std::pair<std::string, Configuration>> Vector of key/Configuration pairs.
+     */
+    std::vector<std::pair<std::string, Configuration>> children() const;
+
+private:
+    YAML::Node node_;
 };
+
+
+template<typename T>
+T Configuration::get(const T& default_value) const {
+    try {
+        if (node_)
+            return node_.as<T>();
+    } catch (const YAML::Exception&) {
+        // Fall through to return default value.
+    }
+    return default_value;
+}
+
+template<typename T>
+void Configuration::set(const std::string& key, const T& value) {
+    // Ensure the current node is a map; if not, convert it to one.
+    if (!node_ || !node_.IsMap()) {
+        node_ = YAML::Node(YAML::NodeType::Map);
+    }
+    node_[key] = value;
+}
 
 
 #endif // CONFIGURATION_H
