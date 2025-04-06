@@ -48,9 +48,8 @@ cd pogosim
 ./build.sh 
 ```
 
-## Install on MacOSX (experimental)
+## Install on MacOSX
 The installation requires brew to be installed on your computer, cf brew documentation [here](https://brew.sh/).
-*NOTE*: This support is *experimental*. Please contact us if you find any bugs. 
 
 You can then install the necessary packages to compile Pogosim:
 ```shell
