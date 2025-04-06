@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - dev
   pull_request:
     branches:
       - main
+      - dev
 
 jobs:
 #  documentation:
@@ -37,9 +39,9 @@ jobs:
   build-and-test:
     strategy:
       matrix:
-        #os: [ubuntu-latest, macos-latest, windows-latest]  # Test on multiple OS
+        os: [ubuntu-latest, macos-latest, windows-latest]  # Test on multiple OS
         #os: [ubuntu-latest, macos-latest]  # Test on multiple OS
-        os: [ubuntu-latest]  # Test on multiple OS
+        #os: [ubuntu-latest]  # Test on multiple OS
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -77,7 +79,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           brew update
-          brew install cmake boost sdl2 sdl2_image sdl2_gfx sdl2_ttf yaml-cpp spdlog apache-arrow pkg-config
+          brew install cmake boost sdl2 sdl2_image sdl2_gfx sdl2_ttf yaml-cpp spdlog apache-arrow pkg-config fmt
 
           # Install Box2D
           git clone https://github.com/erincatto/box2d.git
@@ -94,7 +96,7 @@ jobs:
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          choco install cmake git boost sdl2 sdl2_image sdl2_ttf yaml-cpp spdlog -y
+          choco install cmake git boost sdl2 sdl2_image sdl2_ttf yaml-cpp spdlog apache-arrow fmt -y
 
           # Install Box2D
           git clone https://github.com/erincatto/box2d.git
