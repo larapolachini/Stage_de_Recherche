@@ -1,7 +1,10 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include <sstream>
+#include <iomanip>
 
+#include <fmt/format.h>
 #include <yaml-cpp/yaml.h>
 #include <unordered_map>
 #include <spdlog/spdlog.h>
@@ -625,7 +628,7 @@ void Simulation::draw_scale_bar() {
     thickLineRGBA(renderer, x1, y1, x2, y2, 4, 0, 0, 0, 255);
 
     // Render the scale
-    std::string formatted_scale = std::vformat("{:.0f} mm", std::make_format_args(mm_scale));
+    std::string formatted_scale = fmt::format("{:.0f} mm", mm_scale);
     FC_Draw(font, renderer, x1, y1 + 5, "%s", formatted_scale.c_str()); 
 }
 
@@ -652,7 +655,7 @@ void Simulation::render_all() {
     SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 
     // Render the current time
-    std::string formatted_time = std::vformat("{:.4f}s", std::make_format_args(t));
+    std::string formatted_time  = fmt::format("{:.4f}s", t);
     FC_Draw(font, renderer, windowWidth - 120, 10, "t=%s", formatted_time.c_str()); 
 
     // Render the scale bar
@@ -667,7 +670,7 @@ void Simulation::export_frames() {
         //float const time_step_duration = config["timeStep"].get(0.01667f);
         if (t >= last_frame_saved_t + save_video_period) {
             last_frame_saved_t = t;
-            std::string formatted_filename = std::vformat(frames_name, std::make_format_args(t));
+            std::string formatted_filename = fmt::format(fmt::runtime(frames_name), t);
             save_window_to_png(renderer, window, formatted_filename);
         }
     }

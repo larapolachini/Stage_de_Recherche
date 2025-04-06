@@ -19,7 +19,7 @@ First, install the necessary packages:
 sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     build-essential cmake git libboost-system-dev \
     libsdl2-dev libsdl2-image-dev libsdl2-gfx-dev libsdl2-ttf-dev \
-    libyaml-cpp-dev libspdlog-dev \
+    libyaml-cpp-dev libspdlog-dev libfmt-dev \
     wget unzip ca-certificates lsb-release
 
 # Install Apache Arrow
@@ -54,7 +54,7 @@ The installation requires brew to be installed on your computer, cf brew documen
 
 You can then install the necessary packages to compile Pogosim:
 ```shell
-brew install cmake boost sdl2 sdl2_image sdl2_gfx sdl2_ttf yaml-cpp spdlog apache-arrow pkg-config
+brew install cmake boost sdl2 sdl2_image sdl2_gfx sdl2_ttf yaml-cpp spdlog apache-arrow pkg-config fmt
 ```
 
 Then compile and install Box2D 3.0:

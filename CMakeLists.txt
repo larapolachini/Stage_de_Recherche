@@ -19,6 +19,7 @@ find_package(SDL2_ttf REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Arrow REQUIRED)
+find_package(fmt REQUIRED)
 
 
 # Collect source files
@@ -78,6 +79,7 @@ target_link_libraries(${PROJECT_NAME}
         #        Box2D::Box2D
         yaml-cpp
         spdlog::spdlog
+        fmt::fmt
 )
 
 # Set compile options
