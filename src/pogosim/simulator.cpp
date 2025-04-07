@@ -255,8 +255,8 @@ void Simulation::init_config() {
     mm_to_pixels = 0.0f;
     adjust_mm_to_pixels(config["mm_to_pixels"].get(1.0f));
     robot_radius = config["robot_radius"].get(10.0f);
-    comm_radius = config["commRadius"].get(90);
-    show_comm = config["showComms"].get(false);
+    comm_radius = config["communication_radius"].get(90);
+    show_comm = config["show_communication_channels"].get(false);
     show_lateral_leds = config["show_lateral_LEDs"].get(true);
 
     enable_gui = config["GUI"].get(true);
@@ -316,7 +316,7 @@ void Simulation::init_SDL() {
 void Simulation::create_robots() {
     std::string const initial_robot_formation = to_lowercase(config["initial_robot_formation"].get(std::string("random")));
     uint32_t const nb_robots = config["nBots"].get(100);
-    float const msg_success_rate_val = config["msgSuccessRate"].get(0.50f);
+    float const msg_success_rate_val = config["msg_success_rate"].get(0.50f);
     glogger->info("Creating {} robots", nb_robots);
     if (!nb_robots)
         throw std::runtime_error("Number of robots is 0 (nBot=0 in configuration).");
@@ -667,7 +667,7 @@ void Simulation::export_frames() {
     float const save_video_period = config["save_video_period"].get(-1.0f);
     std::string const frames_name = config["frames_name"].get(std::string("frames/f{:010.4f}.png"));
     if (save_video_period > 0.0 && frames_name.size()) {
-        //float const time_step_duration = config["timeStep"].get(0.01667f);
+        //float const time_step_duration = config["time_step"].get(0.01667f);
         if (t >= last_frame_saved_t + save_video_period) {
             last_frame_saved_t = t;
             std::string formatted_filename = fmt::format(fmt::runtime(frames_name), t);
@@ -709,7 +709,7 @@ void Simulation::main_loop() {
     delete_old_data();
 
     bool const progress_bar = config["progress_bar"].get(false);
-    double const simulation_time = config["simulationTime"].get(100.0f);
+    double const simulation_time = config["simulation_time"].get(100.0f);
     glogger->info("Launching the main simulation loop.");
 
     // Print an help message with the GUI keyboard shortcuts
@@ -718,8 +718,7 @@ void Simulation::main_loop() {
 
     double const save_data_period = config["save_data_period"].get(1.0f);
     double const save_video_period = config["save_video_period"].get(-1.0f);
-    double time_step_duration = config["timeStep"].get(0.01f);
-    //double const GUI_time_step_duration = config["GUItimeStep"].get(0.01667f);
+    double time_step_duration = config["time_step"].get(0.01f);
     double GUI_frame_period;
 
     //sim_starting_time = std::chrono::system_clock::now();
