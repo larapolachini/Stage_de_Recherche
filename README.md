@@ -48,6 +48,16 @@ cd pogosim
 ./build.sh 
 ```
 
+
+## Install on WSL
+Just follow the previous section to install on Ubuntu 24.04+ using WSL.
+If the simulator is really slow, it may be due to a bug with SDL2 on WSL, as explained [here](https://github.com/libsdl-org/SDL/issues/6333#issuecomment-1293872149) and [here]( https://github.com/lem-project/lem/issues/1332). If this is the case, just add:
+```shell
+export SDL_RENDER_DRIVER=software
+```
+before launching the simulator.
+
+
 ## Install on MacOSX
 The installation requires brew to be installed on your computer, cf brew documentation [here](https://brew.sh/).
 
