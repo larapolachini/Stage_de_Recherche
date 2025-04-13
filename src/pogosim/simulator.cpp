@@ -97,11 +97,33 @@ void Simulation::init_all() {
     //create_walls();
     create_arena();
     create_robots();
-    create_membranes();
+    create_objects();
 }
 
-// TODO
-void Simulation::create_membranes() {
+void Simulation::create_objects() {
+    uint16_t current_id = 0;
+
+    // TODO
+    LightLevelMap* light_map = nullptr;
+
+    // Parse the configuration, and create objects as needed
+    for (const auto& [name, obj_config] : config["objects"].children()) {
+        // Find number of objects of this category
+        size_t nb = obj_config["nb"].get(1);
+
+        // XXX
+        // Generate random coordinates for all objects of this category
+        std::vector<b2Vec2> points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * 50.0, nb); // XXX
+
+        // Generate all objects of this category
+        std::vector<std::unique_ptr<Object>> obj_vec;
+        for (size_t i = 0; i < nb; ++i) {
+            auto const point = points[i];
+            obj_vec.emplace_back(object_factory(current_id, point.x, point.y, worldId, obj_config, light_map));
+            current_id++;
+        }
+        objects[name] = std::move(obj_vec);
+    }
 }
 
 
@@ -645,10 +667,17 @@ void Simulation::render_all() {
     }
     //membrane.render(renderer, worldId);
 
+    // Render objects
     for (auto const& robot : robots) {
         robot.render(renderer, worldId, show_comm, show_lateral_leds);
     }
     //SDL_RenderPresent(renderer);
+
+    for (const auto& [cat_name, obj_vec] : objects) {
+        for (auto const& obj : obj_vec) {
+            obj->render(renderer, worldId);
+        }
+    }
 
     // Get the window size
     int windowWidth, windowHeight;

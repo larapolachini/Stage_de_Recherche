@@ -3,6 +3,7 @@
 
 #include "pogosim.h"
 #include "robot.h"
+#include "objects.h"
 #include "configuration.h"
 #include "data_logger.h"
 #include "SDL_FontCache.h"
@@ -75,6 +76,9 @@ class Simulation {
     std::vector<Robot> membranes;       ///< Vector of membrane robots (if used).
     std::vector<std::vector<b2Vec2>> arena_polygons; ///< Arena polygon definitions.
 
+    // Objects
+    std::map<std::string, std::vector<std::unique_ptr<Object>>> objects;   ///< Dictionary of simulation objects, by category name.
+
     double last_frame_shown_t = -1.0;     ///< Time when the last frame was rendered.
     double last_frame_saved_t = -1.0;     ///< Time when the last frame was saved.
     double last_data_saved_t = -1.0;      ///< Time when the last data export occurred.
@@ -128,11 +132,10 @@ public:
     void create_robots();
 
     /**
-     * @brief Creates membrane robots.
+     * @brief Creates objects in the simulation
      *
-     * (TODO) Currently a placeholder function.
      */
-    void create_membranes();
+    void create_objects();
 
     /**
      * @brief Creates the arena from a CSV file.

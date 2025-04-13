@@ -40,10 +40,10 @@ time_step: 0.01            # In s
 GUI_speed_up: 10.0
 temporal_noise_stddev: 0   # In µs
 
-# Light and photo_start
-initial_light_value: 32767
-photo_start_at: 1.0         # In s
-photo_start_duration: 1.0   # In s
+## Light and photo_start
+#initial_light_value: 32767
+#photo_start_at: 1.0         # In s
+#photo_start_duration: 1.0   # In s
 
 # Locomotion
 robot_linear_damping: 0.3
@@ -55,6 +55,46 @@ robot_collision_shape: circle
 robot_collision_radius: 0.00
 robot_linear_noise_stddev: 0.5
 robot_angular_noise_stddev: 2.0
+
+# TODO WIP
+initial_formation: random
+
+# Objects. TODO WIP
+objects:
+#    global_light:
+#        type: static_light
+#        area: global
+#        value: 0
+#        photo_start_at: 1.0
+#        photo_start_duration: 1.0
+#        photo_start_value: 32767
+#
+#    target_light:
+#        type: static_light
+#        area: position
+#        x: 0
+#        y: 0
+#        radius: 50
+#        value: 32767
+
+    obstacles:
+        type: passive_object
+        geometry: rectangle # disk
+        nb: 3
+        #initial_formation: random
+        colormap: qualitative # rainbow # TODO
+
+        radius: 70
+        body_width: 70
+        body_height: 50
+
+        body_linear_damping: 0.0
+        body_angular_damping: 0.0
+        body_density: 10.1
+        body_friction: 0.3
+        body_restitution: 0.3
+        #body_collision_shape: rectangle
+
 
 ########### Parameters used to directly initialize variables from the C code of the robots ###########
 parameters:

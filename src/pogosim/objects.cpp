@@ -1,0 +1,453 @@
+
+#include "utils.h"
+#include "objects.h"
+
+#include "SDL2_gfxPrimitives.h"
+
+
+/************* ObjectGeometry *************/ // {{{1
+
+ObjectGeometry::~ObjectGeometry() {
+    if (shape_created && b2Shape_IsValid(shape_id))
+        b2DestroyShape(shape_id);
+}
+
+/************* DiskGeometry *************/ // {{{1
+
+void DiskGeometry::create_box2d_shape(b2BodyId body_id, b2ShapeDef& shape_def) {
+    b2Circle circle;
+    circle.center = { 0.0f, 0.0f };
+    circle.radius = radius / VISUALIZATION_SCALE;
+    shape_id = b2CreateCircleShape(body_id, &shape_def, &circle);
+    shape_created = true;
+}
+
+std::vector<std::vector<bool>> DiskGeometry::export_geometry_grid(size_t num_bins_x,
+                                                                  size_t num_bins_y,
+                                                                  float bin_width,
+                                                                  float bin_height,
+                                                                  float obj_x,
+                                                                  float obj_y) const {
+    std::vector<std::vector<bool>> grid(num_bins_y, std::vector<bool>(num_bins_x, false));
+
+    for (size_t j = 0; j < num_bins_y; ++j) {
+        for (size_t i = 0; i < num_bins_x; ++i) {
+            // Determine the center of this bin.
+            float center_x = (i + 0.5f) * bin_width;
+            float center_y = (j + 0.5f) * bin_height;
+            // Calculate squared distance from the bin center to the object center.
+            float dx = center_x - obj_x;
+            float dy = center_y - obj_y;
+            if ((dx * dx + dy * dy) <= (radius * radius)) {
+                grid[j][i] = true;
+            }
+        }
+    }
+    return grid;
+}
+
+
+void DiskGeometry::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId world_id, float x, float y, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) const {
+    filledCircleRGBA(renderer, x, y, radius * mm_to_pixels, r, g, b, alpha);
+}
+
+
+/************* RectangleGeometry *************/ // {{{1
+
+void RectangleGeometry::create_box2d_shape(b2BodyId body_id, b2ShapeDef& shape_def) {
+    float half_width = width / (2.0f * VISUALIZATION_SCALE);
+    float half_height = height / (2.0f * VISUALIZATION_SCALE);
+    b2Polygon polygon = b2MakeBox(half_width, half_height);
+
+    // Create the polygon shape similarly to how the circle was created.
+    shape_id = b2CreatePolygonShape(body_id, &shape_def, &polygon);
+    shape_created = true;
+}
+
+// Export a boolean grid where each cell is marked true if its center lies within the rectangle.
+std::vector<std::vector<bool>> RectangleGeometry::export_geometry_grid(size_t num_bins_x,
+                                                                       size_t num_bins_y,
+                                                                       float bin_width,
+                                                                       float bin_height,
+                                                                       float obj_x,
+                                                                       float obj_y) const {
+    // Initialize a grid with false values.
+    std::vector<std::vector<bool>> grid(num_bins_y, std::vector<bool>(num_bins_x, false));
+
+    // Calculate the rectangle boundaries (assumed centered on (obj_x, obj_y)).
+    float left   = obj_x - width / 2.0f;
+    float right  = obj_x + width / 2.0f;
+    float top    = obj_y - height / 2.0f;
+    float bottom = obj_y + height / 2.0f;
+
+    // Loop over each bin in the grid.
+    for (size_t j = 0; j < num_bins_y; ++j) {
+        for (size_t i = 0; i < num_bins_x; ++i) {
+            // Determine the center of the current bin.
+            float center_x = (i + 0.5f) * bin_width;
+            float center_y = (j + 0.5f) * bin_height;
+            // Check if the bin center is inside the rectangle boundaries.
+            if (center_x >= left && center_x <= right &&
+                center_y >= top  && center_y <= bottom) {
+                grid[j][i] = true;
+            }
+        }
+    }
+
+    return grid;
+}
+
+// The rectangle is drawn as a filled box centered at (x, y) converted to pixels.
+void RectangleGeometry::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId world_id,
+                               float x, float y, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) const {
+    // Calculate the pixel size and position.
+    SDL_Rect rect;
+    rect.w = static_cast<int>(width * mm_to_pixels);
+    rect.h = static_cast<int>(height * mm_to_pixels);
+    // Center the rectangle at (x, y) by offsetting by half its width and height.
+    rect.x = static_cast<int>(x - rect.w / 2);
+    rect.y = static_cast<int>(y - rect.h / 2);
+
+    // Set the drawing color and render the filled rectangle.
+    SDL_SetRenderDrawColor(renderer, r, g, b, alpha);
+    SDL_RenderFillRect(renderer, &rect);
+}
+
+
+/************* GlobalGeometry *************/ // {{{1
+
+std::vector<std::vector<bool>> GlobalGeometry::export_geometry_grid(size_t num_bins_x,
+                                                                    size_t num_bins_y,
+                                                                    float /*bin_width*/,
+                                                                    float /*bin_height*/,
+                                                                    float /*obj_x*/,
+                                                                    float /*obj_y*/) const {
+    return std::vector<std::vector<bool>>(num_bins_y, std::vector<bool>(num_bins_x, true));
+}
+
+
+/************* LightLevelMap *************/ // {{{1
+
+// Constructor: Initialize the grid with all light levels set to 0.
+LightLevelMap::LightLevelMap(size_t num_bins_x, size_t num_bins_y, float bin_width, float bin_height)
+        : num_bins_x_(num_bins_x), num_bins_y_(num_bins_y), bin_width_(bin_width), bin_height_(bin_height) {
+    levels_.resize(num_bins_y_);
+    for (auto &row : levels_) {
+        row.resize(num_bins_x_, 0.0f);
+    }
+}
+
+// Destructor.
+LightLevelMap::~LightLevelMap() {
+    // No special cleanup is necessary here.
+}
+
+// Returns the light level at a specified bin.
+float LightLevelMap::get_light_level(size_t bin_x, size_t bin_y) const {
+    assert(bin_x < num_bins_x_ && bin_y < num_bins_y_);
+    return levels_[bin_y][bin_x];
+}
+
+// Sets the light level at a specified bin.
+void LightLevelMap::set_light_level(size_t bin_x, size_t bin_y, int16_t value) {
+    assert(bin_x < num_bins_x_ && bin_y < num_bins_y_);
+    levels_[bin_y][bin_x] = value;
+}
+
+// Adds a value to the light level at a specified bin.
+void LightLevelMap::add_light_level(size_t bin_x, size_t bin_y, int16_t value) {
+    assert(bin_x < num_bins_x_ && bin_y < num_bins_y_);
+    levels_[bin_y][bin_x] += value;
+}
+
+// Resets all bins to 0.
+void LightLevelMap::clear() {
+    for (auto &row : levels_) {
+        std::fill(row.begin(), row.end(), 0);
+    }
+}
+
+// Accessor for the number of bins along the x-axis.
+size_t LightLevelMap::get_num_bins_x() const {
+    return num_bins_x_;
+}
+
+// Accessor for the number of bins along the y-axis.
+size_t LightLevelMap::get_num_bins_y() const {
+    return num_bins_y_;
+}
+
+// Returns the physical width of a bin.
+float LightLevelMap::get_bin_width() const {
+    return bin_width_;
+}
+
+// Returns the physical height of a bin.
+float LightLevelMap::get_bin_height() const {
+    return bin_height_;
+}
+
+
+/************* OBJECT *************/ // {{{1
+
+Object::Object(uint16_t _id, float _x, float _y, ObjectGeometry& _geom,  float _temporal_noise_stddev)
+        : id(_id), x(_x), y(_y), geom(&_geom), temporal_noise_stddev(_temporal_noise_stddev) {
+    initialize_time();
+}
+
+Object::Object(uint16_t _id, float _x, float _y, Configuration const& config)
+        : id(_id), x(_x), y(_y) {
+    parse_configuration(config);
+    initialize_time();
+}
+
+// XXX : destroy geom ??
+Object::~Object() { }
+
+void Object::launch_user_step() {
+    update_time();
+}
+
+void Object::update_time() {
+    current_time_microseconds += temporal_noise;
+}
+
+void Object::parse_configuration(Configuration const& config) {
+    x = config["x"].get(x);
+    y = config["y"].get(y);
+    temporal_noise_stddev = config["temporal_noise_stddev"].get(0.0f);
+
+    // Initialize geometry
+    geom = object_geometry_factory(config); // XXX never destroyed
+}
+
+void Object::initialize_time() {
+    // Identify the level of temporal noise on this object
+    if (temporal_noise_stddev > 0) {
+        std::uniform_real_distribution<float> dist(0.0f, temporal_noise_stddev);
+        temporal_noise = dist(rnd_gen);
+    }
+}
+
+
+/************* StaticLightObject *************/ // {{{1
+
+// Constructor with a light map pointer.
+StaticLightObject::StaticLightObject(uint16_t _id, float x, float y,
+                                     ObjectGeometry& geom, LightLevelMap* light_map,
+                                     int16_t value, float photo_start_at, float photo_start_duration, int16_t photo_start_value,
+                                     float _temporal_noise_stddev)
+    : Object(_id, x, y, geom, _temporal_noise_stddev),
+      value(value),
+      light_map(light_map),
+      photo_start_at(photo_start_at),
+      photo_start_duration(photo_start_duration),
+      photo_start_value(photo_start_value) {
+    // ...
+}
+
+StaticLightObject::StaticLightObject(uint16_t _id, float _x, float _y,
+        LightLevelMap* light_map, Configuration const& config)
+    : Object(_id, _x, _y, config),
+      light_map(light_map) {
+    parse_configuration(config);
+}
+
+void StaticLightObject::update_light_map() {
+    if (!light_map)
+        return;
+
+    // Retrieve grid parameters from the light map.
+    size_t num_bins_x = light_map->get_num_bins_x();
+    size_t num_bins_y = light_map->get_num_bins_y();
+    float bin_width = light_map->get_bin_width();
+    float bin_height = light_map->get_bin_height();
+
+    // Use the geometry's export method to get a grid indicating where the geometry exists.
+    std::vector<std::vector<bool>> geometry_grid =
+        geom->export_geometry_grid(num_bins_x, num_bins_y, bin_width, bin_height, x, y);
+
+    // Update each bin in the light map that is covered by this object's geometry.
+    for (size_t j = 0; j < num_bins_y; ++j) {
+        for (size_t i = 0; i < num_bins_x; ++i) {
+            if (geometry_grid[j][i]) {
+                light_map->add_light_level(i, j, value);
+            }
+        }
+    }
+}
+
+void StaticLightObject::parse_configuration(Configuration const& config) {
+    Object::parse_configuration(config);
+    value = config["value"].get(10);
+    photo_start_at = config["photo_start_at"].get(1.0f);
+    photo_start_duration = config["photo_start_duration"].get(1.0f);
+    photo_start_value = config["photo_start_value"].get(32767);
+}
+
+
+/************* PhysicalObject *************/ // {{{1
+
+PhysicalObject::PhysicalObject(uint16_t _id, float _x, float _y,
+       ObjectGeometry& geom, b2WorldId world_id,
+       float _temporal_noise_stddev,
+       float _linear_damping, float _angular_damping,
+       float _density, float _friction, float _restitution)
+    : Object(_id, _x, _y, geom, _temporal_noise_stddev),
+      linear_damping(_linear_damping),
+      angular_damping(_angular_damping),
+      density(_density),
+      friction(_friction),
+      restitution(_restitution) {
+    create_body(world_id);
+}
+
+PhysicalObject::PhysicalObject(uint16_t _id, float _x, float _y,
+       b2WorldId world_id, Configuration const& config)
+    : Object(_id, _x, _y, config) {
+    parse_configuration(config);
+    create_body(world_id);
+}
+
+b2Vec2 PhysicalObject::get_position() const {
+    return b2Body_GetPosition(body_id);
+}
+
+float PhysicalObject::get_angle() const {
+    b2Rot const rotation = b2Body_GetRotation(body_id);
+    return std::atan2(rotation.s, rotation.c);
+}
+
+void PhysicalObject::parse_configuration(Configuration const& config) {
+    Object::parse_configuration(config);
+    linear_damping = config["body_linear_damping"].get(0.0f);
+    angular_damping = config["body_angular_damping"].get(0.0f);
+    density = config["body_density"].get(10.0f);
+    friction = config["body_friction"].get(0.3f);
+    restitution = config["body_restitution"].get(0.5f);
+}
+
+void PhysicalObject::create_body(b2WorldId world_id) {
+    // Create the body definition.
+    b2BodyDef bodyDef = b2DefaultBodyDef();
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.position = { x / VISUALIZATION_SCALE, y / VISUALIZATION_SCALE };
+    bodyDef.linearDamping = 1000.0f; // XXX ?
+    bodyDef.angularDamping = 1000.0f; // XXX ?
+    bodyDef.isBullet = false;
+    body_id = b2CreateBody(world_id, &bodyDef);
+
+    // Set up a shape definition with common physical properties.
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    shapeDef.density = density;
+    shapeDef.friction = friction;
+    shapeDef.restitution = restitution;
+    shapeDef.enablePreSolveEvents = true;
+
+    // Create shape
+    geom->create_box2d_shape(body_id, shapeDef);
+
+    // Assign an initial velocity.
+    b2Vec2 velocity = { 1.0f, 1.0f };
+    b2Body_SetLinearVelocity(body_id, velocity);
+}
+
+
+
+/************* PassiveObject *************/ // {{{1
+
+PassiveObject::PassiveObject(uint16_t _id, float _x, float _y,
+       ObjectGeometry& geom, b2WorldId world_id,
+       float _temporal_noise_stddev,
+       float _linear_damping, float _angular_damping,
+       float _density, float _friction, float _restitution,
+       std::string _colormap)
+    : PhysicalObject(_id, _x, _y, geom, world_id,
+      _temporal_noise_stddev, _linear_damping, _angular_damping,
+      _density, _friction, _restitution),
+      colormap(_colormap) {
+    // ...
+}
+
+PassiveObject::PassiveObject(uint16_t _id, float _x, float _y,
+       b2WorldId world_id, Configuration const& config)
+    : PhysicalObject(_id, _x, _y, world_id, config) {
+    parse_configuration(config);
+    // ...
+}
+
+void PassiveObject::render(SDL_Renderer* renderer, b2WorldId world_id) const {
+    // Get object's position in the physics world
+    b2Vec2 body_position = b2Body_GetPosition(body_id);
+
+    // Identify object X and Y coordinates in visualization instance
+    float screen_x = body_position.x * VISUALIZATION_SCALE;
+    float screen_y = body_position.y * VISUALIZATION_SCALE;
+    auto const pos = visualization_position(screen_x, screen_y);
+
+    // Assign color based on object id
+    uint8_t const value = id % 256;
+    uint8_t r, g, b;
+    get_cmap_val(colormap, value, &r, &g, &b);
+
+    // Draw the object main body
+    geom->render(renderer, world_id, pos.x, pos.y, r, g, b, 255);
+}
+
+void PassiveObject::parse_configuration(Configuration const& config) {
+    PhysicalObject::parse_configuration(config);
+    colormap = config["colormap"].get(std::string("rainbow"));
+}
+
+
+
+/************* Factories *************/ // {{{1
+
+
+ObjectGeometry* object_geometry_factory(Configuration const& config) {
+    std::string const geometry_str = to_lowercase(config["geometry"].get(std::string("unknown")));
+    if (geometry_str == "global") {
+        return new GlobalGeometry();
+    } else if (geometry_str == "disk") {
+        float const radius = config["radius"].get(10.0);
+        return new DiskGeometry(radius);
+    } else if (geometry_str == "rectangle") {
+        float const body_width = config["body_width"].get(10.0);
+        float const body_height = config["body_height"].get(10.0);
+        return new RectangleGeometry(body_width, body_height);
+    } else {
+        throw std::runtime_error("Unknown geometry type '" + geometry_str + "'.");
+    }
+}
+
+Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map) {
+    std::string const type = to_lowercase(config["type"].get(std::string("unknown")));
+    Object* res = nullptr;
+
+    if (type == "static_light") {
+        res = new StaticLightObject(id, x, y, light_map, config);
+
+    } else if (type == "passive_object") {
+        res = new PassiveObject(id, x, y, world_id, config);
+
+    } else {
+        throw std::runtime_error("Unknown object type '" + type + "'.");
+    }
+
+    return res;
+}
+
+
+void get_cmap_val(std::string const name, uint8_t const value, uint8_t* r, uint8_t* g, uint8_t* b) {
+    if (name == "rainbow") {
+        rainbow_colormap(value, r, g, b);
+    } else if (name == "qualitative") {
+        qualitative_colormap(value, r, g, b);
+    } else {
+        throw std::runtime_error("Unknown colormap '" + name + "'.");
+    }
+}
+
+// MODELINE "{{{1
+// vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+// vim:foldmethod=marker
