@@ -36,7 +36,7 @@ float euclidean_distance(const b2Vec2& a, const b2Vec2& b);
  *               that can store pointers to neighboring Robot objects.
  * @param maxDistance The maximum distance within which two robots are considered neighbors.
  */
-void find_neighbors(ir_direction dir, std::vector<Robot>& robots, float maxDistance);
+void find_neighbors(ir_direction dir, std::vector<std::shared_ptr<PogobotObject>>& robots, float maxDistance);
 
 #endif // DISTANCES_H
 

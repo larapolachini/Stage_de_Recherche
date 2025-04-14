@@ -9,6 +9,27 @@
 
 
 /**
+ * @brief Represents a disk with center (x, y) and radius.
+ */
+struct BoundingDisk {
+    float center_x;
+    float center_y;
+    float radius;
+};
+
+/**
+ * @brief Represents an axis-aligned bounding box with top-left corner (x, y) and dimensions width and height.
+ */
+struct BoundingBox {
+    float x;
+    float y;
+    float width;
+    float height;
+};
+
+
+
+/**
  * @brief Geometry of an object.
  *
  */
@@ -66,6 +87,20 @@ public:
      * @param alpha Alpha color component
      */
     virtual void render(SDL_Renderer* renderer, b2WorldId world_id, float x, float y, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha = 255) const = 0;
+
+    /**
+     * @brief Computes the bounding disk that completely encloses the geometry.
+     *
+     * @return A BoundingDisk with center (x,y) and radius.
+     */
+    virtual BoundingDisk compute_bounding_disk() const = 0;
+
+    /**
+     * @brief Computes the axis-aligned bounding box that completely encloses the geometry.
+     *
+     * @return A BoundingBox with top-left corner (x,y) and width and height.
+     */
+    virtual BoundingBox compute_bounding_box() const = 0;
 
 protected:
     bool shape_created = false;
@@ -125,6 +160,11 @@ public:
      * @param alpha Alpha color component
      */
     virtual void render(SDL_Renderer* renderer, b2WorldId world_id, float x, float y, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha = 255) const override;
+
+    // New methods for DiskGeometry.
+    virtual BoundingDisk compute_bounding_disk() const override;
+    virtual BoundingBox compute_bounding_box() const override;
+
 
 protected:
     float radius;           ///< Radius of the disk
@@ -187,6 +227,10 @@ public:
      */
     float get_height() const { return height; }
 
+    // New methods for RectangleGeometry.
+    virtual BoundingDisk compute_bounding_disk() const override;
+    virtual BoundingBox compute_bounding_box() const override;
+
 protected:
     float width;   ///< Width of the rectangle.
     float height;  ///< Height of the rectangle.
@@ -240,6 +284,10 @@ public:
      * @param alpha Alpha color component
      */
     virtual void render(SDL_Renderer*, b2WorldId, float, float, uint8_t, uint8_t, uint8_t, uint8_t = 255) const override {}
+
+    // New methods for GlobalGeometry
+    virtual BoundingDisk compute_bounding_disk() const override;
+    virtual BoundingBox compute_bounding_box() const override;
 };
 
 
@@ -345,6 +393,25 @@ public:
      */
     virtual void update_time();
 
+    /**
+     * @brief Return the object's geometry.
+     */
+    ObjectGeometry* get_geometry() { return geom;} ;
+
+    /**
+     * @brief Move the object to a given coordinate
+     *
+     * @param x X coordinate.
+     * @param y Y coordinate.
+     */
+    virtual void move(float x, float y);
+
+
+    // Base info
+    uint16_t id;                         ///< Object identifier.
+    uint64_t current_time_microseconds = 0LL;                        ///< Current time in microseconds.
+
+
 protected:
     /**
      * @brief Parse a provided configuration and set associated members values.
@@ -358,8 +425,6 @@ protected:
      */
     void initialize_time();
 
-    // Base info
-    uint16_t id;                         ///< Object identifier.
 
     // Physical information
     float x;                             ///< X position
@@ -367,7 +432,6 @@ protected:
     ObjectGeometry* geom;                ///< Geometry of the object.
 
     // Temporal information
-    uint64_t current_time_microseconds = 0LL;                        ///< Current time in microseconds.
     float temporal_noise = 0;
     float temporal_noise_stddev;
 };
@@ -504,6 +568,14 @@ public:
      */
     virtual void render(SDL_Renderer* renderer, b2WorldId world_id) const = 0;
 
+    /**
+     * @brief Move the object to a given coordinate
+     *
+     * @param x X coordinate.
+     * @param y Y coordinate.
+     */
+    virtual void move(float x, float y) override;
+
 
 protected:
     /**
@@ -609,8 +681,9 @@ ObjectGeometry* object_geometry_factory(Configuration const& config);
  * @param world_id The Box2D world identifier (unused in rendering).
  * @param config Configuration entry describing the object properties.
  * @param light_map Pointer to the global light level map.
+ * @param userdatasize Size of the memory block allocated for user data.
  */
-Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map);
+Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map, size_t userdatasize = 0);
 
 /**
  * @brief Interface to colormaps

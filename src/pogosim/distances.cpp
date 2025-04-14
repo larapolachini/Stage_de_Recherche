@@ -84,7 +84,7 @@ inline GridCell getGridCell(float x, float y, float cellSize) {
             static_cast<int>(std::floor(y / cellSize))};
 }
 
-void find_neighbors(ir_direction dir, std::vector<Robot>& robots, float maxDistance) {
+void find_neighbors(ir_direction dir, std::vector<std::shared_ptr<PogobotObject>>& robots, float maxDistance) {
     const float cellSize = maxDistance;
     const float maxDistSq = maxDistance * maxDistance;
     const size_t N = robots.size();
@@ -93,7 +93,7 @@ void find_neighbors(ir_direction dir, std::vector<Robot>& robots, float maxDista
     //    This avoids calling get_position() repeatedly and also helps cache locality.
     std::vector<float> xs(N), ys(N);
     for (size_t i = 0; i < N; i++) {
-        b2Vec2 pos = robots[i].get_IR_emitter_position(dir);
+        b2Vec2 pos = robots[i]->get_IR_emitter_position(dir);
         xs[i] = pos.x;
         ys[i] = pos.y;
     }
@@ -110,7 +110,7 @@ void find_neighbors(ir_direction dir, std::vector<Robot>& robots, float maxDista
     // 3) For each robot, find neighbors in the same or adjacent cells.
     for (size_t i = 0; i < N; i++) {
         // Clear the old neighbor list
-        robots[i].neighbors[dir].clear();
+        robots[i]->neighbors[dir].clear();
 
         GridCell cell = getGridCell(xs[i], ys[i], cellSize);
 
@@ -129,7 +129,7 @@ void find_neighbors(ir_direction dir, std::vector<Robot>& robots, float maxDista
                     float distSq = dx*dx + dy*dy;
                     if (distSq <= maxDistSq) {
                         // Robot i and otherIdx are neighbors
-                        robots[i].neighbors[dir].push_back(&robots[otherIdx]);
+                        robots[i]->neighbors[dir].push_back(robots[otherIdx].get());
                     }
                 }
             }

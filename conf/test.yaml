@@ -17,10 +17,10 @@ save_video_period: 1.0      # In s
 frames_name: "frames/f{:010.4f}.png"
 
 seed: 0
-nBots: 200
-initial_robot_formation: random # Can be "random" (all robots are placed randomly in the arena), or "disk" (robots are placed uniformly in a disk shape at the center of the arena)
-robot_radius: 26.5      # In mm
-communication_radius: 80.0        # In mm, from border of a focal robot to the border of a neighboring robot
+#nBots: 0
+#initial_robot_formation: random 
+#robot_radius: 26.5      # In mm
+#communication_radius: 80.0        # In mm, from border of a focal robot to the border of a neighboring robot
 show_communication_channels: false
 show_lateral_LEDs: true
 GUI: true
@@ -57,7 +57,7 @@ robot_linear_noise_stddev: 0.5
 robot_angular_noise_stddev: 2.0
 
 # TODO WIP
-initial_formation: random
+initial_formation: random # Can be "random" (all robots are placed randomly in the arena), or "disk" (robots are placed uniformly in a disk shape at the center of the arena)
 
 # Objects. TODO WIP
 objects:
@@ -84,9 +84,9 @@ objects:
         #initial_formation: random
         colormap: qualitative # rainbow # TODO
 
-        radius: 70
-        body_width: 70
-        body_height: 50
+        radius: 70              # In mm, if geometry is a disk
+        body_width: 70          # In mm, if geometry is a rectangle
+        body_height: 50         # In mm, if geometry is a rectangle
 
         body_linear_damping: 0.0
         body_angular_damping: 0.0
@@ -95,6 +95,64 @@ objects:
         body_restitution: 0.3
         #body_collision_shape: rectangle
 
+#    walls:
+#        type: pogowall
+#        geometry: arena
+#
+#        p_send: 0.5
+#        msg_success_rate:
+#            type: static
+#            rate: 0.9
+
+    robots:
+        type: pogobot
+        nb: 60
+        #initial_formation: disk
+        geometry: disk                  # Pogobots are always disk-shaped
+        radius: 26.5                    # In mm
+
+        communication_radius: 80.0      # In mm, from each IR emitter
+        body_linear_damping: 0.3
+        body_angular_damping: 0.3
+        body_density: 10.0
+        body_friction: 0.3
+        body_restitution: 0.5
+        #body_collision_shape: circle
+        #body_collision_radius: 0.00
+        body_linear_noise_stddev: 0.5
+        body_angular_noise_stddev: 2.0
+
+        msg_success_rate:
+            #type: static
+            #rate: 0.9
+            type: dynamic # Msg success rate follows this formula: "1 / (1 + (alpha * msg_size**beta * p_send**gamma * cluster_size**delta))"
+            alpha: 0.000004
+            beta: 2.8096
+            gamma: 2.3807
+            delta: 1.2457
+
+
+    robots2:
+        type: pogobot
+        nb: 40
+        #initial_formation: disk
+        geometry: disk                  # Pogobots are always disk-shaped
+        radius: 16.5                    # In mm
+
+        communication_radius: 120.0     # In mm, from each IR emitter
+        body_linear_damping: 0.3
+        body_angular_damping: 0.3
+        body_density: 10.0
+        body_friction: 0.3
+        body_restitution: 0.5
+        #body_collision_shape: circle
+        #body_collision_radius: 0.00
+        body_linear_noise_stddev: 0.5
+        body_angular_noise_stddev: 2.0
+
+        msg_success_rate:
+            type: static
+            rate: 0.9
 
 ########### Parameters used to directly initialize variables from the C code of the robots ###########
 parameters:

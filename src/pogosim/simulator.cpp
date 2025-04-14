@@ -28,7 +28,7 @@
 #undef main         // We defined main() as robot_main() in pogobot.h
 
 
-void set_current_robot(Robot& robot) {
+void set_current_robot(PogobotObject& robot) {
     // Store values of previous robot
     if (current_robot != nullptr) {
         current_robot->callback_create_data_schema   = callback_create_data_schema;
@@ -96,12 +96,13 @@ Simulation::~Simulation() {
 void Simulation::init_all() {
     //create_walls();
     create_arena();
-    create_robots();
     create_objects();
+    create_robots();
 }
 
 void Simulation::create_objects() {
     uint16_t current_id = 0;
+    float largest_bounding_disk_radius = 0.0f;
 
     // TODO
     LightLevelMap* light_map = nullptr;
@@ -115,15 +116,47 @@ void Simulation::create_objects() {
         // Generate random coordinates for all objects of this category
         std::vector<b2Vec2> points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * 50.0, nb); // XXX
 
+        // XXX
+        // Identify the userspace for this category
+        size_t userdatasize = UserdataSize; // XXX
+
         // Generate all objects of this category
-        std::vector<std::unique_ptr<Object>> obj_vec;
+        std::vector<std::shared_ptr<Object>> obj_vec;
         for (size_t i = 0; i < nb; ++i) {
             auto const point = points[i];
-            obj_vec.emplace_back(object_factory(current_id, point.x, point.y, worldId, obj_config, light_map));
+            obj_vec.emplace_back(object_factory(current_id, point.x, point.y, worldId, obj_config, light_map, userdatasize));
             current_id++;
+
+            // Update largest bounding disk radius
+            auto* geom = obj_vec.back()->get_geometry();
+            float bounding_disk_radius = geom->compute_bounding_disk().radius;
+            if (bounding_disk_radius > largest_bounding_disk_radius)
+                largest_bounding_disk_radius = bounding_disk_radius;
+
+            // Check if the object is a robot, and store it if this is the case
+            if (auto robot = std::dynamic_pointer_cast<PogobotObject>(obj_vec.back())) {
+                robots.push_back(robot);
+                // Update max communication radius
+                float const tot_radius = robot->radius + robot->communication_radius;
+                if (max_comm_radius < tot_radius)
+                    max_comm_radius = tot_radius;
+            }
         }
         objects[name] = std::move(obj_vec);
     }
+
+//    // Generate random coordinates for all objects of all categories
+//    std::vector<b2Vec2> points = generate_random_points_within_polygon_safe(arena_polygons, largest_bounding_disk_radius, current_id);
+//    size_t current_point_idx = 0;
+//    for (const auto& [key, obj_vec] : objects) {
+//        for (const auto& obj : obj_vec) {
+//            float const x = points[current_point_idx].x;
+//            float const y = points[current_point_idx].y;
+//            obj->move(x, y);
+//            current_point_idx++;
+//        }
+//    }
+
 }
 
 
@@ -276,8 +309,6 @@ void Simulation::init_config() {
 
     mm_to_pixels = 0.0f;
     adjust_mm_to_pixels(config["mm_to_pixels"].get(1.0f));
-    robot_radius = config["robot_radius"].get(10.0f);
-    comm_radius = config["communication_radius"].get(90);
     show_comm = config["show_communication_channels"].get(false);
     show_lateral_leds = config["show_lateral_LEDs"].get(true);
 
@@ -336,93 +367,12 @@ void Simulation::init_SDL() {
 
 
 void Simulation::create_robots() {
-    std::string const initial_robot_formation = to_lowercase(config["initial_robot_formation"].get(std::string("random")));
-    uint32_t const nb_robots = config["nBots"].get(100);
-    float const msg_success_rate_val = config["msg_success_rate"].get(0.50f);
-    glogger->info("Creating {} robots", nb_robots);
-    if (!nb_robots)
-        throw std::runtime_error("Number of robots is 0 (nBot=0 in configuration).");
-
-    std::vector<b2Vec2> points;
-    try {
-        if (initial_robot_formation == "random") {
-            points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * robot_radius, nb_robots);
-        } else if (initial_robot_formation == "disk") {
-            points = generate_regular_disk_points_in_polygon(arena_polygons, 1.0 * robot_radius, nb_robots);
-        } else {
-            glogger->error("Unknown 'initial_robot_formation' value: '{}'. Assuming random formation...", initial_robot_formation);
-            points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * robot_radius, nb_robots);
-        }
-    } catch (const std::exception& e) {
-        throw std::runtime_error("Impossible to create robots (number may be too high for the provided arena): " + std::string(e.what()));
-    }
-
-    // Retrieve locomotion configuration
-    float const robot_linear_damping = config["robot_linear_damping"].get(0.0f);
-    float const robot_angular_damping = config["robot_angular_damping"].get(0.0f);
-    float const robot_density = config["robot_density"].get(10.0f);
-    float const robot_friction = config["robot_friction"].get(0.3f);
-    float const robot_restitution = config["robot_restitution"].get(0.5f);
-    float const robot_collision_radius = config["robot_collision_radius"].get(0.0f);
-    float const robot_linear_noise_stddev = config["robot_linear_noise_stddev"].get(0.0f);
-    float const robot_angular_noise_stddev = config["robot_angular_noise_stddev"].get(0.0f);
-    float const temporal_noise_stddev = config["temporal_noise_stddev"].get(0.0f);
-
-    // Retrieve msg_success_rate configuration
-    float const dynamic_msg_success_rate__enable = config["dynamic_msg_success_rate"]["enable"].get(false);
-    float const dynamic_msg_success_rate__alpha  = config["dynamic_msg_success_rate"]["alpha"].get(0.000004f);
-    float const dynamic_msg_success_rate__beta   = config["dynamic_msg_success_rate"]["beta"].get(2.8096f);
-    float const dynamic_msg_success_rate__gamma  = config["dynamic_msg_success_rate"]["gamma"].get(2.3807f);
-    float const dynamic_msg_success_rate__delta  = config["dynamic_msg_success_rate"]["delta"].get(1.2457f);
-
-    // Set robot collision shape
-    std::string const robot_collision_shape_str = to_lowercase(config["robot_collision_shape"].get(std::string("circle")));
-    ShapeType robot_collision_shape;
-    if (robot_collision_shape_str == "circle") {
-        robot_collision_shape = ShapeType::Circle;
-    } else if (robot_collision_shape_str == "ellipse") {
-        robot_collision_shape = ShapeType::Ellipse;
-    } else if (robot_collision_shape_str == "polygon") {
-        robot_collision_shape = ShapeType::Polygon;
-        throw std::runtime_error("robot_collision_shape == 'polygon' is not implemented yet! Select 'circle' or 'ellipse' instead.");
-    } else {
-        throw std::runtime_error("Unknown value for configuration parameter 'robot_collision_shape'. Select 'circle' or 'ellipse'.");
-    }
-
-    // Create all robots
-    for (size_t i = 0; i < nb_robots; ++i) {
-        // Create a success rate object
-        std::unique_ptr<MsgSuccessRate> msg_success_rate;
-        if (dynamic_msg_success_rate__enable) {
-            msg_success_rate = std::make_unique<DynamicMsgSuccessRate>(
-                    dynamic_msg_success_rate__alpha,
-                    dynamic_msg_success_rate__beta,
-                    dynamic_msg_success_rate__gamma,
-                    dynamic_msg_success_rate__delta);
-        } else {
-            msg_success_rate = std::make_unique<ConstMsgSuccessRate>(msg_success_rate_val);
-        }
-
-        //auto const point = generate_random_point_within_polygon_safe(arena_polygons, 10.0 * robot_radius);
-        auto const point = points[i];
-        robots.emplace_back(i, UserdataSize, point.x, point.y, robot_radius, worldId, std::move(msg_success_rate),
-                robot_linear_damping, robot_angular_damping,
-                robot_density, robot_friction, robot_restitution,
-                robot_collision_shape, robot_collision_radius,
-                std::vector<b2Vec2>(),
-                robot_linear_noise_stddev, robot_angular_noise_stddev,
-                temporal_noise_stddev);
-        //float x = minX + std::rand() % static_cast<int>(maxX - minX);
-        //float y = minY + std::rand() % static_cast<int>(maxY - minY);
-        //robots.emplace_back(i, UserdataSize, x, y, robot_radius, worldId);
-        glogger->debug("Creating robot at ({}, {})", point.x, point.y);
-    }
-    current_robot = &robots.front();
+    current_robot = robots.front().get();
 
     glogger->info("Initializing all robots...");
     // Launch main() on all robots
-    for (auto& robot : robots) {
-        set_current_robot(robot);
+    for (auto robot : robots) {
+        set_current_robot(*robot.get());
         robot_main();
     }
 
@@ -432,9 +382,11 @@ void Simulation::create_robots() {
         callback_global_setup();
     }
 
+    // TODO call callback_create_data_schema here
+
     // Setup all robots
-    for (auto& robot : robots) {
-        set_current_robot(robot);
+    for (auto robot : robots) {
+        set_current_robot(*robot.get());
         current_robot->user_init();
     }
 }
@@ -566,16 +518,16 @@ void Simulation::handle_SDL_events() {
 
 void Simulation::compute_neighbors() {
     for (int i = 0; i < IR_RX_COUNT; i++ ) {
-        find_neighbors((ir_direction)i, robots, (comm_radius + robot_radius) / VISUALIZATION_SCALE);
+        find_neighbors((ir_direction)i, robots, max_comm_radius / VISUALIZATION_SCALE);
     }
 
     // Merge neighbors (without duplicates) from all IR emitters/receivers into the direction ir_all
-    for (Robot& a : robots) {
+    for (auto a : robots) {
         for (std::size_t i = 0; i < IR_RX_COUNT; ++i) {
-            for (Robot* r : a.neighbors[i]) {
+            for (auto* r : a->neighbors[i]) {
                 // Check if r is already in neighbors[ir_all]
-                if (std::find(a.neighbors[ir_all].begin(), a.neighbors[ir_all].end(), r) == a.neighbors[ir_all].end()) {
-                    a.neighbors[ir_all].push_back(r);
+                if (std::find(a->neighbors[ir_all].begin(), a->neighbors[ir_all].end(), r) == a->neighbors[ir_all].end()) {
+                    a->neighbors[ir_all].push_back(r);
                 }
             }
         }
@@ -609,10 +561,11 @@ void Simulation::init_data_logger() {
     data_logger->add_field("angle", arrow::float64());
 
     // Init user-defined schema (only call the main function of the first robot)
-    assert(robots.size() > 0);
-    Robot& robot = robots[0];
-    if (robot.callback_create_data_schema != nullptr)
-        robot.callback_create_data_schema();
+    if (robots.size() > 0) {
+        auto robot = robots[0];
+        if (robot->callback_create_data_schema != nullptr)
+            robot->callback_create_data_schema();
+    }
 
     // Open data logger file
     data_logger->open_file(data_filename);
@@ -665,11 +618,12 @@ void Simulation::render_all() {
     for(auto const& poly : arena_polygons) {
         draw_polygon(renderer, poly);
     }
-    //membrane.render(renderer, worldId);
 
     // Render objects
-    for (auto const& robot : robots) {
-        robot.render(renderer, worldId, show_comm, show_lateral_leds);
+    for (auto robot : robots) {
+        robot->show_comm = show_comm;
+        robot->show_lateral_leds = show_lateral_leds;
+        robot->render(renderer, worldId);
     }
     //SDL_RenderPresent(renderer);
 
@@ -706,18 +660,18 @@ void Simulation::export_frames() {
 }
 
 void Simulation::export_data() {
-    for (auto& robot : robots) {
+    for (auto robot : robots) {
         data_logger->set_value("time", t);
-        data_logger->set_value("robot_id", (int32_t) robot.id);
-        data_logger->set_value("pogobot_ticks", (int64_t) robot.pogobot_ticks);
-        auto const pos = robot.get_position();
+        data_logger->set_value("robot_id", (int32_t) robot->id);
+        data_logger->set_value("pogobot_ticks", (int64_t) robot->pogobot_ticks);
+        auto const pos = robot->get_position();
         data_logger->set_value("x", pos.x);
         data_logger->set_value("y", pos.y);
-        data_logger->set_value("angle", robot.get_angle());
+        data_logger->set_value("angle", robot->get_angle());
 
         // User-defined values
-        if (robot.callback_export_data != nullptr) {
-            robot.callback_export_data();
+        if (robot->callback_export_data != nullptr) {
+            robot->callback_export_data();
         }
 
         data_logger->save_row();
@@ -785,12 +739,12 @@ void Simulation::main_loop() {
         GUI_frame_period = time_step_duration * GUI_speed_up;
 
         // Launch user code
-        for (auto& robot : robots) {
-            set_current_robot(robot);
+        for (auto robot : robots) {
+            set_current_robot(*robot.get());
             // Check if the robot has waited enough time
             //glogger->debug("Debug main loop. t={}  robot.current_time_microseconds={}", t * 1000000.0f, robot.current_time_microseconds);
-            if (t * 1000000.0f >= robot.current_time_microseconds) {
-                robot.launch_user_step();
+            if (t * 1000000.0f >= robot->current_time_microseconds) {
+                robot->launch_user_step();
             }
             // Check if dt is enough to simulate the main loop frequency of this robot
             double const main_loop_period = 1.0f / main_loop_hz;

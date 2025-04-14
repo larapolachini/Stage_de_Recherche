@@ -1,6 +1,7 @@
 
 #include "utils.h"
 #include "objects.h"
+#include "robot.h"
 
 #include "SDL2_gfxPrimitives.h"
 
@@ -49,6 +50,17 @@ std::vector<std::vector<bool>> DiskGeometry::export_geometry_grid(size_t num_bin
 
 void DiskGeometry::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId world_id, float x, float y, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) const {
     filledCircleRGBA(renderer, x, y, radius * mm_to_pixels, r, g, b, alpha);
+}
+
+BoundingDisk DiskGeometry::compute_bounding_disk() const {
+    // The disk is defined by its own radius and is centered at (0,0) in local coordinates.
+    return { 0.0f, 0.0f, radius };
+}
+
+BoundingBox DiskGeometry::compute_bounding_box() const {
+    // The bounding box of a disk centered at (0,0) is a square from (-radius,-radius)
+    // with width and height equal to 2*radius.
+    return { -radius, -radius, 2.0f * radius, 2.0f * radius };
 }
 
 
@@ -113,6 +125,20 @@ void RectangleGeometry::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldI
     SDL_RenderFillRect(renderer, &rect);
 }
 
+BoundingDisk RectangleGeometry::compute_bounding_disk() const {
+    // The bounding disk must cover the entire rectangle.
+    // Its radius is half the diagonal of the rectangle.
+    float half_width = width / 2.0f;
+    float half_height = height / 2.0f;
+    float radius = std::sqrt(half_width * half_width + half_height * half_height);
+    return { 0.0f, 0.0f, radius };
+}
+
+BoundingBox RectangleGeometry::compute_bounding_box() const {
+    // The rectangle is its own bounding box (centered at (0,0)).
+    return { -width / 2.0f, -height / 2.0f, width, height };
+}
+
 
 /************* GlobalGeometry *************/ // {{{1
 
@@ -123,6 +149,14 @@ std::vector<std::vector<bool>> GlobalGeometry::export_geometry_grid(size_t num_b
                                                                     float /*obj_x*/,
                                                                     float /*obj_y*/) const {
     return std::vector<std::vector<bool>>(num_bins_y, std::vector<bool>(num_bins_x, true));
+}
+
+BoundingDisk GlobalGeometry::compute_bounding_disk() const {
+    return { 0.0f, 0.0f, 0.0f };
+}
+
+BoundingBox GlobalGeometry::compute_bounding_box() const {
+    return { 0.0f, 0.0f, 0.0f, 0.0f };
 }
 
 
@@ -227,6 +261,11 @@ void Object::initialize_time() {
         std::uniform_real_distribution<float> dist(0.0f, temporal_noise_stddev);
         temporal_noise = dist(rnd_gen);
     }
+}
+
+void Object::move(float _x, float _y) {
+    x = _x;
+    y = _y;
 }
 
 
@@ -352,6 +391,13 @@ void PhysicalObject::create_body(b2WorldId world_id) {
     b2Body_SetLinearVelocity(body_id, velocity);
 }
 
+void PhysicalObject::move(float _x, float _y) {
+    Object::move(x, y);
+    b2Vec2 position = {x / VISUALIZATION_SCALE, y / VISUALIZATION_SCALE};
+    b2Rot rotation = b2Body_GetRotation(body_id);
+    b2Body_SetTransform(body_id, position, rotation);
+}
+
 
 
 /************* PassiveObject *************/ // {{{1
@@ -420,7 +466,7 @@ ObjectGeometry* object_geometry_factory(Configuration const& config) {
     }
 }
 
-Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map) {
+Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map, size_t userdatasize) {
     std::string const type = to_lowercase(config["type"].get(std::string("unknown")));
     Object* res = nullptr;
 
@@ -429,6 +475,9 @@ Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Config
 
     } else if (type == "passive_object") {
         res = new PassiveObject(id, x, y, world_id, config);
+
+    } else if (type == "pogobot") {
+        res = new PogobotObject(id, x, y, world_id, userdatasize, config);
 
     } else {
         throw std::runtime_error("Unknown object type '" + type + "'.");

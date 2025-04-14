@@ -24,7 +24,8 @@ extern "C" int robot_main(void);
  *
  * @param robot Reference to the Robot to be set as current.
  */
-void set_current_robot(Robot& robot);
+//void set_current_robot(Robot& robot);
+void set_current_robot(PogobotObject& robot);
 
 /**
  * @brief Prints the help message to the console.
@@ -62,22 +63,15 @@ class Simulation {
     float arena_width = 1000.0;           ///< Arena width in millimeters.
     float arena_height = 1000.0;          ///< Arena height in millimeters.
     float arena_surface = 1e6;            ///< Arena surface area in mm².
-    float robot_radius = 10.0;            ///< Robot radius in millimeters.
-    float comm_radius = 90.0;             ///< Communication radius in millimeters.
+    float max_comm_radius = 00.0f;        ///< Max communication radius across all types of objects
 
-    float const wall_offset = 30.0f;      ///< Offset for arena walls in millimeters.
-    float const minX = wall_offset + robot_radius*2; ///< Minimum x-coordinate for robot placement.
-    float const maxX = window_width - wall_offset - robot_radius*2; ///< Maximum x-coordinate.
-    float const minY = wall_offset + robot_radius*2; ///< Minimum y-coordinate.
-    float const maxY = window_height - wall_offset - robot_radius*2; ///< Maximum y-coordinate.
-
-    b2WorldId worldId;                  ///< Identifier for the Box2D world.
-    std::vector<Robot> robots;          ///< Vector of robots in the simulation.
-    std::vector<Robot> membranes;       ///< Vector of membrane robots (if used).
+    b2WorldId worldId;                    ///< Identifier for the Box2D world.
+    //std::vector<Robot> robots;          ///< Vector of robots in the simulation.
     std::vector<std::vector<b2Vec2>> arena_polygons; ///< Arena polygon definitions.
 
     // Objects
-    std::map<std::string, std::vector<std::unique_ptr<Object>>> objects;   ///< Dictionary of simulation objects, by category name.
+    std::map<std::string, std::vector<std::shared_ptr<Object>>> objects;    ///< Dictionary of simulation objects, by category name.
+    std::vector<std::shared_ptr<PogobotObject>> robots;                     ///< Vector of robots in the simulation.
 
     double last_frame_shown_t = -1.0;     ///< Time when the last frame was rendered.
     double last_frame_saved_t = -1.0;     ///< Time when the last frame was saved.
@@ -88,7 +82,7 @@ class Simulation {
     double photo_start_duration = 1.f;      ///< Duration for the photo capture.
 
     // Fonts
-    FC_Font* font;                        ///< Font used for rendering text.
+    FC_Font* font;                          ///< Font used for rendering text.
 
     // Mouse dragging for visualization
     bool dragging_pos_by_mouse = false;   ///< Flag for mouse dragging.
@@ -119,7 +113,7 @@ public:
     /**
      * @brief Initializes the simulation components.
      *
-     * Calls functions to create the arena, robots, and membranes.
+     * Calls functions to create the arena and robots
      */
     void init_all();
 

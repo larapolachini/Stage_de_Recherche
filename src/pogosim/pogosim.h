@@ -30,6 +30,12 @@ extern void (*callback_global_setup)(void);
 
 #else // Compiling for real robots
 
+// TODO
+// Define ROBOT_CATEGORY if it is not set
+#ifndef ROBOT_CATEGORY
+#define ROBOT_CATEGORY robots // Default to "robots" category
+#endif
+
 // On real robots, declare an extern variable for a single shared instance.
 #define DECLARE_USERDATA(UDT)       \
     extern UDT myuserdata;         \
