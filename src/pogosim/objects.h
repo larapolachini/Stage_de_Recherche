@@ -326,6 +326,18 @@ public:
     float get_bin_width() const;
     float get_bin_height() const;
 
+    /**
+     * @brief Renders the light level map to the given SDL_Renderer.
+     *
+     * This method scales each bin's light level into a brightness value. For each bin, it:
+     * - Normalizes the light level from the int16_t range [-32768, 32767] to [0, 1].
+     * - Maps that normalized value to a brightness in the range [100, 200].
+     * - Renders a filled rectangle with that brightness.
+     *
+     * @param renderer A pointer to the SDL_Renderer used for drawing.
+     */
+    void render(SDL_Renderer* renderer) const;
+
 private:
     size_t num_bins_x_;
     size_t num_bins_y_;
@@ -405,6 +417,11 @@ public:
      * @param y Y coordinate.
      */
     virtual void move(float x, float y);
+
+    /**
+     * @brief Returns whether this object is tangible (e.g. collisions, etc) or not.
+     */
+    virtual bool is_tangible() const { return false; };
 
 
     // Base info
@@ -575,6 +592,11 @@ public:
      * @param y Y coordinate.
      */
     virtual void move(float x, float y) override;
+
+    /**
+     * @brief Returns whether this object is tangible (e.g. collisions, etc) or not.
+     */
+    virtual bool is_tangible() const { return true; };
 
 
 protected:

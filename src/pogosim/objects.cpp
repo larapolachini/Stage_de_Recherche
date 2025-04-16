@@ -221,6 +221,52 @@ float LightLevelMap::get_bin_height() const {
     return bin_height_;
 }
 
+void LightLevelMap::render(SDL_Renderer* renderer) const {
+    // Iterate over each bin in the grid.
+    for (size_t y = 0; y < num_bins_y_; ++y) {
+        for (size_t x = 0; x < num_bins_x_; ++x) {
+            // Retrieve the current light level value.
+            // The value is in the range [-32768, 32767].
+            int16_t current_value = levels_[y][x];
+            if (current_value < 0)
+                current_value = 0;
+//            // XXX
+//            current_value = (y * num_bins_x_ + x) * 50.00;
+
+            // Normalize the current value to a [0, 1] range.
+            float normalized = (static_cast<float>(current_value)) / 32768.0f;
+
+            // Map the normalized value into a brightness range [100, 200].
+            // You can adjust these constants to get a different brightness range.
+            //float scaled = 100.0f + (200.0f - 100.0f) * normalized;
+            float scaled = 30.0f + (200.0f - 30.0f) * normalized;
+            uint8_t brightness = static_cast<uint8_t>(std::round(scaled));
+
+            // Identify object X and Y coordinates in visualization instance
+            float screen_x = x * bin_width_;
+            float screen_y = y * bin_height_;
+            auto const pos = visualization_position(screen_x, screen_y);
+            float screen_w = bin_width_ + 1;
+            float screen_h = bin_height_ + 1;
+            auto const wh = visualization_position(screen_w, screen_h);
+
+            // Create the rectangle representing the bin's position and size.
+            SDL_Rect rect;
+            rect.x = static_cast<int>(pos.x);
+            rect.y = static_cast<int>(pos.y);
+            rect.w = static_cast<int>(wh.x + 1);
+            rect.h = static_cast<int>(wh.y + 1);
+            //rect.w = static_cast<int>(bin_width_);
+            //rect.h = static_cast<int>(bin_height_);
+
+            // Set the drawing color to the computed brightness.
+            // Using the same value for red, green, and blue creates a gray color.
+            SDL_SetRenderDrawColor(renderer, brightness, brightness, brightness, 255);
+            SDL_RenderFillRect(renderer, &rect);
+        }
+    }
+}
+
 
 /************* OBJECT *************/ // {{{1
 
@@ -282,7 +328,7 @@ StaticLightObject::StaticLightObject(uint16_t _id, float x, float y,
       photo_start_at(photo_start_at),
       photo_start_duration(photo_start_duration),
       photo_start_value(photo_start_value) {
-    // ...
+    update_light_map();
 }
 
 StaticLightObject::StaticLightObject(uint16_t _id, float _x, float _y,
@@ -290,6 +336,7 @@ StaticLightObject::StaticLightObject(uint16_t _id, float _x, float _y,
     : Object(_id, _x, _y, config),
       light_map(light_map) {
     parse_configuration(config);
+    update_light_map();
 }
 
 void StaticLightObject::update_light_map() {

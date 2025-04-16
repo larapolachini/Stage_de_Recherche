@@ -106,10 +106,15 @@ void Simulation::create_objects() {
     std::vector<std::shared_ptr<Object>> objects_to_move;
 
     // Create light map
-    float bin_width = 5.0f;
-    float bin_height = 5.0f;
-    size_t num_bin_x = arena_width / bin_width;
-    size_t num_bin_y = arena_height / bin_height;
+    //float bin_width = 0.5f;
+    //float bin_height = 0.5f;
+    //size_t num_bin_x = arena_width / bin_width;
+    //size_t num_bin_y = arena_height / bin_height;
+    size_t num_bin_x = 100.0f;
+    size_t num_bin_y = 100.0f;
+    float bin_width = arena_width / num_bin_x;
+    float bin_height = arena_height / num_bin_y;
+    glogger->info("DEBUG arena_width={}  arena_height={}  bin_width={}  bin_height={}", arena_width, arena_height, bin_width, bin_height);
     light_map.reset(new LightLevelMap(num_bin_x, num_bin_y, bin_width, bin_height));
 
     // Parse the configuration, and create objects as needed
@@ -440,6 +445,7 @@ void Simulation::help_message() {
     glogger->info(" - F4: Speed up the simulation");
     glogger->info(" - F5: Show/Hide the communication channels");
     glogger->info(" - F6: Show/Hide the lateral LEDs");
+    glogger->info(" - F7: Show/Hide the light level");
     glogger->info(" - ESC: quit the simulation");
     glogger->info(" - SPACE: pause the simulation");
     glogger->info(" - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates");
@@ -471,6 +477,9 @@ void Simulation::handle_SDL_events() {
                     break;
                 case SDLK_F6:
                     show_lateral_leds = !show_lateral_leds;
+                    break;
+                case SDLK_F7:
+                    show_light_levels = !show_light_levels;
                     break;
                 case SDLK_ESCAPE:
                     running = false;
@@ -633,10 +642,15 @@ void Simulation::draw_scale_bar() {
 
 
 void Simulation::render_all() {
-    float scaled_background_level = 100 + ((200 - 100) * (float(current_light_value) - -32768) / (32768 - - 32768));
-    uint8_t background_level = static_cast<uint8_t>(std::round(scaled_background_level));
-    SDL_SetRenderDrawColor(renderer, background_level, background_level, background_level, 255); // Grey background
-    SDL_RenderClear(renderer);
+    if (show_light_levels) {
+        SDL_RenderClear(renderer);
+        light_map->render(renderer);
+    } else {
+        float scaled_background_level = 100 + ((200 - 100) * (float(current_light_value) - -32768) / (32768 - - 32768));
+        uint8_t background_level = static_cast<uint8_t>(std::round(scaled_background_level));
+        SDL_SetRenderDrawColor(renderer, background_level, background_level, background_level, 255); // Grey background
+        SDL_RenderClear(renderer);
+    }
 
     //renderWalls(renderer); // Render the walls
     for(auto const& poly : arena_polygons) {
