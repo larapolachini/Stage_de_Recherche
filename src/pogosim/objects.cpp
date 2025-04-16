@@ -392,8 +392,8 @@ void PhysicalObject::create_body(b2WorldId world_id) {
 }
 
 void PhysicalObject::move(float _x, float _y) {
-    Object::move(x, y);
-    b2Vec2 position = {x / VISUALIZATION_SCALE, y / VISUALIZATION_SCALE};
+    Object::move(_x, _y);
+    b2Vec2 position = {_x / VISUALIZATION_SCALE, _y / VISUALIZATION_SCALE};
     b2Rot rotation = b2Body_GetRotation(body_id);
     b2Body_SetTransform(body_id, position, rotation);
 }

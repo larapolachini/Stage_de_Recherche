@@ -72,6 +72,8 @@ class Simulation {
     // Objects
     std::map<std::string, std::vector<std::shared_ptr<Object>>> objects;    ///< Dictionary of simulation objects, by category name.
     std::vector<std::shared_ptr<PogobotObject>> robots;                     ///< Vector of robots in the simulation.
+    std::unique_ptr<LightLevelMap> light_map;                               ///< Light map of the arena.
+    std::string initial_formation;                                          ///< Type of initial formation of the objects.
 
     double last_frame_shown_t = -1.0;     ///< Time when the last frame was rendered.
     double last_frame_saved_t = -1.0;     ///< Time when the last frame was saved.

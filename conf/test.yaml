@@ -56,8 +56,7 @@ robot_collision_radius: 0.00
 robot_linear_noise_stddev: 0.5
 robot_angular_noise_stddev: 2.0
 
-# TODO WIP
-initial_formation: random # Can be "random" (all robots are placed randomly in the arena), or "disk" (robots are placed uniformly in a disk shape at the center of the arena)
+initial_formation: disk # Can be "random" (all robots are placed randomly in the arena), or "disk" (robots are placed uniformly in a disk shape at the center of the arena)
 
 # Objects. TODO WIP
 objects:
@@ -134,7 +133,7 @@ objects:
 
     robots2:
         type: pogobot
-        nb: 40
+        nb: 50
         #initial_formation: disk
         geometry: disk                  # Pogobots are always disk-shaped
         radius: 16.5                    # In mm

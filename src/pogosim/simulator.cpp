@@ -102,19 +102,20 @@ void Simulation::init_all() {
 
 void Simulation::create_objects() {
     uint16_t current_id = 0;
-    float largest_bounding_disk_radius = 0.0f;
+    float smallest_bounding_disk_radius = 1e5f;
+    std::vector<std::shared_ptr<Object>> objects_to_move;
 
-    // TODO
-    LightLevelMap* light_map = nullptr;
+    // Create light map
+    float bin_width = 5.0f;
+    float bin_height = 5.0f;
+    size_t num_bin_x = arena_width / bin_width;
+    size_t num_bin_y = arena_height / bin_height;
+    light_map.reset(new LightLevelMap(num_bin_x, num_bin_y, bin_width, bin_height));
 
     // Parse the configuration, and create objects as needed
     for (const auto& [name, obj_config] : config["objects"].children()) {
         // Find number of objects of this category
         size_t nb = obj_config["nb"].get(1);
-
-        // XXX
-        // Generate random coordinates for all objects of this category
-        std::vector<b2Vec2> points = generate_random_points_within_polygon_safe(arena_polygons, 1.0 * 50.0, nb); // XXX
 
         // XXX
         // Identify the userspace for this category
@@ -123,15 +124,24 @@ void Simulation::create_objects() {
         // Generate all objects of this category
         std::vector<std::shared_ptr<Object>> obj_vec;
         for (size_t i = 0; i < nb; ++i) {
-            auto const point = points[i];
-            obj_vec.emplace_back(object_factory(current_id, point.x, point.y, worldId, obj_config, light_map, userdatasize));
+            // Check if this object has an initial coordinate
+            float x = obj_config["x"].get(NAN);
+            float y = obj_config["y"].get(NAN);
+
+            // Create object from configuration
+            if (std::isnan(x) or std::isnan(y)) {
+                obj_vec.emplace_back(object_factory(current_id, 0.0f, 0.0f, worldId, obj_config, light_map.get(), userdatasize));
+                objects_to_move.push_back(obj_vec.back());
+            } else {
+                obj_vec.emplace_back(object_factory(current_id, x, y, worldId, obj_config, light_map.get(), userdatasize));
+            }
             current_id++;
 
             // Update largest bounding disk radius
             auto* geom = obj_vec.back()->get_geometry();
             float bounding_disk_radius = geom->compute_bounding_disk().radius;
-            if (bounding_disk_radius > largest_bounding_disk_radius)
-                largest_bounding_disk_radius = bounding_disk_radius;
+            if (bounding_disk_radius < smallest_bounding_disk_radius)
+                smallest_bounding_disk_radius = bounding_disk_radius;
 
             // Check if the object is a robot, and store it if this is the case
             if (auto robot = std::dynamic_pointer_cast<PogobotObject>(obj_vec.back())) {
@@ -145,17 +155,29 @@ void Simulation::create_objects() {
         objects[name] = std::move(obj_vec);
     }
 
-//    // Generate random coordinates for all objects of all categories
-//    std::vector<b2Vec2> points = generate_random_points_within_polygon_safe(arena_polygons, largest_bounding_disk_radius, current_id);
-//    size_t current_point_idx = 0;
-//    for (const auto& [key, obj_vec] : objects) {
-//        for (const auto& obj : obj_vec) {
-//            float const x = points[current_point_idx].x;
-//            float const y = points[current_point_idx].y;
-//            obj->move(x, y);
-//            current_point_idx++;
-//        }
-//    }
+    // Generate random coordinates for all objects of all categories
+    std::vector<b2Vec2> points;
+    try {
+        if (initial_formation == "random") {
+            points = generate_random_points_within_polygon_safe(arena_polygons, smallest_bounding_disk_radius, objects_to_move.size());
+        } else if (initial_formation == "disk") {
+            points = generate_regular_disk_points_in_polygon(arena_polygons, smallest_bounding_disk_radius, objects_to_move.size());
+        } else {
+            glogger->error("Unknown 'initial_formation' value: '{}'. Assuming random formation...", initial_formation);
+            points = generate_random_points_within_polygon_safe(arena_polygons, smallest_bounding_disk_radius, objects_to_move.size());
+        }
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Impossible to create robots (number may be too high for the provided arena): " + std::string(e.what()));
+    }
+
+    // Move all objects to the new coordinates
+    size_t current_point_idx = 0;
+    for (const auto& obj : objects_to_move) {
+        float const x = points[current_point_idx].x;
+        float const y = points[current_point_idx].y;
+        obj->move(x, y);
+        current_point_idx++;
+    }
 
 }
 
@@ -311,6 +333,8 @@ void Simulation::init_config() {
     adjust_mm_to_pixels(config["mm_to_pixels"].get(1.0f));
     show_comm = config["show_communication_channels"].get(false);
     show_lateral_leds = config["show_lateral_LEDs"].get(true);
+
+    initial_formation = config["initial_formation"].get(std::string("random"));
 
     enable_gui = config["GUI"].get(true);
     GUI_speed_up = config["GUI_speed_up"].get(1.0f);
