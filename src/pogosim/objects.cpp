@@ -208,7 +208,10 @@ void LightLevelMap::set_light_level(size_t bin_x, size_t bin_y, int16_t value) {
 // Adds a value to the light level at a specified bin.
 void LightLevelMap::add_light_level(size_t bin_x, size_t bin_y, int16_t value) {
     assert(bin_x < num_bins_x_ && bin_y < num_bins_y_);
-    levels_[bin_y][bin_x] += value;
+    if (levels_[bin_y][bin_x] + value < 32767)
+        levels_[bin_y][bin_x] += value;
+    else
+        levels_[bin_y][bin_x] = 32767;
 }
 
 // Resets all bins to 0.

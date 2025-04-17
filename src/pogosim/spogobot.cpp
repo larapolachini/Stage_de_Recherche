@@ -249,7 +249,8 @@ void pogobot_led_setColors(const uint8_t r, const uint8_t g, const uint8_t b, ui
 
 int16_t pogobot_photosensors_read( uint8_t sensor_number ) {
     //return simulation->get_current_light_value();
-    return simulation->get_light_map()->get_light_level_at(current_robot->x, current_robot->y);
+    b2Vec2 pos = current_robot->get_position();
+    return simulation->get_light_map()->get_light_level_at(pos.x * VISUALIZATION_SCALE, pos.y * VISUALIZATION_SCALE);
 }
 
 
