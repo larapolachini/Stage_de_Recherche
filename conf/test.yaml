@@ -17,47 +17,18 @@ save_video_period: 1.0      # In s
 frames_name: "frames/f{:010.4f}.png"
 
 seed: 0
-#nBots: 0
-#initial_robot_formation: random 
-#robot_radius: 26.5      # In mm
-#communication_radius: 80.0        # In mm, from border of a focal robot to the border of a neighboring robot
 show_communication_channels: false
 show_lateral_LEDs: true
 show_light_levels: true
 GUI: true
 
-# Msg success rate follows this formula: "1 / (1 + (alpha * msg_size**beta * p_send**gamma * cluster_size**delta))"
-dynamic_msg_success_rate:
-    enable: true
-    alpha: 0.000004
-    beta: 2.8096
-    gamma: 2.3807
-    delta: 1.2457
-msg_success_rate: 0.9   # Used if dynamic_msg_success_rate.enable is false
-
 # Time
 simulation_time: 500.0     # In s
 time_step: 0.01            # In s
 GUI_speed_up: 10.0
-temporal_noise_stddev: 0   # In µs
-
-## Light and photo_start
-initial_light_value: 32767
-#photo_start_at: 1.0         # In s
-#photo_start_duration: 1.0   # In s
-
-# Locomotion
-robot_linear_damping: 0.3
-robot_angular_damping: 0.3
-robot_density: 10.0
-robot_friction: 0.3
-robot_restitution: 0.5
-robot_collision_shape: circle
-robot_collision_radius: 0.00
-robot_linear_noise_stddev: 0.5
-robot_angular_noise_stddev: 2.0
 
 initial_formation: random # Can be "random" (all robots are placed randomly in the arena), or "disk" (robots are placed uniformly in a disk shape at the center of the arena)
+
 
 # Objects. TODO WIP
 objects:
