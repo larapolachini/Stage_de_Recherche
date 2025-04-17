@@ -31,7 +31,6 @@
 void set_current_robot(PogobotObject& robot) {
     // Store values of previous robot
     if (current_robot != nullptr) {
-        current_robot->callback_create_data_schema   = callback_create_data_schema;
         current_robot->callback_export_data          = callback_export_data;
         current_robot->pogobot_ticks                 = pogobot_ticks;
         current_robot->main_loop_hz                  = main_loop_hz;
@@ -52,7 +51,6 @@ void set_current_robot(PogobotObject& robot) {
     mydata = robot.data;
 
     // Update robot values
-    callback_create_data_schema   = robot.callback_create_data_schema;
     callback_export_data          = robot.callback_export_data;
     pogobot_ticks                 = robot.pogobot_ticks;
     main_loop_hz                  = robot.main_loop_hz;
@@ -408,8 +406,6 @@ void Simulation::create_robots() {
         callback_global_setup();
     }
 
-    // TODO call callback_create_data_schema here
-
     // Setup all robots
     for (auto robot : robots) {
         set_current_robot(*robot.get());
@@ -590,11 +586,9 @@ void Simulation::init_data_logger() {
     data_logger->add_field("y", arrow::float64());
     data_logger->add_field("angle", arrow::float64());
 
-    // Init user-defined schema (only call the main function of the first robot)
-    if (robots.size() > 0) {
-        auto robot = robots[0];
-        if (robot->callback_create_data_schema != nullptr)
-            robot->callback_create_data_schema();
+    // Init user-defined schema
+    if (robots.size() > 0 && callback_create_data_schema != nullptr) {
+        callback_create_data_schema();
     }
 
     // Open data logger file
@@ -643,7 +637,7 @@ void Simulation::render_all() {
         SDL_RenderClear(renderer);
         light_map->render(renderer);
     } else {
-        uint8_t background_level = 255.0f;
+        uint8_t background_level = 200.0f;
         SDL_SetRenderDrawColor(renderer, background_level, background_level, background_level, 255); // Grey background
         SDL_RenderClear(renderer);
     }

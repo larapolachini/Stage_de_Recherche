@@ -195,7 +195,6 @@ public:
     void* data = nullptr;                ///< Pointer to user data.
     void (*user_init)(void) = nullptr;   ///< Pointer to a user-defined initialization function.
     void (*user_step)(void) = nullptr;   ///< Pointer to a user-defined step function.
-    void (*callback_create_data_schema)(void) = nullptr; ///< Callback to create a data schema.
     void (*callback_export_data)(void) = nullptr;        ///< Callback to export data.
 
     /**
