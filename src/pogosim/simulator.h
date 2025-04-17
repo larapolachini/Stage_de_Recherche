@@ -73,16 +73,13 @@ class Simulation {
     // Objects
     std::map<std::string, std::vector<std::shared_ptr<Object>>> objects;    ///< Dictionary of simulation objects, by category name.
     std::vector<std::shared_ptr<PogobotObject>> robots;                     ///< Vector of robots in the simulation.
+    std::vector<std::shared_ptr<Object>> non_robots;                        ///< Vector of objects that are not robots in the simulation.
     std::unique_ptr<LightLevelMap> light_map;                               ///< Light map of the arena.
     std::string initial_formation;                                          ///< Type of initial formation of the objects.
 
     double last_frame_shown_t = -1.0;     ///< Time when the last frame was rendered.
     double last_frame_saved_t = -1.0;     ///< Time when the last frame was saved.
     double last_data_saved_t = -1.0;      ///< Time when the last data export occurred.
-
-    int16_t current_light_value = std::numeric_limits<int16_t>::max(); ///< Current light sensor value.
-    double photo_start_at = -1.f;           ///< Time to start a photo capture.
-    double photo_start_duration = 1.f;      ///< Duration for the photo capture.
 
     // Fonts
     FC_Font* font;                          ///< Font used for rendering text.
@@ -266,13 +263,6 @@ public:
     void export_data();
 
     /**
-     * @brief Adjusts the simulated light value for photo capture.
-     *
-     * Sets the current light value to zero during the photo capture period, and resets it otherwise.
-     */
-    void photo_start();
-
-    /**
      * @brief Runs the main simulation loop.
      *
      * Processes SDL events, updates robot states, steps the Box2D world, computes neighbors,
@@ -288,13 +278,6 @@ public:
     void delete_old_data();
 
     /**
-     * @brief Retrieves the current light sensor value.
-     *
-     * @return uint16_t The current light value.
-     */
-    uint16_t get_current_light_value() const;
-
-    /**
      * @brief Retrieves the current configuration
      *
      * @return Configuration& configuration
@@ -307,6 +290,13 @@ public:
      * @return DataLogger* Pointer to the DataLogger instance.
      */
     DataLogger* get_data_logger();
+
+    /**
+     * @brief Retrieves the light map.
+     *
+     * @return LightLevelMap* Pointer to the LightLevelMap instance.
+     */
+    LightLevelMap* get_light_map();
 };
 
 /// Global simulation instance.

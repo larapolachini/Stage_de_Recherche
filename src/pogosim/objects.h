@@ -1,11 +1,13 @@
 #ifndef OBJECTS_H
 #define OBJECTS_H
 
+#include <functional>
 
 #include "utils.h"
 #include "configuration.h"
 #include "render.h"
 #include "colormaps.h"
+
 
 
 /**
@@ -308,6 +310,14 @@ public:
     /// Destructor.
     ~LightLevelMap();
 
+    /**
+     * @brief Get the light level at a physical coordinate (world‐space).
+     * @param x  X coordinate in the same units as bin_width_.
+     * @param y  Y coordinate in the same units as bin_height_.
+     * @return   The light level at the bin containing (x,y), or 0 if outside.
+     */
+    float get_light_level_at(float x, float y) const;
+
     /// Returns the light level stored at the given bin (bin_x, bin_y).
     float get_light_level(size_t bin_x, size_t bin_y) const;
 
@@ -338,12 +348,20 @@ public:
      */
     void render(SDL_Renderer* renderer) const;
 
+    /// Register a callback which will be called with the map
+    /// whenever update() is run.
+    void register_callback(std::function<void(LightLevelMap&)> cb);
+
+    /// Clears the map and invokes all registered callbacks.
+    void update();
+
 private:
     size_t num_bins_x_;
     size_t num_bins_y_;
     float bin_width_;
     float bin_height_;
     std::vector<std::vector<int16_t>> levels_;
+    std::vector<std::function<void(LightLevelMap&)>> callbacks_;
 };
 
 
@@ -360,11 +378,8 @@ public:
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param geom Object's geometry.
-     * @param _temporal_noise_stddev Standard deviation of the gaussian noise to apply to time on each object, or 0.0 for deterministic time
      */
-    Object(uint16_t _id, float _x, float _y,
-           ObjectGeometry& _geom,
-           float _temporal_noise_stddev = 0.0f);
+    Object(uint16_t _id, float _x, float _y, ObjectGeometry& _geom);
 
     /**
      * @brief Constructs an Object from a configuration entry.
@@ -393,17 +408,9 @@ public:
     /**
      * @brief Launches the user-defined step function.
      *
-     * Updates the object's time, enables all registered stop watches, executes the user step
-     * function via pogo_main_loop_step, and then disables the stop watches.
+     * @param t current simulation time
      */
-    virtual void launch_user_step();
-
-    /**
-     * @brief Updates the object's current time.
-     *
-     * Computes the current time in microseconds relative to the simulation start.
-     */
-    virtual void update_time();
+    virtual void launch_user_step(float f);
 
     /**
      * @brief Return the object's geometry.
@@ -426,7 +433,10 @@ public:
 
     // Base info
     uint16_t id;                         ///< Object identifier.
-    uint64_t current_time_microseconds = 0LL;                        ///< Current time in microseconds.
+
+    // Physical information
+    float x;                             ///< X position
+    float y;                             ///< Y position
 
 
 protected:
@@ -437,20 +447,7 @@ protected:
      */
     virtual void parse_configuration(Configuration const& config);
 
-    /**
-     * @brief Initialize time-related operations
-     */
-    void initialize_time();
-
-
-    // Physical information
-    float x;                             ///< X position
-    float y;                             ///< Y position
     ObjectGeometry* geom;                ///< Geometry of the object.
-
-    // Temporal information
-    float temporal_noise = 0;
-    float temporal_noise_stddev;
 };
 
 
@@ -473,12 +470,10 @@ public:
      * @param photo_start_at Change the light value at the specified time to trigger the synchronised photo start of the robots.
      * @param photo_start_duration Amount of time to stay in the photo start stage.
      * @param photo_start_value Light value during the photo start stage.
-     * @param _temporal_noise_stddev Standard deviation of the gaussian noise to apply to time on each object, or 0.0 for deterministic time.
      */
     StaticLightObject(uint16_t _id, float _x, float _y,
            ObjectGeometry& _geom, LightLevelMap* light_map,
-           int16_t _value, float _photo_start_at = 1.0f, float _photo_start_duration = 1.0f, int16_t _photo_start_value = 32767,
-           float _temporal_noise_stddev = 0.0f);
+           int16_t _value, float _photo_start_at = -1.0f, float _photo_start_duration = 1.0f, int16_t _photo_start_value = 32767);
 
     /**
      * @brief Constructs a StaticLightObject object from a configuration entry.
@@ -501,7 +496,15 @@ public:
     virtual void render(SDL_Renderer*, b2WorldId) const override {}
 
     /// Updates the object's contribution to the light level map.
-    virtual void update_light_map();
+    virtual void update_light_map(LightLevelMap& l);
+
+    /**
+     * @brief Launches the user-defined step function.
+     *
+     * Updates the object's time, enables all registered stop watches, executes the user step
+     * function via pogo_main_loop_step, and then disables the stop watches.
+     */
+    virtual void launch_user_step(float t) override;
 
 protected:
     /**
@@ -512,10 +515,12 @@ protected:
     virtual void parse_configuration(Configuration const& config) override;
 
     int16_t value;
+    int16_t orig_value;
     LightLevelMap* light_map;  ///< Pointer to the global light level map.
     float photo_start_at;
     float photo_start_duration;
     int16_t photo_start_value;
+    bool performing_photo_start = false;
 };
 
 
@@ -534,7 +539,6 @@ public:
      * @param y Initial y-coordinate in the simulation.
      * @param geom Object's geometry.
      * @param world_id The Box2D world identifier.
-     * @param _temporal_noise_stddev Standard deviation of the gaussian noise to apply to time on each object, or 0.0 for deterministic time
      * @param _linear_damping Linear damping value for the physical body (default is 0.0f).
      * @param _angular_damping Angular damping value for the physical body (default is 0.0f).
      * @param _density Density of the body shape (default is 10.0f).
@@ -543,7 +547,6 @@ public:
      */
     PhysicalObject(uint16_t _id, float _x, float _y,
            ObjectGeometry& geom, b2WorldId world_id,
-           float _temporal_noise_stddev = 0.0f,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
            float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f);
 
@@ -642,7 +645,6 @@ public:
      * @param y Initial y-coordinate in the simulation.
      * @param geom Object's geometry.
      * @param world_id The Box2D world identifier.
-     * @param _temporal_noise_stddev Standard deviation of the gaussian noise to apply to time on each object, or 0.0 for deterministic time
      * @param _linear_damping Linear damping value for the physical body (default is 0.0f).
      * @param _angular_damping Angular damping value for the physical body (default is 0.0f).
      * @param _density Density of the body shape (default is 10.0f).
@@ -652,7 +654,6 @@ public:
      */
     PassiveObject(uint16_t _id, float _x, float _y,
            ObjectGeometry& geom, b2WorldId world_id,
-           float _temporal_noise_stddev = 0.0f,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
            float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
            std::string _colormap = "rainbow");

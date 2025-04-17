@@ -23,6 +23,7 @@ seed: 0
 #communication_radius: 80.0        # In mm, from border of a focal robot to the border of a neighboring robot
 show_communication_channels: false
 show_lateral_LEDs: true
+show_light_levels: true
 GUI: true
 
 # Msg success rate follows this formula: "1 / (1 + (alpha * msg_size**beta * p_send**gamma * cluster_size**delta))"
@@ -75,6 +76,9 @@ objects:
         y: 500
         radius: 200
         value: 32767
+#        photo_start_at: 1.0
+#        photo_start_duration: 1.0
+#        photo_start_value: 0
 
     obstacles:
         type: passive_object

@@ -176,6 +176,23 @@ LightLevelMap::~LightLevelMap() {
     // No special cleanup is necessary here.
 }
 
+float LightLevelMap::get_light_level_at(float x, float y) const {
+    // 1) Early‐out if outside the overall map
+    if (x < 0.0f || y < 0.0f)
+        return 0.0f;
+
+    // 2) Compute which bin this falls into
+    size_t bin_x = static_cast<size_t>(std::floor(x / bin_width_));
+    size_t bin_y = static_cast<size_t>(std::floor(y / bin_height_));
+
+    // 3) Check bounds
+    if (bin_x >= num_bins_x_ || bin_y >= num_bins_y_)
+        return 0.0f;
+
+    // 4) Delegate to your existing getter
+    return get_light_level(bin_x, bin_y);
+}
+
 // Returns the light level at a specified bin.
 float LightLevelMap::get_light_level(size_t bin_x, size_t bin_y) const {
     assert(bin_x < num_bins_x_ && bin_y < num_bins_y_);
@@ -230,8 +247,6 @@ void LightLevelMap::render(SDL_Renderer* renderer) const {
             int16_t current_value = levels_[y][x];
             if (current_value < 0)
                 current_value = 0;
-//            // XXX
-//            current_value = (y * num_bins_x_ + x) * 50.00;
 
             // Normalize the current value to a [0, 1] range.
             float normalized = (static_cast<float>(current_value)) / 32768.0f;
@@ -239,7 +254,7 @@ void LightLevelMap::render(SDL_Renderer* renderer) const {
             // Map the normalized value into a brightness range [100, 200].
             // You can adjust these constants to get a different brightness range.
             //float scaled = 100.0f + (200.0f - 100.0f) * normalized;
-            float scaled = 30.0f + (200.0f - 30.0f) * normalized;
+            float scaled = 100.f + (200.0f - 100.0f) * normalized;
             uint8_t brightness = static_cast<uint8_t>(std::round(scaled));
 
             // Identify object X and Y coordinates in visualization instance
@@ -256,8 +271,6 @@ void LightLevelMap::render(SDL_Renderer* renderer) const {
             rect.y = static_cast<int>(pos.y);
             rect.w = static_cast<int>(wh.x + 1);
             rect.h = static_cast<int>(wh.y + 1);
-            //rect.w = static_cast<int>(bin_width_);
-            //rect.h = static_cast<int>(bin_height_);
 
             // Set the drawing color to the computed brightness.
             // Using the same value for red, green, and blue creates a gray color.
@@ -267,46 +280,46 @@ void LightLevelMap::render(SDL_Renderer* renderer) const {
     }
 }
 
+void LightLevelMap::register_callback(std::function<void(LightLevelMap&)> cb) {
+    callbacks_.emplace_back(std::move(cb));
+}
+
+void LightLevelMap::update() {
+    // 1) zero out the entire grid
+    clear();
+
+    // 2) let every callback “paint” its contribution
+    for (auto& cb : callbacks_) {
+        cb(*this);
+    }
+}
+
 
 /************* OBJECT *************/ // {{{1
 
-Object::Object(uint16_t _id, float _x, float _y, ObjectGeometry& _geom,  float _temporal_noise_stddev)
-        : id(_id), x(_x), y(_y), geom(&_geom), temporal_noise_stddev(_temporal_noise_stddev) {
-    initialize_time();
+Object::Object(uint16_t _id, float _x, float _y, ObjectGeometry& _geom)
+        : id(_id), x(_x), y(_y), geom(&_geom) {
+    // ...
 }
 
 Object::Object(uint16_t _id, float _x, float _y, Configuration const& config)
         : id(_id), x(_x), y(_y) {
     parse_configuration(config);
-    initialize_time();
 }
 
 // XXX : destroy geom ??
 Object::~Object() { }
 
-void Object::launch_user_step() {
-    update_time();
-}
-
-void Object::update_time() {
-    current_time_microseconds += temporal_noise;
+void Object::launch_user_step([[maybe_unused]] float t) {
+    // ...
 }
 
 void Object::parse_configuration(Configuration const& config) {
     x = config["x"].get(x);
     y = config["y"].get(y);
-    temporal_noise_stddev = config["temporal_noise_stddev"].get(0.0f);
 
     // Initialize geometry
     geom = object_geometry_factory(config); // XXX never destroyed
-}
-
-void Object::initialize_time() {
-    // Identify the level of temporal noise on this object
-    if (temporal_noise_stddev > 0) {
-        std::uniform_real_distribution<float> dist(0.0f, temporal_noise_stddev);
-        temporal_noise = dist(rnd_gen);
-    }
 }
 
 void Object::move(float _x, float _y) {
@@ -320,15 +333,16 @@ void Object::move(float _x, float _y) {
 // Constructor with a light map pointer.
 StaticLightObject::StaticLightObject(uint16_t _id, float x, float y,
                                      ObjectGeometry& geom, LightLevelMap* light_map,
-                                     int16_t value, float photo_start_at, float photo_start_duration, int16_t photo_start_value,
-                                     float _temporal_noise_stddev)
-    : Object(_id, x, y, geom, _temporal_noise_stddev),
+                                     int16_t value, float photo_start_at, float photo_start_duration, int16_t photo_start_value)
+    : Object(_id, x, y, geom),
       value(value),
+      orig_value(value),
       light_map(light_map),
       photo_start_at(photo_start_at),
       photo_start_duration(photo_start_duration),
       photo_start_value(photo_start_value) {
-    update_light_map();
+    light_map->register_callback([this](LightLevelMap& m){ this->update_light_map(m); });
+    //update_light_map();
 }
 
 StaticLightObject::StaticLightObject(uint16_t _id, float _x, float _y,
@@ -336,18 +350,16 @@ StaticLightObject::StaticLightObject(uint16_t _id, float _x, float _y,
     : Object(_id, _x, _y, config),
       light_map(light_map) {
     parse_configuration(config);
-    update_light_map();
+    light_map->register_callback([this](LightLevelMap& m){ this->update_light_map(m); });
+    //update_light_map();
 }
 
-void StaticLightObject::update_light_map() {
-    if (!light_map)
-        return;
-
+void StaticLightObject::update_light_map(LightLevelMap& l) {
     // Retrieve grid parameters from the light map.
-    size_t num_bins_x = light_map->get_num_bins_x();
-    size_t num_bins_y = light_map->get_num_bins_y();
-    float bin_width = light_map->get_bin_width();
-    float bin_height = light_map->get_bin_height();
+    size_t num_bins_x = l.get_num_bins_x();
+    size_t num_bins_y = l.get_num_bins_y();
+    float bin_width = l.get_bin_width();
+    float bin_height = l.get_bin_height();
 
     // Use the geometry's export method to get a grid indicating where the geometry exists.
     std::vector<std::vector<bool>> geometry_grid =
@@ -357,7 +369,7 @@ void StaticLightObject::update_light_map() {
     for (size_t j = 0; j < num_bins_y; ++j) {
         for (size_t i = 0; i < num_bins_x; ++i) {
             if (geometry_grid[j][i]) {
-                light_map->add_light_level(i, j, value);
+                l.add_light_level(i, j, value);
             }
         }
     }
@@ -366,9 +378,30 @@ void StaticLightObject::update_light_map() {
 void StaticLightObject::parse_configuration(Configuration const& config) {
     Object::parse_configuration(config);
     value = config["value"].get(10);
-    photo_start_at = config["photo_start_at"].get(1.0f);
+    photo_start_at = config["photo_start_at"].get(-1.0f);
     photo_start_duration = config["photo_start_duration"].get(1.0f);
     photo_start_value = config["photo_start_value"].get(32767);
+}
+
+void StaticLightObject::launch_user_step(float t) {
+    Object::launch_user_step(t);
+
+    // Check if we should launch photo_start
+    if (photo_start_at >= 0 && t >= photo_start_at && t < photo_start_at + photo_start_duration) {
+        // Check if we just started photo_start
+        if (!performing_photo_start) {
+            performing_photo_start = true;
+            value = photo_start_value;
+            light_map->update();
+        }
+    } else {
+        // Check if we just finished photo_start
+        if (performing_photo_start) {
+            value = orig_value;
+            performing_photo_start = false;
+            light_map->update();
+        }
+    }
 }
 
 
@@ -376,10 +409,9 @@ void StaticLightObject::parse_configuration(Configuration const& config) {
 
 PhysicalObject::PhysicalObject(uint16_t _id, float _x, float _y,
        ObjectGeometry& geom, b2WorldId world_id,
-       float _temporal_noise_stddev,
        float _linear_damping, float _angular_damping,
        float _density, float _friction, float _restitution)
-    : Object(_id, _x, _y, geom, _temporal_noise_stddev),
+    : Object(_id, _x, _y, geom),
       linear_damping(_linear_damping),
       angular_damping(_angular_damping),
       density(_density),
@@ -451,12 +483,11 @@ void PhysicalObject::move(float _x, float _y) {
 
 PassiveObject::PassiveObject(uint16_t _id, float _x, float _y,
        ObjectGeometry& geom, b2WorldId world_id,
-       float _temporal_noise_stddev,
        float _linear_damping, float _angular_damping,
        float _density, float _friction, float _restitution,
        std::string _colormap)
     : PhysicalObject(_id, _x, _y, geom, world_id,
-      _temporal_noise_stddev, _linear_damping, _angular_damping,
+      _linear_damping, _angular_damping,
       _density, _friction, _restitution),
       colormap(_colormap) {
     // ...

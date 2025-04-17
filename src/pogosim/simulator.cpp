@@ -106,15 +106,10 @@ void Simulation::create_objects() {
     std::vector<std::shared_ptr<Object>> objects_to_move;
 
     // Create light map
-    //float bin_width = 0.5f;
-    //float bin_height = 0.5f;
-    //size_t num_bin_x = arena_width / bin_width;
-    //size_t num_bin_y = arena_height / bin_height;
     size_t num_bin_x = 100.0f;
     size_t num_bin_y = 100.0f;
     float bin_width = arena_width / num_bin_x;
     float bin_height = arena_height / num_bin_y;
-    glogger->info("DEBUG arena_width={}  arena_height={}  bin_width={}  bin_height={}", arena_width, arena_height, bin_width, bin_height);
     light_map.reset(new LightLevelMap(num_bin_x, num_bin_y, bin_width, bin_height));
 
     // Parse the configuration, and create objects as needed
@@ -155,6 +150,8 @@ void Simulation::create_objects() {
                 float const tot_radius = robot->radius + robot->communication_radius;
                 if (max_comm_radius < tot_radius)
                     max_comm_radius = tot_radius;
+            } else {
+                non_robots.push_back(obj_vec.back());
             }
         }
         objects[name] = std::move(obj_vec);
@@ -184,6 +181,8 @@ void Simulation::create_objects() {
         current_point_idx++;
     }
 
+    // Update the light map
+    light_map->update();
 }
 
 
@@ -338,14 +337,12 @@ void Simulation::init_config() {
     adjust_mm_to_pixels(config["mm_to_pixels"].get(1.0f));
     show_comm = config["show_communication_channels"].get(false);
     show_lateral_leds = config["show_lateral_LEDs"].get(true);
+    show_light_levels = config["show_light_levels"].get(false);
 
     initial_formation = config["initial_formation"].get(std::string("random"));
 
     enable_gui = config["GUI"].get(true);
     GUI_speed_up = config["GUI_speed_up"].get(1.0f);
-    current_light_value = config["initial_light_value"].get(32767);
-    photo_start_at = config["photo_start_at"].get(1.0f);
-    photo_start_duration = config["photo_start_duration"].get(1.0f);
 
     std::srand(std::time(nullptr));
 }
@@ -646,8 +643,7 @@ void Simulation::render_all() {
         SDL_RenderClear(renderer);
         light_map->render(renderer);
     } else {
-        float scaled_background_level = 100 + ((200 - 100) * (float(current_light_value) - -32768) / (32768 - - 32768));
-        uint8_t background_level = static_cast<uint8_t>(std::round(scaled_background_level));
+        uint8_t background_level = 255.0f;
         SDL_SetRenderDrawColor(renderer, background_level, background_level, background_level, 255); // Grey background
         SDL_RenderClear(renderer);
     }
@@ -716,14 +712,6 @@ void Simulation::export_data() {
     }
 }
 
-void Simulation::photo_start() {
-    if (photo_start_at >= 0 && t >= photo_start_at && t < photo_start_at + photo_start_duration) {
-        current_light_value = 0;
-    } else {
-        current_light_value = config["initial_light_value"].get(32767);
-    }
-}
-
 
 void Simulation::main_loop() {
     // Delete old data, if needed
@@ -776,13 +764,18 @@ void Simulation::main_loop() {
         gui_delay = time_step_duration / GUI_speed_up;
         GUI_frame_period = time_step_duration * GUI_speed_up;
 
-        // Launch user code
+        // Launch user code on normal objects
+        for (auto obj : non_robots) {
+            obj->launch_user_step(t);
+        }
+
+        // Launch user code on robots
         for (auto robot : robots) {
             set_current_robot(*robot.get());
             // Check if the robot has waited enough time
             //glogger->debug("Debug main loop. t={}  robot.current_time_microseconds={}", t * 1000000.0f, robot.current_time_microseconds);
             if (t * 1000000.0f >= robot->current_time_microseconds) {
-                robot->launch_user_step();
+                robot->launch_user_step(t);
             }
             // Check if dt is enough to simulate the main loop frequency of this robot
             double const main_loop_period = 1.0f / main_loop_hz;
@@ -795,9 +788,6 @@ void Simulation::main_loop() {
 
         // Step the Box2D world
         b2World_Step(worldId, time_step_duration, sub_step_count);
-
-        // Photo start, if needed
-        photo_start();
 
         // Compute neighbors
         compute_neighbors();
@@ -852,10 +842,6 @@ void Simulation::delete_old_data() {
     }
 }
 
-uint16_t Simulation::get_current_light_value() const {
-    return current_light_value;
-}
-
 DataLogger* Simulation::get_data_logger() {
     return data_logger.get();
 }
@@ -863,6 +849,10 @@ DataLogger* Simulation::get_data_logger() {
 
 Configuration& Simulation::get_config() {
     return config;
+}
+
+LightLevelMap* Simulation::get_light_map() {
+    return light_map.get();
 }
 
 
