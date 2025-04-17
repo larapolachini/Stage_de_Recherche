@@ -177,6 +177,7 @@ void user_step(void) {
     }
 }
 
+#ifdef SIMULATOR
 /**
  * @brief Function called once to initialize global values (e.g. configuration-specified constants)
  */
@@ -186,6 +187,7 @@ void global_setup() {
     init_uint32_from_configuration(&tumble_duration_min, "tumble_duration_min", 100);
     init_uint32_from_configuration(&tumble_duration_max, "tumble_duration_max", 1100);
 }
+#endif
 
 /**
  * @brief Program entry point.
