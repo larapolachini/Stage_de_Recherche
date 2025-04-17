@@ -134,7 +134,7 @@ MsgSuccessRate* msg_success_rate_factory(Configuration const& config);
 
 
 /**
- * @brief Class representing a simulated robot.
+ * @brief Class representing a simulated Pogobot.
  *
  * The PogobotObject class encapsulates the properties and behaviors of a simulated Pogobot robot,
  * including physical properties, timing, LED control, messaging, and rendering.
@@ -283,7 +283,7 @@ public:
      * @param motor The identifier of the motor to update.
      * @param speed The new speed value for the selected motor.
      */
-    void set_motor(motor_id motor, int speed);
+    virtual void set_motor(motor_id motor, int speed);
 
     /**
      * @brief Retrieves the IR emitters current positions
@@ -292,7 +292,7 @@ public:
      *
      * @return b2Vec2 The current position.
      */
-    b2Vec2 get_IR_emitter_position(ir_direction dir) const;
+    virtual b2Vec2 get_IR_emitter_position(ir_direction dir) const;
 
     // LED control
     std::vector<color_t> leds = std::vector<color_t>(5, {0, 0, 0}); ///< LED colors for the robot.
@@ -362,6 +362,73 @@ protected:
      * @param config Configuration entry describing the object properties.
      */
     virtual void parse_configuration(Configuration const& config) override;
+};
+
+
+/**
+ * @brief Class representing a simulated Pogobject.
+ */
+class PogobjectObject : public PogobotObject {
+public:
+    /**
+     * Initializes a new Pogobject robot with the specified identifier, user data size, initial position,
+     * radius, associated Box2D world, and message success rate. It also allows customization
+     * of the body's physical properties (linear and angular damping, density, friction, and restitution).
+     *
+     * @param _id Unique object identifier.
+     * @param x Initial x-coordinate in the simulation.
+     * @param y Initial y-coordinate in the simulation.
+     * @param geom Object's geometry.
+     * @param world_id The Box2D world identifier.
+     * @param _userdatasize Size of the memory block allocated for user data.
+     * @param _communication_radius communication radius of each IR emitter
+     * @param _msg_success_rate std::unique_ptr<MsgSuccessRate> describing the probability of successfully sending a message.
+     * @param _temporal_noise_stddev Standard deviation of the gaussian noise to apply to time on each object, or 0.0 for deterministic time
+     * @param _linear_damping Linear damping value for the physical body (default is 0.0f).
+     * @param _angular_damping Angular damping value for the physical body (default is 0.0f).
+     * @param _density Density of the body shape (default is 10.0f).
+     * @param _friction Friction coefficient of the body shape (default is 0.3f).
+     * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
+     */
+    PogobjectObject(uint16_t _id, float _x, float _y,
+           ObjectGeometry& geom, b2WorldId world_id,
+           size_t _userdatasize,
+           float _communication_radius = 80.0f,
+           std::unique_ptr<MsgSuccessRate> _msg_success_rate = std::make_unique<ConstMsgSuccessRate>(0.5),
+           float _temporal_noise_stddev = 0.0f,
+           float _linear_damping = 0.0f, float _angular_damping = 0.0f,
+           float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f);
+
+    /**
+     * @brief Constructs a PogobotObject from a configuration entry.
+     *
+     * @param _id Unique object identifier.
+     * @param x Initial x-coordinate in the simulation.
+     * @param y Initial y-coordinate in the simulation.
+     * @param world_id The Box2D world identifier.
+     * @param _userdatasize Size of the memory block allocated for user data.
+     * @param config Configuration entry describing the object properties.
+     */
+    PogobjectObject(uint16_t _id, float _x, float _y,
+           b2WorldId world_id, size_t _userdatasize, Configuration const& config);
+
+    /**
+     * @brief Updates the motor speed of the robot and recalculates its velocities.
+     * Pogobjects do not move, so this method will always set the motors to 0.
+     *
+     * @param motor The identifier of the motor to update.
+     * @param speed (Ignored) speed value for the selected motor.
+     */
+    virtual void set_motor(motor_id motor, int speed) override;
+
+    /**
+     * @brief Retrieves the IR emitters current positions
+     *
+     * Returns the position of one of the robot's IR emitter as a Box2D vector.
+     *
+     * @return b2Vec2 The current position.
+     */
+    virtual b2Vec2 get_IR_emitter_position(ir_direction dir) const override;
 };
 
 

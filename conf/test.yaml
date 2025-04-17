@@ -108,7 +108,7 @@ objects:
 
     robots2:
         type: pogobot
-        nb: 50
+        nb: 5
         #initial_formation: disk
         geometry: disk                  # Pogobots are always disk-shaped
         radius: 16.5                    # In mm
@@ -123,6 +123,25 @@ objects:
         #body_collision_radius: 0.00
         body_linear_noise_stddev: 0.5
         body_angular_noise_stddev: 2.0
+
+        msg_success_rate:
+            type: static
+            rate: 0.9
+
+    robots3:
+        type: pogobject
+        nb: 2
+        geometry: disk                  # Pogobots are always disk-shaped
+        radius: 50.0                    # In mm
+
+        communication_radius: 120.0     # In mm, from each IR emitter
+        body_linear_damping: 0.3
+        body_angular_damping: 0.3
+        body_density: 1000.0
+        body_friction: 0.3
+        body_restitution: 0.5
+        #body_collision_shape: circle
+        #body_collision_radius: 0.00
 
         msg_success_rate:
             type: static

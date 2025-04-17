@@ -557,6 +557,9 @@ Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Config
     } else if (type == "pogobot") {
         res = new PogobotObject(id, x, y, world_id, userdatasize, config);
 
+    } else if (type == "pogobject") {
+        res = new PogobjectObject(id, x, y, world_id, userdatasize, config);
+
     } else {
         throw std::runtime_error("Unknown object type '" + type + "'.");
     }

@@ -422,6 +422,54 @@ void PogobotObject::sleep_µs(uint64_t microseconds) {
 }
 
 
+/************* Pogobot Objects *************/ // {{{1
+
+PogobjectObject::PogobjectObject(uint16_t _id, float _x, float _y,
+       ObjectGeometry& geom, b2WorldId world_id,
+       size_t _userdatasize,
+       float _communication_radius,
+       std::unique_ptr<MsgSuccessRate> _msg_success_rate,
+       float _temporal_noise_stddev,
+       float _linear_damping, float _angular_damping,
+       float _density, float _friction, float _restitution)
+    : PogobotObject::PogobotObject(_id, _x, _y, geom, world_id,
+      _userdatasize, _communication_radius, std::move(_msg_success_rate),
+      _temporal_noise_stddev, _linear_damping, _angular_damping,
+      _density, _friction, _restitution,
+      0.0f, 0.0f) {
+    for (size_t i = 0; i != motorB; i++)
+        set_motor(static_cast<motor_id>(i), 0);
+}
+
+PogobjectObject::PogobjectObject(uint16_t _id, float _x, float _y,
+       b2WorldId world_id, size_t _userdatasize, Configuration const& config)
+    : PogobotObject::PogobotObject(_id, _x, _y, world_id, _userdatasize, config) {
+    for (size_t i = 0; i != motorB; i++)
+        set_motor(static_cast<motor_id>(i), 0);
+}
+
+void PogobjectObject::set_motor(motor_id motor, [[maybe_unused]] int speed) {
+    // Update motor speeds
+    if (motor == motorL) {
+        left_motor_speed = 0;
+    } else if (motor == motorR) {
+        right_motor_speed = 0;
+    }
+
+    // Set damping values using those provided during construction.
+    b2Body_SetLinearDamping(body_id, linear_damping);
+    b2Body_SetAngularDamping(body_id, angular_damping);
+
+    b2Vec2 linear_velocity = {0.0f, 0.0f};
+    b2Body_SetLinearVelocity(body_id, linear_velocity);
+    b2Body_SetAngularVelocity(body_id, 0.0f);
+}
+
+b2Vec2 PogobjectObject::get_IR_emitter_position([[maybe_unused]] ir_direction dir) const {
+    return b2Body_GetPosition(body_id);
+}
+
+
 // MODELINE "{{{1
 // vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
 // vim:foldmethod=marker
