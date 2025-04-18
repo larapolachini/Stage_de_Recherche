@@ -26,7 +26,7 @@ uint32_t nb_msgs_recv = 0;
 
 
 #ifndef SIMULATOR // Compiling for real robots
-void pogobot_start(void (*user_init)(void), void (*user_step)(void)) {
+void _pogobot_start(void (*user_init)(void), void (*user_step)(void)) {
     pogobot_ticks = 0;
     pogobot_stopwatch_reset(&_global_timer);
     pogobot_stopwatch_reset(&timer_main_loop);
@@ -86,7 +86,8 @@ void pogo_main_loop_step(void (*user_step)(void)) {
     }
 
     // Call user-specified step function
-    user_step();
+    if (user_step != NULL)
+        user_step();
 
     if (main_loop_hz > 0) {
         // Detect and handle time overflows

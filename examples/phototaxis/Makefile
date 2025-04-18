@@ -22,6 +22,7 @@ else  # Linux
 endif
 
 ##### Settings for the pogobot binary #####
+ROBOT_CATEGORY?=robots
 BUILD_DIR?=./build
 POGO_SDK?=../../pogobot-sdk
 POGOSIM_INCLUDE_DIR?=../../src/
@@ -109,10 +110,10 @@ $(BUILD_DIR)/bin/firmware.elf: $(OBJECTS_BUILD)
 	chmod -x $@
 
 $(BUILD_DIR)/bin/%.o: %.c | $(BUILD_DIR)/bin
-	$(compile) -DREAL_ROBOT
+	$(compile) -DREAL_ROBOT -DROBOT_CATEGORY=$(ROBOT_CATEGORY)
 
 $(BUILD_DIR)/bin/%.o: $(POGOSIM_SRC_DIR)/%.c | $(BUILD_DIR)/bin
-	$(compile) -DREAL_ROBOT
+	$(compile) -DREAL_ROBOT -DROBOT_CATEGORY=$(ROBOT_CATEGORY)
 
 clean:
 	$(RM) -r $(BUILD_DIR) .*~ *~

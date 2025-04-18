@@ -300,13 +300,13 @@ void LightLevelMap::update() {
 
 /************* OBJECT *************/ // {{{1
 
-Object::Object(float _x, float _y, ObjectGeometry& _geom)
-        : x(_x), y(_y), geom(&_geom) {
+Object::Object(float _x, float _y, ObjectGeometry& _geom, std::string const& _category)
+        : x(_x), y(_y), category(_category), geom(&_geom) {
     // ...
 }
 
-Object::Object(float _x, float _y, Configuration const& config)
-        : x(_x), y(_y) {
+Object::Object(float _x, float _y, Configuration const& config, std::string const& _category)
+        : x(_x), y(_y), category(_category) {
     parse_configuration(config);
 }
 
@@ -336,8 +336,9 @@ void Object::move(float _x, float _y) {
 // Constructor with a light map pointer.
 StaticLightObject::StaticLightObject(float x, float y,
                                      ObjectGeometry& geom, LightLevelMap* light_map,
-                                     int16_t value, float photo_start_at, float photo_start_duration, int16_t photo_start_value)
-    : Object(x, y, geom),
+                                     int16_t value, float photo_start_at, float photo_start_duration, int16_t photo_start_value,
+                                     std::string const& _category)
+    : Object(x, y, geom, _category),
       value(value),
       orig_value(value),
       light_map(light_map),
@@ -349,8 +350,9 @@ StaticLightObject::StaticLightObject(float x, float y,
 }
 
 StaticLightObject::StaticLightObject(float _x, float _y,
-        LightLevelMap* light_map, Configuration const& config)
-    : Object(_x, _y, config),
+        LightLevelMap* light_map, Configuration const& config,
+        std::string const& _category)
+    : Object(_x, _y, config, _category),
       light_map(light_map) {
     parse_configuration(config);
     light_map->register_callback([this](LightLevelMap& m){ this->update_light_map(m); });
@@ -415,8 +417,9 @@ void StaticLightObject::launch_user_step(float t) {
 PhysicalObject::PhysicalObject(float _x, float _y,
        ObjectGeometry& geom, b2WorldId world_id,
        float _linear_damping, float _angular_damping,
-       float _density, float _friction, float _restitution)
-    : Object(_x, _y, geom),
+       float _density, float _friction, float _restitution,
+       std::string const& _category)
+    : Object(_x, _y, geom, _category),
       linear_damping(_linear_damping),
       angular_damping(_angular_damping),
       density(_density),
@@ -426,8 +429,9 @@ PhysicalObject::PhysicalObject(float _x, float _y,
 }
 
 PhysicalObject::PhysicalObject(float _x, float _y,
-       b2WorldId world_id, Configuration const& config)
-    : Object(_x, _y, config) {
+       b2WorldId world_id, Configuration const& config,
+       std::string const& _category)
+    : Object(_x, _y, config, _category) {
     parse_configuration(config);
     create_body(world_id);
 }
@@ -490,17 +494,19 @@ PassiveObject::PassiveObject(float _x, float _y,
        ObjectGeometry& geom, b2WorldId world_id,
        float _linear_damping, float _angular_damping,
        float _density, float _friction, float _restitution,
-       std::string _colormap)
+       std::string _colormap,
+       std::string const& _category)
     : PhysicalObject(_x, _y, geom, world_id,
       _linear_damping, _angular_damping,
-      _density, _friction, _restitution),
+      _density, _friction, _restitution, _category),
       colormap(_colormap) {
     // ...
 }
 
 PassiveObject::PassiveObject(float _x, float _y,
-       b2WorldId world_id, Configuration const& config)
-    : PhysicalObject(_x, _y, world_id, config) {
+       b2WorldId world_id, Configuration const& config,
+       std::string const& _category)
+    : PhysicalObject(_x, _y, world_id, config, _category) {
     parse_configuration(config);
     // ...
 }
@@ -550,21 +556,21 @@ ObjectGeometry* object_geometry_factory(Configuration const& config) {
     }
 }
 
-Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map, size_t userdatasize) {
+Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map, size_t userdatasize, std::string const& category) {
     std::string const type = to_lowercase(config["type"].get(std::string("unknown")));
     Object* res = nullptr;
 
     if (type == "static_light") {
-        res = new StaticLightObject(x, y, light_map, config);
+        res = new StaticLightObject(x, y, light_map, config, category);
 
     } else if (type == "passive_object") {
-        res = new PassiveObject(x, y, world_id, config);
+        res = new PassiveObject(x, y, world_id, config, category);
 
     } else if (type == "pogobot") {
-        res = new PogobotObject(id, x, y, world_id, userdatasize, config);
+        res = new PogobotObject(id, x, y, world_id, userdatasize, config, category);
 
     } else if (type == "pogobject") {
-        res = new PogobjectObject(id, x, y, world_id, userdatasize, config);
+        res = new PogobjectObject(id, x, y, world_id, userdatasize, config, category);
 
     } else {
         throw std::runtime_error("Unknown object type '" + type + "'.");

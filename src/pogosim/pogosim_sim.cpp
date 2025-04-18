@@ -3,7 +3,10 @@
 #include "robot.h"
 
 #ifdef SIMULATOR // Compiling for the simulator
-void pogobot_start(void (*user_init)(void), void (*user_step)(void)) {
+//void _pogobot_start(void (*user_init)(void), void (*user_step)(void)) {
+void _pogobot_start(void (*user_init)(void), void (*user_step)(void), const char *object_category) {
+    if (std::string(object_category) != current_robot->category)
+        return;
     current_robot->pogobot_ticks = 0;
     pogobot_stopwatch_reset(&_global_timer);
     pogobot_stopwatch_reset(&timer_main_loop);

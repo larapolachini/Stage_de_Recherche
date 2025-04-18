@@ -128,10 +128,10 @@ void Simulation::create_objects() {
 
             // Create object from configuration
             if (std::isnan(x) or std::isnan(y)) {
-                obj_vec.emplace_back(object_factory(current_id, 0.0f, 0.0f, worldId, obj_config, light_map.get(), userdatasize));
+                obj_vec.emplace_back(object_factory(current_id, 0.0f, 0.0f, worldId, obj_config, light_map.get(), userdatasize, name));
                 objects_to_move.push_back(obj_vec.back());
             } else {
-                obj_vec.emplace_back(object_factory(current_id, x, y, worldId, obj_config, light_map.get(), userdatasize));
+                obj_vec.emplace_back(object_factory(current_id, x, y, worldId, obj_config, light_map.get(), userdatasize, name));
             }
 
             // Update largest bounding disk radius
@@ -409,7 +409,8 @@ void Simulation::create_robots() {
     // Setup all robots
     for (auto robot : robots) {
         set_current_robot(*robot.get());
-        current_robot->user_init();
+        if (current_robot->user_init != nullptr)
+            current_robot->user_init();
     }
 }
 

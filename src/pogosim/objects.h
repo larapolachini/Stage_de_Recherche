@@ -377,8 +377,9 @@ public:
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param geom Object's geometry.
+     * @param category Name of the category of the object.
      */
-    Object(float _x, float _y, ObjectGeometry& _geom);
+    Object(float _x, float _y, ObjectGeometry& _geom, std::string const& _category = "objects");
 
     /**
      * @brief Constructs an Object from a configuration entry.
@@ -386,8 +387,9 @@ public:
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param config Configuration entry describing the object properties.
+     * @param category Name of the category of the object.
      */
-    Object(float _x, float _y, Configuration const& config);
+    Object(float _x, float _y, Configuration const& config, std::string const& _category = "objects");
 
     /**
      * @brief Destructor
@@ -429,9 +431,11 @@ public:
     virtual bool is_tangible() const { return false; };
 
     // Physical information
-    float x;                             ///< X position
-    float y;                             ///< Y position
+    float x;                            ///< X position
+    float y;                            ///< Y position
 
+    // Base information
+    std::string category;               ///< Category of the object
 
 protected:
     /**
@@ -463,10 +467,12 @@ public:
      * @param photo_start_at Change the light value at the specified time to trigger the synchronised photo start of the robots.
      * @param photo_start_duration Amount of time to stay in the photo start stage.
      * @param photo_start_value Light value during the photo start stage.
+     * @param category Name of the category of the object.
      */
     StaticLightObject(float _x, float _y,
            ObjectGeometry& _geom, LightLevelMap* light_map,
-           int16_t _value, float _photo_start_at = -1.0f, float _photo_start_duration = 1.0f, int16_t _photo_start_value = 32767);
+           int16_t _value, float _photo_start_at = -1.0f, float _photo_start_duration = 1.0f, int16_t _photo_start_value = 32767,
+           std::string const& _category = "objects");
 
     /**
      * @brief Constructs a StaticLightObject object from a configuration entry.
@@ -475,9 +481,11 @@ public:
      * @param y Initial y-coordinate in the simulation.
      * @param light_map Pointer to the global light level map.
      * @param config Configuration entry describing the object properties.
+     * @param category Name of the category of the object.
      */
     StaticLightObject(float _x, float _y,
-            LightLevelMap* light_map, Configuration const& config);
+            LightLevelMap* light_map, Configuration const& config,
+            std::string const& _category = "objects");
 
     /**
      * @brief Renders the object on the given SDL renderer.
@@ -535,11 +543,13 @@ public:
      * @param _density Density of the body shape (default is 10.0f).
      * @param _friction Friction coefficient of the body shape (default is 0.3f).
      * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
+     * @param category Name of the category of the object.
      */
     PhysicalObject(float _x, float _y,
            ObjectGeometry& geom, b2WorldId world_id,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
-           float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f);
+           float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
+           std::string const& _category = "objects");
 
     /**
      * @brief Constructs a PhysicalObject from a configuration entry.
@@ -548,9 +558,11 @@ public:
      * @param y Initial y-coordinate in the simulation.
      * @param world_id The Box2D world identifier.
      * @param config Configuration entry describing the object properties.
+     * @param category Name of the category of the object.
      */
     PhysicalObject(float _x, float _y,
-           b2WorldId world_id, Configuration const& config);
+           b2WorldId world_id, Configuration const& config,
+           std::string const& _category = "objects");
 
     /**
      * @brief Retrieves the object's current position.
@@ -640,12 +652,14 @@ public:
      * @param _friction Friction coefficient of the body shape (default is 0.3f).
      * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
      * @param _colormap Name of the colormap to use to set the color of the object
+     * @param category Name of the category of the object.
      */
     PassiveObject(float _x, float _y,
            ObjectGeometry& geom, b2WorldId world_id,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
            float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
-           std::string _colormap = "rainbow");
+           std::string _colormap = "rainbow",
+           std::string const& _category = "objects");
 
     /**
      * @brief Constructs a PassiveObject from a configuration entry.
@@ -654,9 +668,11 @@ public:
      * @param y Initial y-coordinate in the simulation.
      * @param world_id The Box2D world identifier.
      * @param config Configuration entry describing the object properties.
+     * @param category Name of the category of the object.
      */
     PassiveObject(float _x, float _y,
-           b2WorldId world_id, Configuration const& config);
+           b2WorldId world_id, Configuration const& config,
+           std::string const& _category = "objects");
 
     /**
      * @brief Renders the object on the given SDL renderer.
@@ -693,8 +709,9 @@ ObjectGeometry* object_geometry_factory(Configuration const& config);
  * @param config Configuration entry describing the object properties.
  * @param light_map Pointer to the global light level map.
  * @param userdatasize Size of the memory block allocated for user data.
+ * @param category Name of the category of the object.
  */
-Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map, size_t userdatasize = 0);
+Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map, size_t userdatasize = 0, std::string const& category = "objects");
 
 /**
  * @brief Interface to colormaps

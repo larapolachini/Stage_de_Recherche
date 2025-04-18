@@ -164,6 +164,7 @@ public:
      * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
      * @param _linear_noise_stddev Standard deviation of the gaussian noise to apply to linear velocity, or 0.0 for deterministic velocity
      * @param _angular_noise_stddev Standard deviation of the gaussian noise to apply to angular velocity, or 0.0 for deterministic velocity
+     * @param category Name of the category of the object.
      */
     PogobotObject(uint16_t _id, float _x, float _y,
            ObjectGeometry& geom, b2WorldId world_id,
@@ -173,7 +174,8 @@ public:
            float _temporal_noise_stddev = 0.0f,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
            float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
-           float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f);
+           float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f,
+           std::string const& _category = "robots");
 
     /**
      * @brief Constructs a PogobotObject from a configuration entry.
@@ -186,7 +188,8 @@ public:
      * @param config Configuration entry describing the object properties.
      */
     PogobotObject(uint16_t _id, float _x, float _y,
-           b2WorldId world_id, size_t _userdatasize, Configuration const& config);
+           b2WorldId world_id, size_t _userdatasize, Configuration const& config,
+           std::string const& _category = "robots");
 
 
     //virtual ~Robot();
@@ -390,6 +393,7 @@ public:
      * @param _density Density of the body shape (default is 10.0f).
      * @param _friction Friction coefficient of the body shape (default is 0.3f).
      * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
+     * @param category Name of the category of the object.
      */
     PogobjectObject(uint16_t _id, float _x, float _y,
            ObjectGeometry& geom, b2WorldId world_id,
@@ -398,7 +402,8 @@ public:
            std::unique_ptr<MsgSuccessRate> _msg_success_rate = std::make_unique<ConstMsgSuccessRate>(0.5),
            float _temporal_noise_stddev = 0.0f,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
-           float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f);
+           float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
+           std::string const& _category = "robots");
 
     /**
      * @brief Constructs a PogobotObject from a configuration entry.
@@ -411,7 +416,8 @@ public:
      * @param config Configuration entry describing the object properties.
      */
     PogobjectObject(uint16_t _id, float _x, float _y,
-           b2WorldId world_id, size_t _userdatasize, Configuration const& config);
+           b2WorldId world_id, size_t _userdatasize, Configuration const& config,
+           std::string const& _category = "robots");
 
     /**
      * @brief Updates the motor speed of the robot and recalculates its velocities.

@@ -92,10 +92,11 @@ PogobotObject::PogobotObject(uint16_t _id, float _x, float _y,
        float _temporal_noise_stddev,
        float _linear_damping, float _angular_damping,
        float _density, float _friction, float _restitution,
-       float _linear_noise_stddev, float _angular_noise_stddev)
+       float _linear_noise_stddev, float _angular_noise_stddev,
+       std::string const& _category)
     : PhysicalObject(_x, _y, geom, world_id,
       _linear_damping, _angular_damping,
-      _density, _friction, _restitution),
+      _density, _friction, _restitution, _category),
     id(_id),
     communication_radius(_communication_radius), msg_success_rate(std::move(_msg_success_rate)),
     temporal_noise_stddev(_temporal_noise_stddev),
@@ -106,8 +107,9 @@ PogobotObject::PogobotObject(uint16_t _id, float _x, float _y,
 }
 
 PogobotObject::PogobotObject(uint16_t _id, float _x, float _y,
-       b2WorldId world_id, size_t _userdatasize, Configuration const& config)
-    : PhysicalObject(_x, _y, world_id, config), id(_id) {
+       b2WorldId world_id, size_t _userdatasize, Configuration const& config,
+       std::string const& _category)
+    : PhysicalObject(_x, _y, world_id, config, _category), id(_id) {
     parse_configuration(config);
     data = malloc(_userdatasize);
     initialize_time();
@@ -433,19 +435,21 @@ PogobjectObject::PogobjectObject(uint16_t _id, float _x, float _y,
        std::unique_ptr<MsgSuccessRate> _msg_success_rate,
        float _temporal_noise_stddev,
        float _linear_damping, float _angular_damping,
-       float _density, float _friction, float _restitution)
+       float _density, float _friction, float _restitution,
+       std::string const& _category)
     : PogobotObject::PogobotObject(_id, _x, _y, geom, world_id,
       _userdatasize, _communication_radius, std::move(_msg_success_rate),
       _temporal_noise_stddev, _linear_damping, _angular_damping,
       _density, _friction, _restitution,
-      0.0f, 0.0f) {
+      0.0f, 0.0f, _category) {
     for (size_t i = 0; i != motorB; i++)
         set_motor(static_cast<motor_id>(i), 0);
 }
 
 PogobjectObject::PogobjectObject(uint16_t _id, float _x, float _y,
-       b2WorldId world_id, size_t _userdatasize, Configuration const& config)
-    : PogobotObject::PogobotObject(_id, _x, _y, world_id, _userdatasize, config) {
+       b2WorldId world_id, size_t _userdatasize, Configuration const& config,
+       std::string const& _category)
+    : PogobotObject::PogobotObject(_id, _x, _y, world_id, _userdatasize, config, _category) {
     for (size_t i = 0; i != motorB; i++)
         set_motor(static_cast<motor_id>(i), 0);
 }

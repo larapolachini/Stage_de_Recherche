@@ -132,7 +132,7 @@ void user_step(void) {
     int32_t curr_light = (p0 + p1 + p2) / 3;
 
     if (pogobot_ticks % 1000 == 0 && pogobot_helper_getid() == 0) {     // Only print messages for robot 0
-        printf("# Robot ID: %d   pogobot_ticks: %lu  curr_light: %ld  p0: %ld  phase: %d\n",
+        printf("# Robot ID: %d   pogobot_ticks: %lu  curr_light: %ld  p0: %d  phase: %d\n",
                 pogobot_helper_getid(),
                 pogobot_ticks,       // Increased by one at each execution of user_step
                 curr_light, p0, mydata->phase);
