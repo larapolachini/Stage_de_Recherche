@@ -430,6 +430,14 @@ public:
      * @return b2Vec2 The current position.
      */
     virtual b2Vec2 get_IR_emitter_position(ir_direction dir) const override;
+
+    /**
+     * @brief Renders the robot on the given SDL renderer.
+     *
+     * @param renderer Pointer to the SDL_Renderer.
+     * @param world_id The Box2D world identifier (unused in rendering).
+     */
+    virtual void render(SDL_Renderer*, b2WorldId) const override;
 };
 
 

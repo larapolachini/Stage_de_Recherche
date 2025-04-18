@@ -471,6 +471,70 @@ b2Vec2 PogobjectObject::get_IR_emitter_position([[maybe_unused]] ir_direction di
     return b2Body_GetPosition(body_id);
 }
 
+void PogobjectObject::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) const {
+    // Get robot's position in the physics world
+    b2Vec2 position = b2Body_GetPosition(body_id);
+
+    // Convert to screen coordinates
+    float screenX = position.x * VISUALIZATION_SCALE;
+    float screenY = position.y * VISUALIZATION_SCALE;
+    auto const circle_pos = visualization_position(screenX, screenY);
+
+    // Get the robot's orientation as a rotation (cosine/sine pair)
+    b2Rot rotation = b2Body_GetRotation(body_id);
+    float cosAngle = rotation.c;
+    float sinAngle = rotation.s;
+
+    // Define relative positions for LEDs around the robot based on orientation.
+    // For the lateral LEDs we want them exactly on the border, so use full 'radius'.
+    std::vector<b2Vec2> ledOffsets = { {0, 0} };
+
+    // Rotate LED offsets based on robot orientation
+    std::vector<b2Vec2> rotatedLedOffsets;
+    for (const auto& offset : ledOffsets) {
+        float rotatedX = cosAngle * offset.x - sinAngle * offset.y;
+        float rotatedY = sinAngle * offset.x + cosAngle * offset.y;
+        rotatedLedOffsets.push_back({rotatedX, rotatedY});
+    }
+
+    // Draw main LED
+    color_t const& ledColor = leds[0]; // Get LED color
+    uint8_t const r = adjust_color(ledColor.r);
+    uint8_t const g = adjust_color(ledColor.g);
+    uint8_t const b = adjust_color(ledColor.b);
+
+    // Calculate screen coordinates for the LED.
+    // Here, we scale the rotated offset from simulation units to pixels.
+    float ledScreenX = screenX + rotatedLedOffsets[0].x  * 0.95;
+    float ledScreenY = screenY + rotatedLedOffsets[0].y  * 0.95;
+
+    auto const led_pos = visualization_position(ledScreenX, ledScreenY);
+    // Center LED is drawn as a full circle.
+    filledCircleRGBA(renderer, led_pos.x, led_pos.y, (radius - 2) * mm_to_pixels, r, g, b, 255);
+
+    // Draw the main robot body (outline)
+    circleRGBA(renderer, circle_pos.x, circle_pos.y, radius * mm_to_pixels, 0, 0, 0, 255);
+
+    // Draw communication channels if needed
+    if (show_comm) {
+        for (int i = 0; i < IR_RX_COUNT; i++ ) {
+            // Find IR emitter position
+            //b2Vec2 ir_position = get_IR_emitter_position((ir_direction)i, 1.f / VISUALIZATION_SCALE);
+            b2Vec2 ir_position = get_position();
+            auto const ir_pos = visualization_position(ir_position.x * VISUALIZATION_SCALE, ir_position.y * VISUALIZATION_SCALE);
+            // Get color from colormap
+            uint8_t r, g, b;
+            qualitative_colormap(i, &r, &g, &b);
+            // Draw communication channels
+            for (PogobotObject* robot : neighbors[i]) {
+                b2Vec2 const r_pos = robot->get_position();
+                auto const r_circle_pos = visualization_position(r_pos.x * VISUALIZATION_SCALE, r_pos.y * VISUALIZATION_SCALE);
+                thickLineRGBA(renderer, ir_pos.x, ir_pos.y, r_circle_pos.x, r_circle_pos.y, 4, r, g, b, 150);
+            }
+        }
+    }
+}
+
 
 // MODELINE "{{{1
 // vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
