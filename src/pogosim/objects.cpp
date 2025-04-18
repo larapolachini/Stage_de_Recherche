@@ -381,6 +381,7 @@ void StaticLightObject::update_light_map(LightLevelMap& l) {
 void StaticLightObject::parse_configuration(Configuration const& config) {
     Object::parse_configuration(config);
     value = config["value"].get(10);
+    orig_value = value;
     photo_start_at = config["photo_start_at"].get(-1.0f);
     photo_start_duration = config["photo_start_duration"].get(1.0f);
     photo_start_value = config["photo_start_value"].get(32767);
@@ -394,6 +395,7 @@ void StaticLightObject::launch_user_step(float t) {
         // Check if we just started photo_start
         if (!performing_photo_start) {
             performing_photo_start = true;
+            orig_value = value;
             value = photo_start_value;
             light_map->update();
         }

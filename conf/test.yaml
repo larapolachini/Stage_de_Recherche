@@ -19,7 +19,7 @@ frames_name: "frames/f{:010.4f}.png"
 seed: 0
 show_communication_channels: false
 show_lateral_LEDs: true
-show_light_levels: true
+show_light_levels: false
 GUI: true
 
 # Time
@@ -30,15 +30,15 @@ GUI_speed_up: 10.0
 initial_formation: random # Can be "random" (all robots are placed randomly in the arena), or "disk" (robots are placed uniformly in a disk shape at the center of the arena)
 
 
-# Objects. TODO WIP
+# List of objects created in the simulation
 objects:
     global_light:
         type: static_light
         geometry: global
         value: 200
-#        photo_start_at: 1.0
-#        photo_start_duration: 1.0
-#        photo_start_value: 32767
+        photo_start_at: 1.0
+        photo_start_duration: 1.0
+        photo_start_value: 32767
 
     target_light:
         type: static_light
@@ -47,9 +47,6 @@ objects:
         y: 500
         radius: 200
         value: 2000
-#        photo_start_at: 1.0
-#        photo_start_duration: 1.0
-#        photo_start_value: 0
 
     obstacles:
         type: passive_object
