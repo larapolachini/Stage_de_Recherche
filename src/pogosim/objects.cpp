@@ -300,13 +300,13 @@ void LightLevelMap::update() {
 
 /************* OBJECT *************/ // {{{1
 
-Object::Object(uint16_t _id, float _x, float _y, ObjectGeometry& _geom)
-        : id(_id), x(_x), y(_y), geom(&_geom) {
+Object::Object(float _x, float _y, ObjectGeometry& _geom)
+        : x(_x), y(_y), geom(&_geom) {
     // ...
 }
 
-Object::Object(uint16_t _id, float _x, float _y, Configuration const& config)
-        : id(_id), x(_x), y(_y) {
+Object::Object(float _x, float _y, Configuration const& config)
+        : x(_x), y(_y) {
     parse_configuration(config);
 }
 
@@ -334,10 +334,10 @@ void Object::move(float _x, float _y) {
 /************* StaticLightObject *************/ // {{{1
 
 // Constructor with a light map pointer.
-StaticLightObject::StaticLightObject(uint16_t _id, float x, float y,
+StaticLightObject::StaticLightObject(float x, float y,
                                      ObjectGeometry& geom, LightLevelMap* light_map,
                                      int16_t value, float photo_start_at, float photo_start_duration, int16_t photo_start_value)
-    : Object(_id, x, y, geom),
+    : Object(x, y, geom),
       value(value),
       orig_value(value),
       light_map(light_map),
@@ -348,9 +348,9 @@ StaticLightObject::StaticLightObject(uint16_t _id, float x, float y,
     //update_light_map();
 }
 
-StaticLightObject::StaticLightObject(uint16_t _id, float _x, float _y,
+StaticLightObject::StaticLightObject(float _x, float _y,
         LightLevelMap* light_map, Configuration const& config)
-    : Object(_id, _x, _y, config),
+    : Object(_x, _y, config),
       light_map(light_map) {
     parse_configuration(config);
     light_map->register_callback([this](LightLevelMap& m){ this->update_light_map(m); });
@@ -410,11 +410,11 @@ void StaticLightObject::launch_user_step(float t) {
 
 /************* PhysicalObject *************/ // {{{1
 
-PhysicalObject::PhysicalObject(uint16_t _id, float _x, float _y,
+PhysicalObject::PhysicalObject(float _x, float _y,
        ObjectGeometry& geom, b2WorldId world_id,
        float _linear_damping, float _angular_damping,
        float _density, float _friction, float _restitution)
-    : Object(_id, _x, _y, geom),
+    : Object(_x, _y, geom),
       linear_damping(_linear_damping),
       angular_damping(_angular_damping),
       density(_density),
@@ -423,9 +423,9 @@ PhysicalObject::PhysicalObject(uint16_t _id, float _x, float _y,
     create_body(world_id);
 }
 
-PhysicalObject::PhysicalObject(uint16_t _id, float _x, float _y,
+PhysicalObject::PhysicalObject(float _x, float _y,
        b2WorldId world_id, Configuration const& config)
-    : Object(_id, _x, _y, config) {
+    : Object(_x, _y, config) {
     parse_configuration(config);
     create_body(world_id);
 }
@@ -484,21 +484,21 @@ void PhysicalObject::move(float _x, float _y) {
 
 /************* PassiveObject *************/ // {{{1
 
-PassiveObject::PassiveObject(uint16_t _id, float _x, float _y,
+PassiveObject::PassiveObject(float _x, float _y,
        ObjectGeometry& geom, b2WorldId world_id,
        float _linear_damping, float _angular_damping,
        float _density, float _friction, float _restitution,
        std::string _colormap)
-    : PhysicalObject(_id, _x, _y, geom, world_id,
+    : PhysicalObject(_x, _y, geom, world_id,
       _linear_damping, _angular_damping,
       _density, _friction, _restitution),
       colormap(_colormap) {
     // ...
 }
 
-PassiveObject::PassiveObject(uint16_t _id, float _x, float _y,
+PassiveObject::PassiveObject(float _x, float _y,
        b2WorldId world_id, Configuration const& config)
-    : PhysicalObject(_id, _x, _y, world_id, config) {
+    : PhysicalObject(_x, _y, world_id, config) {
     parse_configuration(config);
     // ...
 }
@@ -513,7 +513,8 @@ void PassiveObject::render(SDL_Renderer* renderer, b2WorldId world_id) const {
     auto const pos = visualization_position(screen_x, screen_y);
 
     // Assign color based on object id
-    uint8_t const value = id % 256;
+    uint8_t const value = (static_cast<int32_t>(x) + static_cast<int32_t>(y)) % 256;
+    //uint8_t const value = (reinterpret_cast<intptr_t>(this)) % 256;
     uint8_t r, g, b;
     get_cmap_val(colormap, value, &r, &g, &b);
 
@@ -552,10 +553,10 @@ Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Config
     Object* res = nullptr;
 
     if (type == "static_light") {
-        res = new StaticLightObject(id, x, y, light_map, config);
+        res = new StaticLightObject(x, y, light_map, config);
 
     } else if (type == "passive_object") {
-        res = new PassiveObject(id, x, y, world_id, config);
+        res = new PassiveObject(x, y, world_id, config);
 
     } else if (type == "pogobot") {
         res = new PogobotObject(id, x, y, world_id, userdatasize, config);

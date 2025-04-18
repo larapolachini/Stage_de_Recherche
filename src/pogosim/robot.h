@@ -192,6 +192,7 @@ public:
     //virtual ~Robot();
 
     // Base info
+    uint16_t id;                         ///< Object identifier.
     void* data = nullptr;                ///< Pointer to user data.
     void (*user_init)(void) = nullptr;   ///< Pointer to a user-defined initialization function.
     void (*user_step)(void) = nullptr;   ///< Pointer to a user-defined step function.

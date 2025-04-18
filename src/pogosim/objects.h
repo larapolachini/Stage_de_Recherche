@@ -374,22 +374,20 @@ public:
     /**
      * @brief Constructs an Object.
      *
-     * @param _id Unique object identifier.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param geom Object's geometry.
      */
-    Object(uint16_t _id, float _x, float _y, ObjectGeometry& _geom);
+    Object(float _x, float _y, ObjectGeometry& _geom);
 
     /**
      * @brief Constructs an Object from a configuration entry.
      *
-     * @param _id Unique object identifier.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param config Configuration entry describing the object properties.
      */
-    Object(uint16_t _id, float _x, float _y, Configuration const& config);
+    Object(float _x, float _y, Configuration const& config);
 
     /**
      * @brief Destructor
@@ -430,10 +428,6 @@ public:
      */
     virtual bool is_tangible() const { return false; };
 
-
-    // Base info
-    uint16_t id;                         ///< Object identifier.
-
     // Physical information
     float x;                             ///< X position
     float y;                             ///< Y position
@@ -461,7 +455,6 @@ public:
     /**
      * @brief Constructs a StaticLightObject object.
      *
-     * @param _id Unique object identifier.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param geom Object's geometry.
@@ -471,20 +464,19 @@ public:
      * @param photo_start_duration Amount of time to stay in the photo start stage.
      * @param photo_start_value Light value during the photo start stage.
      */
-    StaticLightObject(uint16_t _id, float _x, float _y,
+    StaticLightObject(float _x, float _y,
            ObjectGeometry& _geom, LightLevelMap* light_map,
            int16_t _value, float _photo_start_at = -1.0f, float _photo_start_duration = 1.0f, int16_t _photo_start_value = 32767);
 
     /**
      * @brief Constructs a StaticLightObject object from a configuration entry.
      *
-     * @param _id Unique object identifier.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param light_map Pointer to the global light level map.
      * @param config Configuration entry describing the object properties.
      */
-    StaticLightObject(uint16_t _id, float _x, float _y,
+    StaticLightObject(float _x, float _y,
             LightLevelMap* light_map, Configuration const& config);
 
     /**
@@ -534,7 +526,6 @@ public:
     /**
      * @brief Constructs a PhysicalObject.
      *
-     * @param _id Unique object identifier.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param geom Object's geometry.
@@ -545,7 +536,7 @@ public:
      * @param _friction Friction coefficient of the body shape (default is 0.3f).
      * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
      */
-    PhysicalObject(uint16_t _id, float _x, float _y,
+    PhysicalObject(float _x, float _y,
            ObjectGeometry& geom, b2WorldId world_id,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
            float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f);
@@ -553,13 +544,12 @@ public:
     /**
      * @brief Constructs a PhysicalObject from a configuration entry.
      *
-     * @param _id Unique object identifier.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param world_id The Box2D world identifier.
      * @param config Configuration entry describing the object properties.
      */
-    PhysicalObject(uint16_t _id, float _x, float _y,
+    PhysicalObject(float _x, float _y,
            b2WorldId world_id, Configuration const& config);
 
     /**
@@ -640,7 +630,6 @@ public:
     /**
      * @brief Constructs a PassiveObject.
      *
-     * @param _id Unique object identifier.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param geom Object's geometry.
@@ -652,7 +641,7 @@ public:
      * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
      * @param _colormap Name of the colormap to use to set the color of the object
      */
-    PassiveObject(uint16_t _id, float _x, float _y,
+    PassiveObject(float _x, float _y,
            ObjectGeometry& geom, b2WorldId world_id,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
            float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
@@ -661,13 +650,12 @@ public:
     /**
      * @brief Constructs a PassiveObject from a configuration entry.
      *
-     * @param _id Unique object identifier.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param world_id The Box2D world identifier.
      * @param config Configuration entry describing the object properties.
      */
-    PassiveObject(uint16_t _id, float _x, float _y,
+    PassiveObject(float _x, float _y,
            b2WorldId world_id, Configuration const& config);
 
     /**

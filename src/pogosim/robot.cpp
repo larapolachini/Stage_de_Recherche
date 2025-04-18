@@ -93,9 +93,10 @@ PogobotObject::PogobotObject(uint16_t _id, float _x, float _y,
        float _linear_damping, float _angular_damping,
        float _density, float _friction, float _restitution,
        float _linear_noise_stddev, float _angular_noise_stddev)
-    : PhysicalObject(_id, _x, _y, geom, world_id,
+    : PhysicalObject(_x, _y, geom, world_id,
       _linear_damping, _angular_damping,
       _density, _friction, _restitution),
+    id(_id),
     communication_radius(_communication_radius), msg_success_rate(std::move(_msg_success_rate)),
     temporal_noise_stddev(_temporal_noise_stddev),
     linear_noise_stddev(_linear_noise_stddev), angular_noise_stddev(_angular_noise_stddev) {
@@ -105,7 +106,8 @@ PogobotObject::PogobotObject(uint16_t _id, float _x, float _y,
 }
 
 PogobotObject::PogobotObject(uint16_t _id, float _x, float _y,
-       b2WorldId world_id, size_t _userdatasize, Configuration const& config) : PhysicalObject(_id, _x, _y, world_id, config) {
+       b2WorldId world_id, size_t _userdatasize, Configuration const& config)
+    : PhysicalObject(_x, _y, world_id, config), id(_id) {
     parse_configuration(config);
     data = malloc(_userdatasize);
     initialize_time();

@@ -133,7 +133,6 @@ void Simulation::create_objects() {
             } else {
                 obj_vec.emplace_back(object_factory(current_id, x, y, worldId, obj_config, light_map.get(), userdatasize));
             }
-            current_id++;
 
             // Update largest bounding disk radius
             auto* geom = obj_vec.back()->get_geometry();
@@ -144,6 +143,7 @@ void Simulation::create_objects() {
             // Check if the object is a robot, and store it if this is the case
             if (auto robot = std::dynamic_pointer_cast<PogobotObject>(obj_vec.back())) {
                 robots.push_back(robot);
+                current_id++;
                 // Update max communication radius
                 float const tot_radius = robot->radius + robot->communication_radius;
                 if (max_comm_radius < tot_radius)
