@@ -55,7 +55,7 @@ objects:
         #initial_formation: random
         colormap: rainbow # qualitative
 
-        radius: 70              # In mm, if geometry is a disk
+        #radius: 70             # In mm, if geometry is a disk
         body_width: 70          # In mm, if geometry is a rectangle
         body_height: 50         # In mm, if geometry is a rectangle
 
@@ -66,14 +66,15 @@ objects:
         body_restitution: 0.3
         #body_collision_shape: rectangle
 
-#    walls:
-#        type: pogowall
-#        geometry: arena
-#
-#        p_send: 0.5
-#        msg_success_rate:
-#            type: static
-#            rate: 0.9
+    walls:
+        type: pogowall
+        geometry: arena
+        behavior: default_wall # user_code
+
+        p_send: 0.5
+        msg_success_rate:
+            type: static
+            rate: 0.9
 
     robots:
         type: pogobot

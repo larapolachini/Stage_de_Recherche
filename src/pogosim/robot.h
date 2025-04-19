@@ -180,6 +180,7 @@ public:
     /**
      * @brief Constructs a PogobotObject from a configuration entry.
      *
+     * @param simulation Pointer to the underlying simulation.
      * @param _id Unique object identifier.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
@@ -187,7 +188,7 @@ public:
      * @param _userdatasize Size of the memory block allocated for user data.
      * @param config Configuration entry describing the object properties.
      */
-    PogobotObject(uint16_t _id, float _x, float _y,
+    PogobotObject(Simulation* simulation, uint16_t _id, float _x, float _y,
            b2WorldId world_id, size_t _userdatasize, Configuration const& config,
            std::string const& _category = "robots");
 
@@ -365,7 +366,7 @@ protected:
      *
      * @param config Configuration entry describing the object properties.
      */
-    virtual void parse_configuration(Configuration const& config) override;
+    virtual void parse_configuration(Configuration const& config, Simulation* simulation) override;
 };
 
 
@@ -408,6 +409,7 @@ public:
     /**
      * @brief Constructs a PogobotObject from a configuration entry.
      *
+     * @param simulation Pointer to the underlying simulation.
      * @param _id Unique object identifier.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
@@ -415,7 +417,7 @@ public:
      * @param _userdatasize Size of the memory block allocated for user data.
      * @param config Configuration entry describing the object properties.
      */
-    PogobjectObject(uint16_t _id, float _x, float _y,
+    PogobjectObject(Simulation* simulation, uint16_t _id, float _x, float _y,
            b2WorldId world_id, size_t _userdatasize, Configuration const& config,
            std::string const& _category = "robots");
 
@@ -445,6 +447,88 @@ public:
      */
     virtual void render(SDL_Renderer*, b2WorldId) const override;
 };
+
+
+/**
+ * @brief Class representing a simulated Pogowall.
+ */
+class Pogowall : public PogobotObject {
+public:
+    /**
+     * Initializes a new Pogobject robot with the specified identifier, user data size, initial position,
+     * radius, associated Box2D world, and message success rate. It also allows customization
+     * of the body's physical properties (linear and angular damping, density, friction, and restitution).
+     *
+     * @param _id Unique object identifier.
+     * @param geom Object's geometry.
+     * @param world_id The Box2D world identifier.
+     * @param _userdatasize Size of the memory block allocated for user data.
+     * @param _communication_radius communication radius of each IR emitter
+     * @param _msg_success_rate std::unique_ptr<MsgSuccessRate> describing the probability of successfully sending a message.
+     * @param _temporal_noise_stddev Standard deviation of the gaussian noise to apply to time on each object, or 0.0 for deterministic time
+     * @param category Name of the category of the object.
+     */
+    Pogowall(uint16_t _id,
+           ObjectGeometry& geom, b2WorldId world_id,
+           size_t _userdatasize,
+           float _communication_radius = 80.0f,
+           std::unique_ptr<MsgSuccessRate> _msg_success_rate = std::make_unique<ConstMsgSuccessRate>(0.5),
+           float _temporal_noise_stddev = 0.0f,
+           std::string const& _category = "robots");
+
+    /**
+     * @brief Constructs a PogobotObject from a configuration entry.
+     *
+     * @param simulation Pointer to the underlying simulation.
+     * @param _id Unique object identifier.
+     * @param world_id The Box2D world identifier.
+     * @param _userdatasize Size of the memory block allocated for user data.
+     * @param config Configuration entry describing the object properties.
+     */
+    Pogowall(Simulation* simulation, uint16_t _id,
+           b2WorldId world_id, size_t _userdatasize, Configuration const& config,
+           std::string const& _category = "robots");
+
+    /**
+     * @brief Updates the motor speed of the robot and recalculates its velocities.
+     * Pogobjects do not move, so this method will always set the motors to 0.
+     *
+     * @param motor The identifier of the motor to update.
+     * @param speed (Ignored) speed value for the selected motor.
+     */
+    virtual void set_motor([[maybe_unused]] motor_id motor, [[maybe_unused]] int speed) override { }
+
+    /**
+     * @brief Retrieves the IR emitters current positions
+     *
+     * Returns the position of one of the robot's IR emitter as a Box2D vector.
+     *
+     * @return b2Vec2 The current position.
+     */
+    virtual b2Vec2 get_IR_emitter_position(ir_direction dir) const override;
+
+    /**
+     * @brief Renders the robot on the given SDL renderer.
+     *
+     * @param renderer Pointer to the SDL_Renderer.
+     * @param world_id The Box2D world identifier (unused in rendering).
+     */
+    virtual void render(SDL_Renderer*, b2WorldId) const override { }
+
+    /**
+     * @brief Returns whether this object is tangible (e.g. collisions, etc) or not.
+     */
+    virtual bool is_tangible() const { return true; }
+
+    /**
+     * @brief Move the object to a given coordinate
+     *
+     * @param x X coordinate.
+     * @param y Y coordinate.
+     */
+    virtual void move([[maybe_unused]] float x, [[maybe_unused]] float y) override { }
+};
+
 
 
 //extern Robot* current_robot;

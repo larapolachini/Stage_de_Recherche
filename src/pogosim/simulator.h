@@ -68,10 +68,11 @@ class Simulation {
 
     b2WorldId worldId;                    ///< Identifier for the Box2D world.
     //std::vector<Robot> robots;          ///< Vector of robots in the simulation.
-    std::vector<std::vector<b2Vec2>> arena_polygons; ///< Arena polygon definitions.
+    arena_polygons_t arena_polygons;      ///< Arena polygon definitions.
 
     // Objects
     std::map<std::string, std::vector<std::shared_ptr<Object>>> objects;    ///< Dictionary of simulation objects, by category name.
+    std::vector<std::shared_ptr<Pogowall>> wall_objects;              ///< Vector of pogowalls in the simulation.
     std::vector<std::shared_ptr<PogobotObject>> robots;                     ///< Vector of robots in the simulation.
     std::vector<std::shared_ptr<Object>> non_robots;                        ///< Vector of objects that are not robots in the simulation.
     std::unique_ptr<LightLevelMap> light_map;                               ///< Light map of the arena.
@@ -297,6 +298,14 @@ public:
      * @return LightLevelMap* Pointer to the LightLevelMap instance.
      */
     LightLevelMap* get_light_map();
+
+    /**
+     * @brief Retrieve the arena geometry.
+     *
+     * @return Arena polygons.
+     */
+    arena_polygons_t const& get_arena_geometry() { return arena_polygons; };
+
 };
 
 /// Global simulation instance.

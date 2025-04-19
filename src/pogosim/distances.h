@@ -38,6 +38,35 @@ float euclidean_distance(const b2Vec2& a, const b2Vec2& b);
  */
 void find_neighbors(ir_direction dir, std::vector<std::shared_ptr<PogobotObject>>& robots, float maxDistance);
 
+/**
+ * @brief Compute, for every robot, the distance from its IR–emitter @p dir to the
+ *        nearest arena wall.
+ *
+ * The function returns a vector<double> whose i‑th element is the distance for
+ * robots[i].  The caller decides what to do with the result (store it in the robot,
+ * feed a sensor model, etc.).
+ *
+ * @param dir             Which IR emitter of the robot is queried.
+ * @param robots          Robots for which the distance is required.
+ * @param arena_polygons  Arena walls described as polygons (see arena_polygons_t).
+ * @return std::vector<float> A vector of distances (same ordering as @p robots).
+ */
+std::vector<float>
+compute_wall_distances(ir_direction                           dir,
+                       const std::vector<std::shared_ptr<PogobotObject>>& robots,
+                       const arena_polygons_t&                arena_polygons);
+
+
+/**
+ * @brief Finds robots that are close to given pogowalls.
+ *
+ * @param pogowalls A vector of Pogowall objects.
+ * @param dir Direction in which messages are sent (i.e. the ID number of the IR emitter)
+ * @param robots A vector of Robot objects.
+ * @param max_distance The maximum distance within which a robot and a pogowalls are considered neighbors.
+ */
+void find_neighbors_to_pogowalls(std::vector<std::shared_ptr<Pogowall>>& pogowalls, ir_direction dir, std::vector<std::shared_ptr<PogobotObject>>& robots);
+
 #endif // DISTANCES_H
 
 // MODELINE "{{{1

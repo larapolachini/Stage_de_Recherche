@@ -84,6 +84,7 @@ inline GridCell getGridCell(float x, float y, float cellSize) {
             static_cast<int>(std::floor(y / cellSize))};
 }
 
+// XXX Take into account robot communication radius !!!
 void find_neighbors(ir_direction dir, std::vector<std::shared_ptr<PogobotObject>>& robots, float maxDistance) {
     const float cellSize = maxDistance;
     const float maxDistSq = maxDistance * maxDistance;
@@ -132,6 +133,89 @@ void find_neighbors(ir_direction dir, std::vector<std::shared_ptr<PogobotObject>
                         robots[i]->neighbors[dir].push_back(robots[otherIdx].get());
                     }
                 }
+            }
+        }
+    }
+}
+
+
+namespace {
+
+/* squared length of a vector */
+[[nodiscard]] inline float len_sq(b2Vec2 v) noexcept { return v.x * v.x + v.y * v.y; }
+
+/**
+ * @brief Shortest distance P — segment AB.
+ *
+ * Identical math to what we used in ArenaGeometry; kept here in an unnamed
+ * namespace so the compiler can inline it.
+ */
+[[nodiscard]] float distance_point_segment(b2Vec2 p, b2Vec2 a, b2Vec2 b) noexcept {
+    const b2Vec2 ab{b.x - a.x, b.y - a.y};
+    const float  ab_len2 = len_sq(ab);
+    if (ab_len2 == 0.0f) {          // degenerate edge
+        return std::sqrt(len_sq({p.x - a.x, p.y - a.y}));
+    }
+
+    const b2Vec2 ap{p.x - a.x, p.y - a.y};
+    float t = (ap.x * ab.x + ap.y * ab.y) / ab_len2;   // scalar projection
+    t = std::clamp(t, 0.0f, 1.0f);
+
+    const b2Vec2 closest{a.x + t * ab.x, a.y + t * ab.y};
+    return std::sqrt(len_sq({p.x - closest.x, p.y - closest.y}));
+}
+
+} // namespace
+
+std::vector<float>
+compute_wall_distances(ir_direction                           dir,
+                       const std::vector<std::shared_ptr<PogobotObject>>& robots,
+                       const arena_polygons_t&                arena_polygons) {
+    const std::size_t N = robots.size();
+    std::vector<float> distances;
+    distances.reserve(N);
+
+    /* 1)  Structure‑of‑arrays cache‑friendly layout for robot positions          */
+    std::vector<float> xs(N), ys(N);
+    for (std::size_t i = 0; i < N; ++i) {
+        const b2Vec2 pos = robots[i]->get_IR_emitter_position(dir);
+        xs[i] = pos.x;
+        ys[i] = pos.y;
+    }
+
+    /* 2)  Walk every robot × every arena edge  (usually still very small)        */
+    for (std::size_t i = 0; i < N; ++i) {
+        const b2Vec2 p{xs[i] * VISUALIZATION_SCALE, ys[i] * VISUALIZATION_SCALE};
+        float best = std::numeric_limits<float>::infinity();
+
+        for (const auto& poly : arena_polygons) {
+            const std::size_t m = poly.size();
+            if (m < 2) continue;
+
+            for (std::size_t k = 0, j = m - 1; k < m; j = k++) {
+                best = std::min(best, distance_point_segment(p, poly[j], poly[k]));
+                //glogger->info("compute_wall_distances p=({},{}) poly[i]=({},{}), poly[k]=({},{})", p.x, p.y, poly[i].x, poly[i].y, poly[k].x, poly[k].y);
+            }
+        }
+        distances.push_back(best);
+    }
+    return distances;
+}
+
+void find_neighbors_to_pogowalls(std::vector<std::shared_ptr<Pogowall>>& pogowalls, ir_direction dir, std::vector<std::shared_ptr<PogobotObject>>& robots) {
+    size_t N = robots.size();
+
+    for (auto wall : pogowalls) {
+        ArenaGeometry* geom = dynamic_cast<ArenaGeometry*>(wall->get_geometry());
+        if (geom == nullptr)
+            continue;
+
+        auto dists = compute_wall_distances(dir, robots, geom->get_arena_polygons());
+        for (size_t i = 0; i < N; i++) {
+            //glogger->info("Not close to wall {}: {} ({})", i, dists[i], robots[i]->communication_radius);
+            if (dists[i] <= robots[i]->communication_radius) {
+                //glogger->info("Close to wall {}: {} ({})", i, dists[i], robots[i]->communication_radius);
+                robots[i]->neighbors[dir].push_back(wall.get());
             }
         }
     }

@@ -5,6 +5,8 @@
 #include <SDL2/SDL_image.h>
 #include <box2d/box2d.h>
 
+typedef std::vector<std::vector<b2Vec2>> arena_polygons_t;
+
 float const VISUALIZATION_SCALE = 100.0f; // 1 Box2D unit = 100 pixels
 
 /// Global scaling factor from millimeters to pixels.

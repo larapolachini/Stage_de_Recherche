@@ -9,6 +9,7 @@
 #include "colormaps.h"
 
 
+class Simulation;
 
 /**
  * @brief Represents a disk with center (x, y) and radius.
@@ -104,6 +105,11 @@ public:
      */
     virtual BoundingBox compute_bounding_box() const = 0;
 
+    /**
+     * @brief Compute the distance from a given point to the geometry.
+     */
+    virtual float get_distance_to(b2Vec2 orig, b2Vec2 point) const;
+
 protected:
     bool shape_created = false;
     b2ShapeId shape_id;     ///< Box2D shape identifier.
@@ -163,10 +169,19 @@ public:
      */
     virtual void render(SDL_Renderer* renderer, b2WorldId world_id, float x, float y, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha = 255) const override;
 
-    // New methods for DiskGeometry.
+    /**
+     * @brief Computes the bounding disk that completely encloses the geometry.
+     *
+     * @return A BoundingDisk with center (x,y) and radius.
+     */
     virtual BoundingDisk compute_bounding_disk() const override;
-    virtual BoundingBox compute_bounding_box() const override;
 
+    /**
+     * @brief Computes the axis-aligned bounding box that completely encloses the geometry.
+     *
+     * @return A BoundingBox with top-left corner (x,y) and width and height.
+     */
+    virtual BoundingBox compute_bounding_box() const override;
 
 protected:
     float radius;           ///< Radius of the disk
@@ -229,8 +244,18 @@ public:
      */
     float get_height() const { return height; }
 
-    // New methods for RectangleGeometry.
+    /**
+     * @brief Computes the bounding disk that completely encloses the geometry.
+     *
+     * @return A BoundingDisk with center (x,y) and radius.
+     */
     virtual BoundingDisk compute_bounding_disk() const override;
+
+    /**
+     * @brief Computes the axis-aligned bounding box that completely encloses the geometry.
+     *
+     * @return A BoundingBox with top-left corner (x,y) and width and height.
+     */
     virtual BoundingBox compute_bounding_box() const override;
 
 protected:
@@ -243,7 +268,7 @@ protected:
  * @brief Geometry representing the entire simulation.
  *
  */
-class GlobalGeometry : public ObjectGeometry {
+class GlobalGeometry final : public ObjectGeometry {
 public:
     /**
      * @brief Construct an ObjectGeometry.
@@ -287,9 +312,71 @@ public:
      */
     virtual void render(SDL_Renderer*, b2WorldId, float, float, uint8_t, uint8_t, uint8_t, uint8_t = 255) const override {}
 
-    // New methods for GlobalGeometry
+    /**
+     * @brief Computes the bounding disk that completely encloses the geometry.
+     *
+     * @return A BoundingDisk with center (x,y) and radius.
+     */
     virtual BoundingDisk compute_bounding_disk() const override;
+
+    /**
+     * @brief Computes the axis-aligned bounding box that completely encloses the geometry.
+     *
+     * @return A BoundingBox with top-left corner (x,y) and width and height.
+     */
     virtual BoundingBox compute_bounding_box() const override;
+
+    /**
+     * @brief Compute the distance from a given point to the geometry.
+     */
+    virtual float get_distance_to([[maybe_unused]] b2Vec2 orig, [[maybe_unused]] b2Vec2 point) const override { return 0.0f; }
+};
+
+
+/**
+ * @brief Geometry representing the entire arena (collection of wall polygons).
+ *
+ * Each element of @p arena_polygons describes one closed wall loop.
+ */
+class ArenaGeometry final : public ObjectGeometry {
+public:
+    /// Ctor – keeps a ref to the polygon container that lives elsewhere.
+    explicit ArenaGeometry(arena_polygons_t const& arena_polygons) noexcept
+        : arena_polygons_{arena_polygons} {}
+
+    /* ---------- ObjectGeometry interface ---------- */
+
+    void create_box2d_shape([[maybe_unused]] b2BodyId body_id, [[maybe_unused]] b2ShapeDef& shape_def) override { }
+
+    std::vector<std::vector<bool>>
+    export_geometry_grid(std::size_t num_bins_x,
+                         std::size_t num_bins_y,
+                         float      bin_width,
+                         float      bin_height,
+                         float      obj_x,
+                         float      obj_y) const override;
+
+    void render(SDL_Renderer*, b2WorldId, float, float,
+                uint8_t, uint8_t, uint8_t, uint8_t = 255) const override { }
+
+    BoundingDisk  compute_bounding_disk() const override;
+    BoundingBox   compute_bounding_box()  const override;
+
+    /**
+     * @brief Return the *shortest* Euclidean distance between @p point and all arena walls.
+     *
+     * The @p orig parameter is ignored (it is only useful for geometries that need a reference
+     * point such as Catmull‑Rom splines).
+     */
+    float get_distance_to(b2Vec2 /*orig*/, b2Vec2 point) const override;
+
+    arena_polygons_t const& get_arena_polygons() { return arena_polygons_; }
+
+private:
+    static float distance_point_segment(b2Vec2 p, b2Vec2 a, b2Vec2 b) noexcept;
+    static bool  point_inside_polygon(b2Vec2 p, const std::vector<b2Vec2>& poly) noexcept;
+
+    const arena_polygons_t& arena_polygons_;
 };
 
 
@@ -384,12 +471,13 @@ public:
     /**
      * @brief Constructs an Object from a configuration entry.
      *
+     * @param simulation Pointer to the underlying simulation.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param config Configuration entry describing the object properties.
      * @param category Name of the category of the object.
      */
-    Object(float _x, float _y, Configuration const& config, std::string const& _category = "objects");
+    Object(Simulation* simulation, float _x, float _y, Configuration const& config, std::string const& _category = "objects");
 
     /**
      * @brief Destructor
@@ -443,7 +531,7 @@ protected:
      *
      * @param config Configuration entry describing the object properties.
      */
-    virtual void parse_configuration(Configuration const& config);
+    virtual void parse_configuration(Configuration const& config, Simulation* simulation);
 
     ObjectGeometry* geom;                ///< Geometry of the object.
 };
@@ -477,13 +565,14 @@ public:
     /**
      * @brief Constructs a StaticLightObject object from a configuration entry.
      *
+     * @param simulation Pointer to the underlying simulation.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param light_map Pointer to the global light level map.
      * @param config Configuration entry describing the object properties.
      * @param category Name of the category of the object.
      */
-    StaticLightObject(float _x, float _y,
+    StaticLightObject(Simulation* simulation, float _x, float _y,
             LightLevelMap* light_map, Configuration const& config,
             std::string const& _category = "objects");
 
@@ -512,7 +601,7 @@ protected:
      *
      * @param config Configuration entry describing the object properties.
      */
-    virtual void parse_configuration(Configuration const& config) override;
+    virtual void parse_configuration(Configuration const& config, Simulation* simulation) override;
 
     int16_t value;
     int16_t orig_value;
@@ -554,13 +643,14 @@ public:
     /**
      * @brief Constructs a PhysicalObject from a configuration entry.
      *
+     * @param simulation Pointer to the underlying simulation.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param world_id The Box2D world identifier.
      * @param config Configuration entry describing the object properties.
      * @param category Name of the category of the object.
      */
-    PhysicalObject(float _x, float _y,
+    PhysicalObject(Simulation* simulation, float _x, float _y,
            b2WorldId world_id, Configuration const& config,
            std::string const& _category = "objects");
 
@@ -610,7 +700,7 @@ protected:
      *
      * @param config Configuration entry describing the object properties.
      */
-    virtual void parse_configuration(Configuration const& config) override;
+    virtual void parse_configuration(Configuration const& config, Simulation* simulation) override;
 
     /**
      * @brief Creates the object's physical body in the simulation.
@@ -664,13 +754,14 @@ public:
     /**
      * @brief Constructs a PassiveObject from a configuration entry.
      *
+     * @param simulation Pointer to the underlying simulation.
      * @param x Initial x-coordinate in the simulation.
      * @param y Initial y-coordinate in the simulation.
      * @param world_id The Box2D world identifier.
      * @param config Configuration entry describing the object properties.
      * @param category Name of the category of the object.
      */
-    PassiveObject(float _x, float _y,
+    PassiveObject(Simulation* simulation, float _x, float _y,
            b2WorldId world_id, Configuration const& config,
            std::string const& _category = "objects");
 
@@ -690,7 +781,7 @@ protected:
      *
      * @param config Configuration entry describing the object properties.
      */
-    virtual void parse_configuration(Configuration const& config) override;
+    virtual void parse_configuration(Configuration const& config, Simulation* simulation) override;
 };
 
 
@@ -698,20 +789,22 @@ protected:
  * @brief Factory of ObjectGeometries
  *
  * @param config Configuration entry describing the object properties.
+ * @param simulation Pointer to the underlying simulation.
  */
-ObjectGeometry* object_geometry_factory(Configuration const& config);
+ObjectGeometry* object_geometry_factory(Configuration const& config, Simulation* simulation);
 
 
 /**
  * @brief Factory of simulation Objects. Return a constructed object from configuration.
  *
+ * @param simulation Pointer to the underlying simulation.
  * @param world_id The Box2D world identifier (unused in rendering).
  * @param config Configuration entry describing the object properties.
  * @param light_map Pointer to the global light level map.
  * @param userdatasize Size of the memory block allocated for user data.
  * @param category Name of the category of the object.
  */
-Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map, size_t userdatasize = 0, std::string const& category = "objects");
+Object* object_factory(Simulation* simulation, uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map, size_t userdatasize = 0, std::string const& category = "objects");
 
 /**
  * @brief Interface to colormaps

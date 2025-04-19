@@ -106,18 +106,18 @@ PogobotObject::PogobotObject(uint16_t _id, float _x, float _y,
     create_robot_body(world_id);
 }
 
-PogobotObject::PogobotObject(uint16_t _id, float _x, float _y,
+PogobotObject::PogobotObject(Simulation* simulation, uint16_t _id, float _x, float _y,
        b2WorldId world_id, size_t _userdatasize, Configuration const& config,
        std::string const& _category)
-    : PhysicalObject(_x, _y, world_id, config, _category), id(_id) {
-    parse_configuration(config);
+    : PhysicalObject(simulation, _x, _y, world_id, config, _category), id(_id) {
+    parse_configuration(config, simulation);
     data = malloc(_userdatasize);
     initialize_time();
     create_robot_body(world_id);
 }
 
-void PogobotObject::parse_configuration(Configuration const& config) {
-    PhysicalObject::parse_configuration(config);
+void PogobotObject::parse_configuration(Configuration const& config, Simulation* simulation) {
+    PhysicalObject::parse_configuration(config, simulation);
     msg_success_rate.reset(msg_success_rate_factory(config["msg_success_rate"]));
     communication_radius = config["communication_radius"].get(80.0f);
     temporal_noise_stddev = config["temporal_noise_stddev"].get(0.0f);
@@ -131,11 +131,8 @@ void PogobotObject::create_robot_body([[maybe_unused]] b2WorldId world_id) {
     b2Vec2 velocity = { 1.0f, 1.0f };
     b2Body_SetLinearVelocity(body_id, velocity);
 
-    // Ensure the geometry is a disk, and extract radius
-    DiskGeometry* g = dynamic_cast<DiskGeometry*>(geom);
-    if (!g)
-        throw std::runtime_error("Pogobots can only have a geometry of type 'disk'.");
-    radius = g->get_radius();
+    // Extract radius from geometry
+    radius = geom->compute_bounding_disk().radius;
 }
 
 
@@ -446,10 +443,10 @@ PogobjectObject::PogobjectObject(uint16_t _id, float _x, float _y,
         set_motor(static_cast<motor_id>(i), 0);
 }
 
-PogobjectObject::PogobjectObject(uint16_t _id, float _x, float _y,
+PogobjectObject::PogobjectObject(Simulation* simulation, uint16_t _id, float _x, float _y,
        b2WorldId world_id, size_t _userdatasize, Configuration const& config,
        std::string const& _category)
-    : PogobotObject::PogobotObject(_id, _x, _y, world_id, _userdatasize, config, _category) {
+    : PogobotObject::PogobotObject(simulation, _id, _x, _y, world_id, _userdatasize, config, _category) {
     for (size_t i = 0; i != motorB; i++)
         set_motor(static_cast<motor_id>(i), 0);
 }
@@ -537,6 +534,36 @@ void PogobjectObject::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId 
             }
         }
     }
+}
+
+/************* Pogowalls *************/ // {{{1
+
+Pogowall::Pogowall(uint16_t _id,
+       ObjectGeometry& _geom, b2WorldId world_id,
+       size_t _userdatasize,
+       float _communication_radius,
+       std::unique_ptr<MsgSuccessRate> _msg_success_rate,
+       float _temporal_noise_stddev,
+       std::string const& _category)
+    : PogobotObject::PogobotObject(_id, 0.0f, 0.0f, _geom, world_id,
+      _userdatasize, _communication_radius, std::move(_msg_success_rate),
+      _temporal_noise_stddev, 0.0f, 0.0f,
+      1000.f, 0.0f, 0.0f,
+      0.0f, 0.0f, _category) {
+    auto bd = geom->compute_bounding_disk();
+    PhysicalObject::move(bd.center_x, bd.center_y);
+}
+
+Pogowall::Pogowall(Simulation* simulation, uint16_t _id,
+       b2WorldId world_id, size_t _userdatasize, Configuration const& config,
+       std::string const& _category)
+    : PogobotObject::PogobotObject(simulation, _id, 0.0f, 0.0f, world_id, _userdatasize, config, _category) {
+    auto bd = geom->compute_bounding_disk();
+    PhysicalObject::move(bd.center_x, bd.center_y);
+}
+
+b2Vec2 Pogowall::get_IR_emitter_position([[maybe_unused]] ir_direction dir) const {
+    return {NAN, NAN};
 }
 
 

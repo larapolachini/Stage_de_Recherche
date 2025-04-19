@@ -100,6 +100,7 @@ void Simulation::init_all() {
 
 void Simulation::create_objects() {
     uint16_t current_id = 0;
+    uint16_t current_other_id = 65535;
     float smallest_bounding_disk_radius = 1e5f;
     std::vector<std::shared_ptr<Object>> objects_to_move;
 
@@ -128,10 +129,11 @@ void Simulation::create_objects() {
 
             // Create object from configuration
             if (std::isnan(x) or std::isnan(y)) {
-                obj_vec.emplace_back(object_factory(current_id, 0.0f, 0.0f, worldId, obj_config, light_map.get(), userdatasize, name));
-                objects_to_move.push_back(obj_vec.back());
+                obj_vec.emplace_back(object_factory(this, current_id, 0.0f, 0.0f, worldId, obj_config, light_map.get(), userdatasize, name));
+                if (obj_vec.back()->is_tangible())
+                    objects_to_move.push_back(obj_vec.back());
             } else {
-                obj_vec.emplace_back(object_factory(current_id, x, y, worldId, obj_config, light_map.get(), userdatasize, name));
+                obj_vec.emplace_back(object_factory(this, current_id, x, y, worldId, obj_config, light_map.get(), userdatasize, name));
             }
 
             // Update largest bounding disk radius
@@ -141,7 +143,12 @@ void Simulation::create_objects() {
                 smallest_bounding_disk_radius = bounding_disk_radius;
 
             // Check if the object is a robot, and store it if this is the case
-            if (auto robot = std::dynamic_pointer_cast<PogobotObject>(obj_vec.back())) {
+            if (auto wall = std::dynamic_pointer_cast<Pogowall>(obj_vec.back())) {
+                wall->id = current_other_id;
+                current_other_id--;
+                wall_objects.push_back(wall);
+                robots.push_back(wall);
+            } else if (auto robot = std::dynamic_pointer_cast<PogobotObject>(obj_vec.back())) {
                 robots.push_back(robot);
                 current_id++;
                 // Update max communication radius
@@ -544,8 +551,10 @@ void Simulation::handle_SDL_events() {
 
 
 void Simulation::compute_neighbors() {
+    // Find robots that are neighbors
     for (int i = 0; i < IR_RX_COUNT; i++ ) {
         find_neighbors((ir_direction)i, robots, max_comm_radius / VISUALIZATION_SCALE);
+        find_neighbors_to_pogowalls(wall_objects, (ir_direction)i, robots);
     }
 
     // Merge neighbors (without duplicates) from all IR emitters/receivers into the direction ir_all

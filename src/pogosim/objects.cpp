@@ -2,6 +2,8 @@
 #include "utils.h"
 #include "objects.h"
 #include "robot.h"
+#include "distances.h"
+#include "simulator.h"
 
 #include "SDL2_gfxPrimitives.h"
 
@@ -11,6 +13,10 @@
 ObjectGeometry::~ObjectGeometry() {
     if (shape_created && b2Shape_IsValid(shape_id))
         b2DestroyShape(shape_id);
+}
+
+float ObjectGeometry::get_distance_to(b2Vec2 orig, b2Vec2 point) const {
+    return euclidean_distance(orig, point);
 }
 
 /************* DiskGeometry *************/ // {{{1
@@ -159,6 +165,112 @@ BoundingBox GlobalGeometry::compute_bounding_box() const {
     return { 0.0f, 0.0f, 0.0f, 0.0f };
 }
 
+/************* ArenaGeometry *************/ // {{{1
+
+
+float ArenaGeometry::distance_point_segment(b2Vec2 p, b2Vec2 a, b2Vec2 b) noexcept {
+    const b2Vec2 ab {b.x - a.x, b.y - a.y};
+    const float  ab_len2 = ab.x * ab.x + ab.y * ab.y;
+    if (ab_len2 == 0.0f) {                    // degenerate segment
+        const float dx = p.x - a.x;
+        const float dy = p.y - a.y;
+        return std::sqrt(dx * dx + dy * dy);
+    }
+
+    const b2Vec2 ap {p.x - a.x, p.y - a.y};
+    float t = (ap.x * ab.x + ap.y * ab.y) / ab_len2;   // projection factor
+    t = std::clamp(t, 0.0f, 1.0f);
+
+    const b2Vec2 closest {a.x + t * ab.x, a.y + t * ab.y};
+    const float  dx = p.x - closest.x;
+    const float  dy = p.y - closest.y;
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+/* Ray‑casting, even‑odd rule */
+bool ArenaGeometry::point_inside_polygon(b2Vec2 p,
+        const std::vector<b2Vec2>& poly) noexcept {
+    bool inside = false;
+    const std::size_t n = poly.size();
+    for (std::size_t i = 0, j = n - 1; i < n; j = i++) {
+        const auto& vi = poly[i];
+        const auto& vj = poly[j];
+
+        const bool intersect = ((vi.y > p.y) != (vj.y > p.y)) &&
+                               (p.x < (vj.x - vi.x) * (p.y - vi.y) / (vj.y - vi.y + 1e-9f) + vi.x);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+std::vector<std::vector<bool>>
+ArenaGeometry::export_geometry_grid(std::size_t num_bins_x,
+                                    std::size_t num_bins_y,
+                                    float       bin_width,
+                                    float       bin_height,
+                                    float       obj_x,
+                                    float       obj_y) const {
+    std::vector<std::vector<bool>> grid(num_bins_y, std::vector<bool>(num_bins_x, false));
+
+    for (std::size_t j = 0; j < num_bins_y; ++j) {
+        for (std::size_t i = 0; i < num_bins_x; ++i) {
+            const float cx = (i + 0.5f) * bin_width  - obj_x;
+            const float cy = (j + 0.5f) * bin_height - obj_y;
+            const b2Vec2 p{cx, cy};
+
+            /* Mark the cell if the point is *inside* any polygon */
+            for (const auto& poly : arena_polygons_) {
+                if (point_inside_polygon(p, poly)) {
+                    grid[j][i] = true;
+                    break;
+                }
+            }
+        }
+    }
+    return grid;
+}
+
+BoundingBox ArenaGeometry::compute_bounding_box() const {
+    float min_x =  std::numeric_limits<float>::max();
+    float min_y =  std::numeric_limits<float>::max();
+    float max_x = -std::numeric_limits<float>::max();
+    float max_y = -std::numeric_limits<float>::max();
+
+    for (const auto& poly : arena_polygons_) {
+        for (const auto& v : poly) {
+            min_x = std::min(min_x, v.x);
+            min_y = std::min(min_y, v.y);
+            max_x = std::max(max_x, v.x);
+            max_y = std::max(max_y, v.y);
+        }
+    }
+    return {min_x, min_y, max_x - min_x, max_y - min_y};
+}
+
+BoundingDisk ArenaGeometry::compute_bounding_disk() const {
+    const auto bb   = compute_bounding_box();
+    const float cx  = bb.x + bb.width  * 0.5f;
+    const float cy  = bb.y + bb.height * 0.5f;
+    const float rad = std::sqrt(bb.width * bb.width + bb.height * bb.height) * 0.5f;
+    return {cx, cy, rad};
+}
+
+float ArenaGeometry::get_distance_to([[maybe_unused]] b2Vec2 orig, b2Vec2 point) const {
+    float best = std::numeric_limits<float>::infinity();
+
+    for (const auto& poly : arena_polygons_) {
+        const std::size_t n = poly.size();
+        if (n < 2) continue;
+
+        /* Walk every segment of the polygon loop */
+        for (std::size_t i = 0, j = n - 1; i < n; j = i++) {
+            const float d = distance_point_segment(point, poly[j], poly[i]);
+            best = std::min(best, d);
+        }
+    }
+    return best;
+}
+
 
 /************* LightLevelMap *************/ // {{{1
 
@@ -305,9 +417,9 @@ Object::Object(float _x, float _y, ObjectGeometry& _geom, std::string const& _ca
     // ...
 }
 
-Object::Object(float _x, float _y, Configuration const& config, std::string const& _category)
+Object::Object(Simulation* simulation, float _x, float _y, Configuration const& config, std::string const& _category)
         : x(_x), y(_y), category(_category) {
-    parse_configuration(config);
+    parse_configuration(config, simulation);
 }
 
 // XXX : destroy geom ??
@@ -317,12 +429,12 @@ void Object::launch_user_step([[maybe_unused]] float t) {
     // ...
 }
 
-void Object::parse_configuration(Configuration const& config) {
+void Object::parse_configuration(Configuration const& config, Simulation* simulation) {
     x = config["x"].get(x);
     y = config["y"].get(y);
 
     // Initialize geometry
-    geom = object_geometry_factory(config); // XXX never destroyed
+    geom = object_geometry_factory(config, simulation); // XXX never destroyed
 }
 
 void Object::move(float _x, float _y) {
@@ -349,12 +461,12 @@ StaticLightObject::StaticLightObject(float x, float y,
     //update_light_map();
 }
 
-StaticLightObject::StaticLightObject(float _x, float _y,
+StaticLightObject::StaticLightObject(Simulation* simulation, float _x, float _y,
         LightLevelMap* light_map, Configuration const& config,
         std::string const& _category)
-    : Object(_x, _y, config, _category),
+    : Object(simulation, _x, _y, config, _category),
       light_map(light_map) {
-    parse_configuration(config);
+    parse_configuration(config, simulation);
     light_map->register_callback([this](LightLevelMap& m){ this->update_light_map(m); });
     //update_light_map();
 }
@@ -380,8 +492,8 @@ void StaticLightObject::update_light_map(LightLevelMap& l) {
     }
 }
 
-void StaticLightObject::parse_configuration(Configuration const& config) {
-    Object::parse_configuration(config);
+void StaticLightObject::parse_configuration(Configuration const& config, Simulation* simulation) {
+    Object::parse_configuration(config, simulation);
     value = config["value"].get(10);
     orig_value = value;
     photo_start_at = config["photo_start_at"].get(-1.0f);
@@ -428,11 +540,11 @@ PhysicalObject::PhysicalObject(float _x, float _y,
     create_body(world_id);
 }
 
-PhysicalObject::PhysicalObject(float _x, float _y,
+PhysicalObject::PhysicalObject(Simulation* simulation, float _x, float _y,
        b2WorldId world_id, Configuration const& config,
        std::string const& _category)
-    : Object(_x, _y, config, _category) {
-    parse_configuration(config);
+    : Object(simulation, _x, _y, config, _category) {
+    parse_configuration(config, simulation);
     create_body(world_id);
 }
 
@@ -445,8 +557,8 @@ float PhysicalObject::get_angle() const {
     return std::atan2(rotation.s, rotation.c);
 }
 
-void PhysicalObject::parse_configuration(Configuration const& config) {
-    Object::parse_configuration(config);
+void PhysicalObject::parse_configuration(Configuration const& config, Simulation* simulation) {
+    Object::parse_configuration(config, simulation);
     linear_damping = config["body_linear_damping"].get(0.0f);
     angular_damping = config["body_angular_damping"].get(0.0f);
     density = config["body_density"].get(10.0f);
@@ -503,11 +615,11 @@ PassiveObject::PassiveObject(float _x, float _y,
     // ...
 }
 
-PassiveObject::PassiveObject(float _x, float _y,
+PassiveObject::PassiveObject(Simulation* simulation, float _x, float _y,
        b2WorldId world_id, Configuration const& config,
        std::string const& _category)
-    : PhysicalObject(_x, _y, world_id, config, _category) {
-    parse_configuration(config);
+    : PhysicalObject(simulation, _x, _y, world_id, config, _category) {
+    parse_configuration(config, simulation);
     // ...
 }
 
@@ -530,8 +642,8 @@ void PassiveObject::render(SDL_Renderer* renderer, b2WorldId world_id) const {
     geom->render(renderer, world_id, pos.x, pos.y, r, g, b, 255);
 }
 
-void PassiveObject::parse_configuration(Configuration const& config) {
-    PhysicalObject::parse_configuration(config);
+void PassiveObject::parse_configuration(Configuration const& config, Simulation* simulation) {
+    PhysicalObject::parse_configuration(config, simulation);
     colormap = config["colormap"].get(std::string("rainbow"));
 }
 
@@ -540,7 +652,7 @@ void PassiveObject::parse_configuration(Configuration const& config) {
 /************* Factories *************/ // {{{1
 
 
-ObjectGeometry* object_geometry_factory(Configuration const& config) {
+ObjectGeometry* object_geometry_factory(Configuration const& config, Simulation* simulation) {
     std::string const geometry_str = to_lowercase(config["geometry"].get(std::string("unknown")));
     if (geometry_str == "global") {
         return new GlobalGeometry();
@@ -551,26 +663,31 @@ ObjectGeometry* object_geometry_factory(Configuration const& config) {
         float const body_width = config["body_width"].get(10.0);
         float const body_height = config["body_height"].get(10.0);
         return new RectangleGeometry(body_width, body_height);
+    } else if (geometry_str == "arena") {
+        return new ArenaGeometry(simulation->get_arena_geometry());
     } else {
         throw std::runtime_error("Unknown geometry type '" + geometry_str + "'.");
     }
 }
 
-Object* object_factory(uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map, size_t userdatasize, std::string const& category) {
+Object* object_factory(Simulation* simulation, uint16_t id, float x, float y, b2WorldId world_id, Configuration const& config, LightLevelMap* light_map, size_t userdatasize, std::string const& category) {
     std::string const type = to_lowercase(config["type"].get(std::string("unknown")));
     Object* res = nullptr;
 
     if (type == "static_light") {
-        res = new StaticLightObject(x, y, light_map, config, category);
+        res = new StaticLightObject(simulation, x, y, light_map, config, category);
 
     } else if (type == "passive_object") {
-        res = new PassiveObject(x, y, world_id, config, category);
+        res = new PassiveObject(simulation, x, y, world_id, config, category);
 
     } else if (type == "pogobot") {
-        res = new PogobotObject(id, x, y, world_id, userdatasize, config, category);
+        res = new PogobotObject(simulation, id, x, y, world_id, userdatasize, config, category);
 
     } else if (type == "pogobject") {
-        res = new PogobjectObject(id, x, y, world_id, userdatasize, config, category);
+        res = new PogobjectObject(simulation, id, x, y, world_id, userdatasize, config, category);
+
+    } else if (type == "pogowall") {
+        res = new Pogowall(simulation, id, world_id, userdatasize, config, category);
 
     } else {
         throw std::runtime_error("Unknown object type '" + type + "'.");
