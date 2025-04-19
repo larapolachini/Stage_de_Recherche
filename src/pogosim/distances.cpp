@@ -217,6 +217,9 @@ void find_neighbors_to_pogowalls(std::vector<std::shared_ptr<Pogowall>>& pogowal
                 //glogger->info("Close to wall {}: {} ({})", i, dists[i], robots[i]->communication_radius);
                 robots[i]->neighbors[dir].push_back(wall.get());
             }
+            if (dists[i] <= wall->communication_radius) {
+                wall->neighbors[0].push_back(robots[i].get());
+            }
         }
     }
 }

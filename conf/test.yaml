@@ -69,9 +69,7 @@ objects:
     walls:
         type: pogowall
         geometry: arena
-        behavior: default_wall # user_code
-
-        p_send: 0.5
+        communication_radius: 50.0
         msg_success_rate:
             type: static
             rate: 0.9
