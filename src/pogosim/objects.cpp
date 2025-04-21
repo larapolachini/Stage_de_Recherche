@@ -69,6 +69,25 @@ BoundingBox DiskGeometry::compute_bounding_box() const {
     return { -radius, -radius, 2.0f * radius, 2.0f * radius };
 }
 
+arena_polygons_t DiskGeometry::generate_contours(std::size_t n, b2Vec2 position) const {
+    if (n == 0) { // Identify best number
+        n = 100;
+    }
+
+    if (n < 3) n = 3;                                // A disk needs ≥ 3 points
+    arena_polygons_t contours(1);
+    auto& poly = contours.front();
+    poly.reserve(n);
+
+    const float step = 2.0f * b2_pi / static_cast<float>(n);
+    for (std::size_t i = 0; i < n; ++i) {
+        const float a = i * step;
+        poly.push_back({position.x + radius * std::cos(a), position.y + radius * std::sin(a)});
+        //glogger->info("generate_contours ({},{}) ({},{})", position.x, position.y, radius * std::cos(a), radius * std::sin(a));
+    }
+    return contours;
+}
+
 
 /************* RectangleGeometry *************/ // {{{1
 
@@ -143,6 +162,48 @@ BoundingDisk RectangleGeometry::compute_bounding_disk() const {
 BoundingBox RectangleGeometry::compute_bounding_box() const {
     // The rectangle is its own bounding box (centered at (0,0)).
     return { -width / 2.0f, -height / 2.0f, width, height };
+}
+
+arena_polygons_t RectangleGeometry::generate_contours(std::size_t n, b2Vec2 position) const {
+    if (n == 0) { // Identify best number
+        n = 100;
+    }
+
+    /* At least the four corners – distribute the rest along the edges. */
+    if (n < 4) n = 4;
+    const std::size_t per_edge = n / 4;
+    const std::size_t extras   = n % 4;
+
+    const float hw = width  * 0.5f;
+    const float hh = height * 0.5f;
+
+    auto edge_points = [per_edge,position](b2Vec2 a, b2Vec2 b) {
+        std::vector<b2Vec2> pts;
+        pts.reserve(per_edge + 1);
+        for (std::size_t i = 0; i < per_edge; ++i) {
+            const float t = static_cast<float>(i) / per_edge;
+            pts.push_back({position.x + a.x + t * (b.x - a.x), position.y + a.y + t * (b.y - a.y)});
+        }
+        return pts;
+    };
+
+    arena_polygons_t contours(1);
+    auto& poly = contours.front();
+
+    /* Counter‑clockwise: left‑top‑right‑bottom edges. */
+    const b2Vec2 lt{-hw, -hh}, rt{ hw, -hh}, rb{ hw,  hh}, lb{-hw,  hh};
+    auto append = [&](auto&& vec){ poly.insert(poly.end(), vec.begin(), vec.end()); };
+
+    append(edge_points(lt, rt));
+    append(edge_points(rt, rb));
+    append(edge_points(rb, lb));
+    append(edge_points(lb, lt));
+
+    /* Distribute any extra vertices on the first edges */
+    for (std::size_t i = 0; i < extras; ++i)
+        poly.push_back(poly[i]);
+
+    return contours;
 }
 
 
@@ -270,6 +331,64 @@ float ArenaGeometry::get_distance_to([[maybe_unused]] b2Vec2 orig, b2Vec2 point)
     }
     return best;
 }
+
+arena_polygons_t ArenaGeometry::generate_contours(std::size_t points, b2Vec2 position) const {
+    /* If points ≥ current vertex count we can just return the wall polygons
+       unchanged – the caller can decimate if necessary.                     */
+    if (arena_polygons_.empty())
+        return {};
+
+    arena_polygons_t result;
+    result.reserve(arena_polygons_.size());
+
+    for (const auto& src : arena_polygons_) {
+        if (src.size() <= points || points == 0) {          // Keep original
+            //result.push_back(src);
+            std::vector<b2Vec2> dst;
+            dst.reserve(src.size());
+            for (size_t i = 0; i < src.size(); i++) {
+                dst.push_back({position.x + src[i].x, position.y + src[i].y});
+            }
+            result.push_back(dst);
+            continue;
+        }
+
+        /* Uniform resampling so every polygon gets exactly @points vertices */
+        std::vector<float> edge_len(src.size());
+        float perimeter = 0.0f;
+
+        for (std::size_t i = 0, j = src.size() - 1; i < src.size(); j = i++) {
+            const auto& a = src[j];
+            const auto& b = src[i];
+            const float dx = b.x - a.x, dy = b.y - a.y;
+            perimeter += edge_len[i] = std::sqrt(dx * dx + dy * dy);
+        }
+
+        const float step = perimeter / points;
+        std::vector<b2Vec2> dst;
+        dst.reserve(points);
+
+        std::size_t  i  = 0,   j = src.size() - 1;
+        float        d = 0.0f, next_d = step;
+
+        while (dst.size() < points) {
+            const auto& a = src[j];
+            const auto& b = src[i];
+            const float seg = edge_len[i];
+
+            while (d + seg >= next_d && dst.size() < points) {
+                const float t = (next_d - d) / seg;
+                dst.push_back({position.x + a.x + t * (b.x - a.x), position.y + a.y + t * (b.y - a.y)});
+                next_d += step;
+            }
+            d += seg;
+            j = i++;
+        }
+        result.emplace_back(std::move(dst));
+    }
+    return result;
+}
+
 
 
 /************* LightLevelMap *************/ // {{{1
@@ -549,12 +668,20 @@ PhysicalObject::PhysicalObject(Simulation* simulation, float _x, float _y,
 }
 
 b2Vec2 PhysicalObject::get_position() const {
-    return b2Body_GetPosition(body_id);
+    if (b2Body_IsValid(body_id)) {
+        return b2Body_GetPosition(body_id);
+    } else {
+        return {NAN, NAN};
+    }
 }
 
 float PhysicalObject::get_angle() const {
-    b2Rot const rotation = b2Body_GetRotation(body_id);
-    return std::atan2(rotation.s, rotation.c);
+    if (b2Body_IsValid(body_id)) {
+        b2Rot const rotation = b2Body_GetRotation(body_id);
+        return std::atan2(rotation.s, rotation.c);
+    } else {
+        return NAN;
+    }
 }
 
 void PhysicalObject::parse_configuration(Configuration const& config, Simulation* simulation) {
@@ -593,9 +720,11 @@ void PhysicalObject::create_body(b2WorldId world_id) {
 
 void PhysicalObject::move(float _x, float _y) {
     Object::move(_x, _y);
-    b2Vec2 position = {_x / VISUALIZATION_SCALE, _y / VISUALIZATION_SCALE};
-    b2Rot rotation = b2Body_GetRotation(body_id);
-    b2Body_SetTransform(body_id, position, rotation);
+    if (b2Body_IsValid(body_id)) {
+        b2Vec2 position = {_x / VISUALIZATION_SCALE, _y / VISUALIZATION_SCALE};
+        b2Rot rotation = b2Body_GetRotation(body_id);
+        b2Body_SetTransform(body_id, position, rotation);
+    }
 }
 
 
@@ -632,7 +761,7 @@ void PassiveObject::render(SDL_Renderer* renderer, b2WorldId world_id) const {
     float screen_y = body_position.y * VISUALIZATION_SCALE;
     auto const pos = visualization_position(screen_x, screen_y);
 
-    // Assign color based on object id
+    // Assign color based on object initial position
     uint8_t const value = (static_cast<int32_t>(x) + static_cast<int32_t>(y)) % 256;
     //uint8_t const value = (reinterpret_cast<intptr_t>(this)) % 256;
     uint8_t r, g, b;
@@ -687,7 +816,10 @@ Object* object_factory(Simulation* simulation, uint16_t id, float x, float y, b2
         res = new PogobjectObject(simulation, id, x, y, world_id, userdatasize, config, category);
 
     } else if (type == "pogowall") {
-        res = new Pogowall(simulation, id, world_id, userdatasize, config, category);
+        res = new Pogowall(simulation, id, x, y, world_id, userdatasize, config, category);
+
+    } else if (type == "membrane") {
+        res = new MembraneObject(simulation, id, x, y, world_id, userdatasize, config, category);
 
     } else {
         throw std::runtime_error("Unknown object type '" + type + "'.");

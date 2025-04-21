@@ -110,6 +110,20 @@ public:
      */
     virtual float get_distance_to(b2Vec2 orig, b2Vec2 point) const;
 
+    /**
+     * @brief Return one or more polygonal contours that approximate / represent
+     *        this geometry.
+     *
+     * @param points_per_contour  Desired number of vertices for each contour
+     *                            (a rectangle has one contour, a disk has one,
+     *                             an arena may have many – one per wall).
+     *
+     * @return arena_polygons_t   A vector of closed polygons (counter‑clockwise,
+     *                            last vertex different from the first – the caller
+     *                            may close the loop if needed).
+     */
+    virtual arena_polygons_t generate_contours(std::size_t points_per_contour = 0, b2Vec2 position = {0.0f, 0.0f}) const = 0;
+
 protected:
     bool shape_created = false;
     b2ShapeId shape_id;     ///< Box2D shape identifier.
@@ -182,6 +196,20 @@ public:
      * @return A BoundingBox with top-left corner (x,y) and width and height.
      */
     virtual BoundingBox compute_bounding_box() const override;
+
+    /**
+     * @brief Return one or more polygonal contours that approximate / represent
+     *        this geometry.
+     *
+     * @param points_per_contour  Desired number of vertices for each contour
+     *                            (a rectangle has one contour, a disk has one,
+     *                             an arena may have many – one per wall).
+     *
+     * @return arena_polygons_t   A vector of closed polygons (counter‑clockwise,
+     *                            last vertex different from the first – the caller
+     *                            may close the loop if needed).
+     */
+    virtual arena_polygons_t generate_contours(std::size_t points_per_contour = 0, b2Vec2 position  = {0.0f, 0.0f}) const override;
 
 protected:
     float radius;           ///< Radius of the disk
@@ -258,6 +286,20 @@ public:
      */
     virtual BoundingBox compute_bounding_box() const override;
 
+    /**
+     * @brief Return one or more polygonal contours that approximate / represent
+     *        this geometry.
+     *
+     * @param points_per_contour  Desired number of vertices for each contour
+     *                            (a rectangle has one contour, a disk has one,
+     *                             an arena may have many – one per wall).
+     *
+     * @return arena_polygons_t   A vector of closed polygons (counter‑clockwise,
+     *                            last vertex different from the first – the caller
+     *                            may close the loop if needed).
+     */
+    virtual arena_polygons_t generate_contours(std::size_t points_per_contour = 0, b2Vec2 position  = {0.0f, 0.0f}) const override;
+
 protected:
     float width;   ///< Width of the rectangle.
     float height;  ///< Height of the rectangle.
@@ -330,6 +372,20 @@ public:
      * @brief Compute the distance from a given point to the geometry.
      */
     virtual float get_distance_to([[maybe_unused]] b2Vec2 orig, [[maybe_unused]] b2Vec2 point) const override { return 0.0f; }
+
+    /**
+     * @brief Return one or more polygonal contours that approximate / represent
+     *        this geometry.
+     *
+     * @param points_per_contour  Desired number of vertices for each contour
+     *                            (a rectangle has one contour, a disk has one,
+     *                             an arena may have many – one per wall).
+     *
+     * @return arena_polygons_t   A vector of closed polygons (counter‑clockwise,
+     *                            last vertex different from the first – the caller
+     *                            may close the loop if needed).
+     */
+    virtual arena_polygons_t generate_contours([[maybe_unused]] std::size_t points_per_contour = 0, [[maybe_unused]] b2Vec2 position  = {0.0f, 0.0f}) const override { return {}; }
 };
 
 
@@ -371,6 +427,20 @@ public:
     float get_distance_to(b2Vec2 /*orig*/, b2Vec2 point) const override;
 
     arena_polygons_t const& get_arena_polygons() { return arena_polygons_; }
+
+    /**
+     * @brief Return one or more polygonal contours that approximate / represent
+     *        this geometry.
+     *
+     * @param points_per_contour  Desired number of vertices for each contour
+     *                            (a rectangle has one contour, a disk has one,
+     *                             an arena may have many – one per wall).
+     *
+     * @return arena_polygons_t   A vector of closed polygons (counter‑clockwise,
+     *                            last vertex different from the first – the caller
+     *                            may close the loop if needed).
+     */
+    virtual arena_polygons_t generate_contours(std::size_t points_per_contour = 0, b2Vec2 position  = {0.0f, 0.0f}) const override;
 
 private:
     static float distance_point_segment(b2Vec2 p, b2Vec2 a, b2Vec2 b) noexcept;
@@ -661,7 +731,7 @@ public:
      *
      * @return b2Vec2 The current position.
      */
-    b2Vec2 get_position() const;
+    virtual b2Vec2 get_position() const;
 
     /**
      * @brief Retrieves the object's current orientation angle.

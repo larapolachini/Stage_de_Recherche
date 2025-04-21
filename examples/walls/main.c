@@ -24,7 +24,8 @@ uint32_t tumble_duration_max  = 1100;
 
 typedef enum {
     MSG_TYPE_NULL = 0,
-    MSG_TYPE_WALL
+    MSG_TYPE_WALL,
+    MSG_TYPE_MEMBRANE,
 } msg_type_t;
 
 typedef struct RawMessage {
@@ -102,6 +103,12 @@ void process_message(message_t* mr) {
     for (uint16_t i = 0; i != MSG_SIZE; i++)
         msg.msg_array[i] = mr->payload[i];
 
+    // Check if we received a message from a membrane
+    if (msg.msg_values.msg_type != MSG_TYPE_MEMBRANE) {
+        pogobot_led_setColors(255, 255, 0, 0);
+        pogobot_led_setColors(255, 255, 0, 1);
+    }
+
     // Check if we received a message from a wall
     if (msg.msg_values.msg_type != MSG_TYPE_WALL)
         return; // No. Just quit.
@@ -115,6 +122,7 @@ void process_message(message_t* mr) {
     mydata->phase = PHASE_GOAL;
     // Indicate success: stop and blue LED
     pogobot_led_setColor(0, 0, 255);
+    pogobot_led_setColors(0, 0, 255, 1);
     pogobot_motor_set(motorL, motorStop);
     pogobot_motor_set(motorR, motorStop);
 
@@ -291,6 +299,61 @@ void walls_user_step(void) {
     // ...
 }
 
+/**
+ * @brief Function called each time the membranes send a message
+ *
+ * This function is called continuously at the frequency defined in membranes_user_init().
+ */
+bool membranes_send_message(void) {
+    message msg;
+    uint8_t data[MSG_SIZE]; // message to send, containing uint8_t data
+
+    // Composing a new message to send
+    msg.msg_values.sender_id = pogobot_helper_getid();
+    msg.msg_values.msg_type = MSG_TYPE_MEMBRANE;
+
+    // Convert the message into an uint8_t pointer
+    for ( uint16_t i = 0; i != MSG_SIZE; i++ )
+        data[i] = msg.msg_array[i];
+
+    // Send message
+    return pogobot_infrared_sendLongMessage_omniGen((uint8_t *)(data), MSG_SIZE);
+}
+
+/**
+ * @brief Initialization function for the membranes.
+ *
+ * This function is executed once at startup (cf 'pogobot_start' call in main()).
+ */
+void membranes_user_init(void) {
+#ifndef SIMULATOR
+    printf("setup ok\n");
+#endif
+    // Initialize the random number generator
+    srand(pogobot_helper_getRandSeed());
+    pogobot_infrared_set_power(2); // Set the power level used to send all the next messages.
+
+    // Set the main loop frequency to 10 Hz (i.e., membranes_user_step() is called 10 times per second).
+    main_loop_hz = 10;
+    // Disable message reception, but enable message send by the membranes.
+    max_nb_processed_msg_per_tick = 0;
+    percent_msgs_sent_per_ticks = 75; // 75% of chance each step to send a message.
+    msg_rx_fn = NULL;
+    msg_tx_fn = membranes_send_message;
+    // Specify LED index for error codes (negative values disable this feature).
+    error_codes_led_idx = -1;
+}
+
+/**
+ * @brief Main control loop for the Membranes
+ *
+ * This function is called continuously at the frequency defined in membranes_user_init().
+ */
+void membranes_user_step(void) {
+    // ...
+}
+
+
 
 
 /**
@@ -315,6 +378,8 @@ int main(void) {
 
     // Init and main loop functions for the walls (pogowalls). Ignored by the robots.
     pogobot_start(walls_user_init, walls_user_step, "walls");
+    pogobot_start(membranes_user_init, membranes_user_step, "membranes");
+    //pogobot_start(walls_user_init, walls_user_step, "membranes");
 
     // Specify the callback functions. Only called by the simulator.
     SET_CALLBACK(callback_global_setup, global_setup);              // Called once to initialize global values (e.g. configuration-specified constants)

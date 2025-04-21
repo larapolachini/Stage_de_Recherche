@@ -460,20 +460,32 @@ public:
      * of the body's physical properties (linear and angular damping, density, friction, and restitution).
      *
      * @param _id Unique object identifier.
+     * @param x Initial x-coordinate in the simulation.
+     * @param y Initial y-coordinate in the simulation.
      * @param geom Object's geometry.
      * @param world_id The Box2D world identifier.
      * @param _userdatasize Size of the memory block allocated for user data.
      * @param _communication_radius communication radius of each IR emitter
      * @param _msg_success_rate std::unique_ptr<MsgSuccessRate> describing the probability of successfully sending a message.
      * @param _temporal_noise_stddev Standard deviation of the gaussian noise to apply to time on each object, or 0.0 for deterministic time
+     * @param _linear_damping Linear damping value for the physical body (default is 0.0f).
+     * @param _angular_damping Angular damping value for the physical body (default is 0.0f).
+     * @param _density Density of the body shape (default is 10.0f).
+     * @param _friction Friction coefficient of the body shape (default is 0.3f).
+     * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
+     * @param _linear_noise_stddev Standard deviation of the gaussian noise to apply to linear velocity, or 0.0 for deterministic velocity
+     * @param _angular_noise_stddev Standard deviation of the gaussian noise to apply to angular velocity, or 0.0 for deterministic velocity
      * @param category Name of the category of the object.
      */
-    Pogowall(uint16_t _id,
+    Pogowall(uint16_t _id, float _x, float _y,
            ObjectGeometry& geom, b2WorldId world_id,
            size_t _userdatasize,
            float _communication_radius = 80.0f,
            std::unique_ptr<MsgSuccessRate> _msg_success_rate = std::make_unique<ConstMsgSuccessRate>(0.5),
            float _temporal_noise_stddev = 0.0f,
+           float _linear_damping = 0.0f, float _angular_damping = 0.0f,
+           float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
+           float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f,
            std::string const& _category = "robots");
 
     /**
@@ -481,11 +493,13 @@ public:
      *
      * @param simulation Pointer to the underlying simulation.
      * @param _id Unique object identifier.
+     * @param x Initial x-coordinate in the simulation.
+     * @param y Initial y-coordinate in the simulation.
      * @param world_id The Box2D world identifier.
      * @param _userdatasize Size of the memory block allocated for user data.
      * @param config Configuration entry describing the object properties.
      */
-    Pogowall(Simulation* simulation, uint16_t _id,
+    Pogowall(Simulation* simulation, uint16_t _id, float _x, float _y,
            b2WorldId world_id, size_t _userdatasize, Configuration const& config,
            std::string const& _category = "robots");
 
@@ -518,7 +532,7 @@ public:
     /**
      * @brief Returns whether this object is tangible (e.g. collisions, etc) or not.
      */
-    virtual bool is_tangible() const { return true; }
+    virtual bool is_tangible() const { return false; }
 
     /**
      * @brief Move the object to a given coordinate
@@ -528,6 +542,151 @@ public:
      */
     virtual void move([[maybe_unused]] float x, [[maybe_unused]] float y) override { }
 };
+
+
+/**
+ * @brief Class representing a simulated Membrane, with a pogowall on each side.
+ */
+class MembraneObject : public Pogowall { // PogobotObject {
+public:
+    struct Dot   { b2BodyId  body_id; };
+    struct Joint { b2JointId joint_id; };
+
+
+    /**
+     * Initializes a new Pogobject robot with the specified identifier, user data size, initial position,
+     * radius, associated Box2D world, and message success rate. It also allows customization
+     * of the body's physical properties (linear and angular damping, density, friction, and restitution).
+     *
+     * @param _id Unique object identifier.
+     * @param x Initial x-coordinate in the simulation.
+     * @param y Initial y-coordinate in the simulation.
+     * @param geom Object's geometry.
+     * @param world_id The Box2D world identifier.
+     * @param _userdatasize Size of the memory block allocated for user data.
+     * @param _communication_radius communication radius of each IR emitter
+     * @param _msg_success_rate std::unique_ptr<MsgSuccessRate> describing the probability of successfully sending a message.
+     * @param _temporal_noise_stddev Standard deviation of the gaussian noise to apply to time on each object, or 0.0 for deterministic time
+     * @param _linear_damping Linear damping value for the physical body (default is 0.0f).
+     * @param _angular_damping Angular damping value for the physical body (default is 0.0f).
+     * @param _density Density of the body shape (default is 10.0f).
+     * @param _friction Friction coefficient of the body shape (default is 0.3f).
+     * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
+     * @param _linear_noise_stddev Standard deviation of the gaussian noise to apply to linear velocity, or 0.0 for deterministic velocity
+     * @param _angular_noise_stddev Standard deviation of the gaussian noise to apply to angular velocity, or 0.0 for deterministic velocity
+     * @param _num_dots How many dots (≈ vertices) the membrane should have.
+     * @param _dot_radius Physical radius for each dot (Box2D units, not pixels).
+     * @param _cross_span Connect every i‑th neighbour to stiffen the sheet (≥ 1).
+     * @param _colormap Name of the colormap to use to set the color of the object
+     * @param _category Name of the category of the object.
+     */
+    MembraneObject(uint16_t _id, float _x, float _y,
+           ObjectGeometry& geom, b2WorldId world_id,
+           size_t _userdatasize,
+           float _communication_radius = 80.0f,
+           std::unique_ptr<MsgSuccessRate> _msg_success_rate = std::make_unique<ConstMsgSuccessRate>(0.5),
+           float _temporal_noise_stddev = 0.0f,
+           float _linear_damping = 0.0f, float _angular_damping = 0.0f,
+           float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
+           float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f,
+           unsigned int _num_dots = 100, float _dot_radius = 10.0f, int _cross_span = 3,
+           std::string _colormap = "rainbow",
+           std::string const& _category = "robots");
+
+    /**
+     * @brief Constructs a PogobotObject from a configuration entry.
+     *
+     * @param simulation Pointer to the underlying simulation.
+     * @param _id Unique object identifier.
+     * @param x Initial x-coordinate in the simulation.
+     * @param y Initial y-coordinate in the simulation.
+     * @param world_id The Box2D world identifier.
+     * @param _userdatasize Size of the memory block allocated for user data.
+     * @param config Configuration entry describing the object properties.
+     */
+    MembraneObject(Simulation* simulation, uint16_t _id, float _x, float _y,
+           b2WorldId world_id, size_t _userdatasize, Configuration const& config,
+           std::string const& _category = "robots");
+
+    /**
+     * @brief Updates the motor speed of the robot and recalculates its velocities.
+     * Pogobjects do not move, so this method will always set the motors to 0.
+     *
+     * @param motor The identifier of the motor to update.
+     * @param speed (Ignored) speed value for the selected motor.
+     */
+    virtual void set_motor([[maybe_unused]] motor_id motor, [[maybe_unused]] int speed) override { }
+
+    /**
+     * @brief Retrieves the object's current position.
+     *
+     * Returns the position of the object's physical body as a Box2D vector.
+     *
+     * @return b2Vec2 The current position.
+     */
+    virtual b2Vec2 get_position() const;
+
+    /**
+     * @brief Retrieves the IR emitters current positions
+     *
+     * Returns the position of one of the robot's IR emitter as a Box2D vector.
+     *
+     * @return b2Vec2 The current position.
+     */
+    virtual b2Vec2 get_IR_emitter_position(ir_direction dir) const override;
+
+    /**
+     * @brief Renders the robot on the given SDL renderer.
+     *
+     * @param renderer Pointer to the SDL_Renderer.
+     * @param world_id The Box2D world identifier (unused in rendering).
+     */
+    virtual void render(SDL_Renderer*, b2WorldId) const override;
+
+    /**
+     * @brief Returns whether this object is tangible (e.g. collisions, etc) or not.
+     */
+    virtual bool is_tangible() const { return true; }
+
+    /**
+     * @brief Move the object to a given coordinate
+     *
+     * @param x X coordinate.
+     * @param y Y coordinate.
+     */
+    virtual void move([[maybe_unused]] float x, [[maybe_unused]] float y) override;
+
+
+protected:
+    /**
+     * @brief Creates the object's physical body in the simulation.
+     *
+     * @param world_id The Box2D world identifier.
+     */
+    void create_robot_body(b2WorldId world_id);
+
+    /**
+     * @brief Parse a provided configuration and set associated members values.
+     *
+     * @param config Configuration entry describing the object properties.
+     */
+    virtual void parse_configuration(Configuration const& config, Simulation* simulation) override;
+
+    /* helper – create one distance joint with the usual parameters */
+    void make_distance_joint(b2WorldId world_id,
+                             b2BodyId  a,
+                             b2BodyId  b,
+                             float     stiffness_scale = 1.0f);
+
+    // Physical information
+    int num_dots;
+    float dot_radius;
+    int cross_span;
+    std::string colormap;
+    std::vector<Dot> dots;
+    std::vector<Joint> joints;
+};
+
 
 
 

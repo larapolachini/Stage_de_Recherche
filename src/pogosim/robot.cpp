@@ -538,32 +538,218 @@ void PogobjectObject::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId 
 
 /************* Pogowalls *************/ // {{{1
 
-Pogowall::Pogowall(uint16_t _id,
+Pogowall::Pogowall(uint16_t _id, float _x, float _y,
        ObjectGeometry& _geom, b2WorldId world_id,
        size_t _userdatasize,
        float _communication_radius,
        std::unique_ptr<MsgSuccessRate> _msg_success_rate,
        float _temporal_noise_stddev,
+       float _linear_damping, float _angular_damping,
+       float _density, float _friction, float _restitution,
+       float _linear_noise_stddev, float _angular_noise_stddev,
        std::string const& _category)
-    : PogobotObject::PogobotObject(_id, 0.0f, 0.0f, _geom, world_id,
+    : PogobotObject::PogobotObject(_id, _x, _y, _geom, world_id,
       _userdatasize, _communication_radius, std::move(_msg_success_rate),
-      _temporal_noise_stddev, 0.0f, 0.0f,
-      1000.f, 0.0f, 0.0f,
-      0.0f, 0.0f, _category) {
+      _temporal_noise_stddev, _linear_damping, _angular_damping,
+      _density, _friction, _restitution,
+      _linear_noise_stddev, _angular_noise_stddev,
+      _category) {
     auto bd = geom->compute_bounding_disk();
     PhysicalObject::move(bd.center_x, bd.center_y);
 }
 
-Pogowall::Pogowall(Simulation* simulation, uint16_t _id,
+Pogowall::Pogowall(Simulation* simulation, uint16_t _id, float _x, float _y,
        b2WorldId world_id, size_t _userdatasize, Configuration const& config,
        std::string const& _category)
-    : PogobotObject::PogobotObject(simulation, _id, 0.0f, 0.0f, world_id, _userdatasize, config, _category) {
+    : PogobotObject::PogobotObject(simulation, _id, _x, _y, world_id, _userdatasize, config, _category) {
     auto bd = geom->compute_bounding_disk();
     PhysicalObject::move(bd.center_x, bd.center_y);
 }
 
 b2Vec2 Pogowall::get_IR_emitter_position([[maybe_unused]] ir_direction dir) const {
     return {NAN, NAN};
+}
+
+/************* MembraneObject *************/ // {{{1
+
+MembraneObject::MembraneObject(uint16_t _id, float _x, float _y,
+       ObjectGeometry& geom, b2WorldId world_id,
+       size_t _userdatasize,
+       float _communication_radius,
+       std::unique_ptr<MsgSuccessRate> _msg_success_rate,
+       float _temporal_noise_stddev,
+       float _linear_damping, float _angular_damping,
+       float _density, float _friction, float _restitution,
+       float _linear_noise_stddev, float _angular_noise_stddev,
+       unsigned int _num_dots, float _dot_radius, int _cross_span,
+       std::string _colormap,
+       std::string const& _category)
+    : Pogowall::Pogowall(_id, _x, _y, geom, world_id,
+      _userdatasize, _communication_radius, std::move(_msg_success_rate),
+      _temporal_noise_stddev, _linear_damping, _angular_damping,
+      _density, _friction, _restitution,
+      _linear_noise_stddev, _angular_noise_stddev, _category),
+      num_dots(_num_dots), dot_radius(_dot_radius), cross_span(_cross_span),
+      colormap(_colormap) {
+    for (size_t i = 0; i != motorB; i++)
+        set_motor(static_cast<motor_id>(i), 0);
+    create_robot_body(world_id);
+}
+
+MembraneObject::MembraneObject(Simulation* simulation, uint16_t _id, float _x, float _y,
+       b2WorldId world_id, size_t _userdatasize, Configuration const& config,
+       std::string const& _category)
+    : Pogowall::Pogowall(simulation, _id, _x, _y, world_id, _userdatasize, config, _category) {
+    for (size_t i = 0; i != motorB; i++)
+        set_motor(static_cast<motor_id>(i), 0);
+    parse_configuration(config, simulation);
+    create_robot_body(world_id);
+}
+
+void MembraneObject::parse_configuration(Configuration const& config, Simulation* simulation) {
+    Pogowall::parse_configuration(config, simulation);
+    num_dots = config["num_dots"].get(100);
+    dot_radius = config["dot_radius"].get(10.0f);
+    cross_span = config["cross_span"].get(3);
+    colormap = config["colormap"].get(std::string("rainbow"));
+}
+
+b2Vec2 MembraneObject::get_IR_emitter_position([[maybe_unused]] ir_direction dir) const {
+    return {NAN, NAN};
+}
+
+b2Vec2 MembraneObject::get_position() const {
+    if (!dots.size())
+        return {NAN, NAN};
+    if (b2Body_IsValid(dots[0].body_id)) {
+        return b2Body_GetPosition(dots[0].body_id);
+    } else {
+        return {NAN, NAN};
+    }
+}
+
+void MembraneObject::render(SDL_Renderer* renderer, [[maybe_unused]] b2WorldId worldId) const {
+    // Assign color based on object id
+    uint8_t const value = static_cast<uint32_t>(id) % 256;
+    uint8_t r, g, b;
+    get_cmap_val(colormap, value, &r, &g, &b);
+    //glogger->info("# ID={} value={} {} {} {}", id, value, r, g, b);
+
+    // Draw dots
+    for (const Dot& d : dots) {
+        b2Vec2 p = b2Body_GetPosition(d.body_id);
+        auto const pos = visualization_position(p.x * VISUALIZATION_SCALE, p.y * VISUALIZATION_SCALE);
+        //auto const pos = visualization_position(p.x, p.y);
+        //glogger->info("pos {} {}", pos.x, pos.y);
+        filledCircleRGBA(renderer, pos.x, pos.y, dot_radius * mm_to_pixels, r, g, b, 255);
+    }
+
+    // Draw joints
+    for (const Joint& j : joints) {
+        b2Vec2 base_pA = b2Body_GetPosition(b2Joint_GetBodyA(j.joint_id));
+        b2Vec2 base_pB = b2Body_GetPosition(b2Joint_GetBodyB(j.joint_id));
+        auto const pA = visualization_position(base_pA.x * VISUALIZATION_SCALE, base_pA.y * VISUALIZATION_SCALE);
+        auto const pB = visualization_position(base_pB.x * VISUALIZATION_SCALE, base_pB.y * VISUALIZATION_SCALE);
+        //glogger->info("joint {} ({},{}) ({},{})", b2Joint_IsValid(j.joint_id), pA.x, pA.y, pB.x, pB.y);
+
+        thickLineRGBA(renderer, pA.x, pA.y, pB.x, pB.y, 4, 255, 0, 0, 150);
+    }
+}
+
+void MembraneObject::make_distance_joint(b2WorldId world_id,
+                         b2BodyId  a,
+                         b2BodyId  b,
+                         float     stiffness_scale) {
+    const b2Vec2 pA = b2Body_GetPosition(a);
+    const b2Vec2 pB = b2Body_GetPosition(b);
+    const float  len = std::sqrt((pA.x - pB.x) * (pA.x - pB.x) +
+                                 (pA.y - pB.y) * (pA.y - pB.y));
+
+    b2DistanceJointDef jd = b2DefaultDistanceJointDef();
+    jd.bodyIdA       = a;
+    jd.bodyIdB       = b;
+    jd.localAnchorA  = {0.0f, 0.0f};
+    jd.localAnchorB  = {0.0f, 0.0f};
+    jd.length        = len;
+    jd.hertz         = 30.0f * stiffness_scale; // XXX
+    jd.dampingRatio  = linear_damping;
+
+    b2JointId j_id = b2CreateDistanceJoint(world_id, &jd);
+    joints.push_back({j_id});
+}
+
+
+void MembraneObject::create_robot_body([[maybe_unused]] b2WorldId world_id) {
+    b2DestroyBody(body_id);
+
+    /* -------- 1. sample the outlines -------------------------------- */
+    arena_polygons_t contours = geom->generate_contours(num_dots);
+
+    for (const auto& contour : contours) {
+        const std::size_t first_idx = dots.size();      // index of 1st dot
+        const std::size_t n         = contour.size();
+        if (n < 2) continue;                            // skip degenerate
+
+        /* ---- 2. create one Box2D body per vertex ------------------- */
+        for (const b2Vec2& v_local : contour) {
+            b2BodyDef body_def     = b2DefaultBodyDef();
+            body_def.type          = b2_dynamicBody;
+            body_def.position      = {(x + v_local.x) / VISUALIZATION_SCALE,
+                                      (y + v_local.y) / VISUALIZATION_SCALE};
+            //body_def.position      = {(x + v_local.x),
+            //                          (y + v_local.y)};
+
+            b2BodyId dot_body_id = b2CreateBody(world_id, &body_def);
+
+            b2Circle   circle { .center = {0.0f, 0.0f},
+                                .radius = dot_radius / VISUALIZATION_SCALE };
+
+            b2ShapeDef shape_def  = b2DefaultShapeDef();
+            shape_def.density     = density;
+            shape_def.friction    = friction;
+
+            b2CreateCircleShape(dot_body_id, &shape_def, &circle);
+            b2Vec2 linear_velocity = {0.0f, 0.0f};
+            b2Body_SetLinearVelocity(dot_body_id, linear_velocity);
+            b2Body_SetAngularVelocity(dot_body_id, 0.0f);
+
+            dots.push_back({dot_body_id});
+        }
+
+        /* ---- 3. joints: edges of the contour ----------------------- */
+        for (std::size_t i = 0; i < n; ++i) {
+            make_distance_joint(world_id,
+                                dots[first_idx + i].body_id,
+                                dots[first_idx + (i + 1) % n].body_id);
+        }
+
+        /* ---- 4. optional cross‑bracing ----------------------------- */
+        if (cross_span > 1) {
+            for (std::size_t i = 0; i < n; i++) {
+                    make_distance_joint(world_id,
+                                        dots[first_idx + i].body_id,
+                                        dots[first_idx + (i + cross_span) % n].body_id,
+                                        /*slightly softer*/ 0.8f);
+            }
+        }
+    }
+}
+
+void MembraneObject::move(float _x, float _y) {
+    /* Offset expressed in Box2D world units */
+    const float dx = (_x - x) / VISUALIZATION_SCALE;
+    const float dy = (_y - y) / VISUALIZATION_SCALE;
+
+    for (const Dot& d : dots) {
+        b2Vec2 pos = b2Body_GetPosition(d.body_id);
+        pos.x += dx;
+        pos.y += dy;
+
+        const b2Rot rot = b2Body_GetRotation(d.body_id);   // Keep current angle
+        b2Body_SetTransform(d.body_id, pos, rot);
+    }
+
+    PogobotObject::move(_x, _y); 
 }
 
 

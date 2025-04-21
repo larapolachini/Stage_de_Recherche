@@ -46,7 +46,7 @@ objects:
         x: 500
         y: 500
         radius: 200
-        value: 2000
+        value: 10000
 
     obstacles:
         type: passive_object
@@ -74,14 +74,34 @@ objects:
             type: static
             rate: 0.9
 
+    membranes:
+        type: membrane
+        nb: 1
+        geometry: disk
+        colormap: qualitative
+
+        radius: 200
+        num_dots: 40
+        dot_radius: 20
+        cross_span: 1
+
+        communication_radius: 50.0
+        body_linear_damping: 0.3
+        body_angular_damping: 0.3
+        body_density: 10.0
+        body_friction: 0.3
+        body_restitution: 0.5
+        msg_success_rate:
+            type: static
+            rate: 0.9
+
     robots:
         type: pogobot
-        nb: 60
+        nb: 100
         #initial_formation: disk
         geometry: disk                  # Pogobots are always disk-shaped
         radius: 26.5                    # In mm
 
-        communication_radius: 80.0      # In mm, from each IR emitter
         body_linear_damping: 0.3
         body_angular_damping: 0.3
         body_density: 10.0
@@ -92,6 +112,7 @@ objects:
         body_linear_noise_stddev: 0.5
         body_angular_noise_stddev: 2.0
 
+        communication_radius: 80.0      # In mm, from each IR emitter
         msg_success_rate:
             #type: static
             #rate: 0.9
@@ -101,46 +122,46 @@ objects:
             gamma: 2.3807
             delta: 1.2457
 
-    robots2:
-        type: pogobot
-        nb: 5
-        #initial_formation: disk
-        geometry: disk                  # Pogobots are always disk-shaped
-        radius: 16.5                    # In mm
-
-        communication_radius: 120.0     # In mm, from each IR emitter
-        body_linear_damping: 0.3
-        body_angular_damping: 0.3
-        body_density: 10.0
-        body_friction: 0.3
-        body_restitution: 0.5
-        #body_collision_shape: circle
-        #body_collision_radius: 0.00
-        body_linear_noise_stddev: 0.5
-        body_angular_noise_stddev: 2.0
-
-        msg_success_rate:
-            type: static
-            rate: 0.9
-
-    robots3:
-        type: pogobject
-        nb: 2
-        geometry: disk                  # Pogobots are always disk-shaped
-        radius: 50.0                    # In mm
-
-        communication_radius: 120.0     # In mm, from each IR emitter
-        body_linear_damping: 0.3
-        body_angular_damping: 0.3
-        body_density: 1000.0
-        body_friction: 0.3
-        body_restitution: 0.5
-        #body_collision_shape: circle
-        #body_collision_radius: 0.00
-
-        msg_success_rate:
-            type: static
-            rate: 0.9
+#    robots2:
+#        type: pogobot
+#        nb: 5
+#        #initial_formation: disk
+#        geometry: disk                  # Pogobots are always disk-shaped
+#        radius: 16.5                    # In mm
+#
+#        body_linear_damping: 0.3
+#        body_angular_damping: 0.3
+#        body_density: 10.0
+#        body_friction: 0.3
+#        body_restitution: 0.5
+#        #body_collision_shape: circle
+#        #body_collision_radius: 0.00
+#        body_linear_noise_stddev: 0.5
+#        body_angular_noise_stddev: 2.0
+#
+#        communication_radius: 120.0     # In mm, from each IR emitter
+#        msg_success_rate:
+#            type: static
+#            rate: 0.9
+#
+#    robots3:
+#        type: pogobject
+#        nb: 2
+#        geometry: disk                  # Pogobots are always disk-shaped
+#        radius: 50.0                    # In mm
+#
+#        body_linear_damping: 0.3
+#        body_angular_damping: 0.3
+#        body_density: 1000.0
+#        body_friction: 0.3
+#        body_restitution: 0.5
+#        #body_collision_shape: circle
+#        #body_collision_radius: 0.00
+#
+#        communication_radius: 120.0     # In mm, from each IR emitter
+#        msg_success_rate:
+#            type: static
+#            rate: 0.9
 
 
 

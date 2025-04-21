@@ -116,7 +116,7 @@ void find_neighbors(ir_direction dir, std::vector<std::shared_ptr<PogobotObject>
         GridCell cell = getGridCell(xs[i], ys[i], cellSize);
 
         for (const auto& offset : precomputedNeighborCells) {
-            GridCell neighborCell{ cell.x + offset.x, cell.y + offset.y };
+     GridCell neighborCell{ cell.x + offset.x, cell.y + offset.y };
             auto it = spatialHash.find(neighborCell);
             if (it != spatialHash.end()) {
                 // For each candidate robot in this neighbor cell
@@ -206,11 +206,9 @@ void find_neighbors_to_pogowalls(std::vector<std::shared_ptr<Pogowall>>& pogowal
     size_t N = robots.size();
 
     for (auto wall : pogowalls) {
-        ArenaGeometry* geom = dynamic_cast<ArenaGeometry*>(wall->get_geometry());
-        if (geom == nullptr)
-            continue;
+        arena_polygons_t contours = wall->get_geometry()->generate_contours(0, wall->get_position());
 
-        auto dists = compute_wall_distances(dir, robots, geom->get_arena_polygons());
+        auto dists = compute_wall_distances(dir, robots, contours);
         for (size_t i = 0; i < N; i++) {
             //glogger->info("Not close to wall {}: {} ({})", i, dists[i], robots[i]->communication_radius);
             if (dists[i] <= robots[i]->communication_radius) {
