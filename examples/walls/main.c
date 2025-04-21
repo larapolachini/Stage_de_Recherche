@@ -73,6 +73,18 @@ REGISTER_USERDATA(USERDATA);
 // Now, members of the USERDATA struct can be accessed through mydata->MEMBER. E.g. mydata->data_foo
 //  On real robots, the compiler will automatically optimize the code to access member variables as if they were true globals.
 
+// Prototypes
+void process_message(message_t* mr);
+void user_init(void);
+void user_step(void);
+bool walls_send_message(void);
+void walls_user_init(void);
+void walls_user_step(void);
+bool membranes_send_message(void);
+void membranes_user_init(void);
+void membranes_user_step(void);
+
+
 /**
  * @brief Generates a random duration for the run phase.
  *
@@ -232,19 +244,6 @@ void user_step(void) {
 
 
 
-#ifdef SIMULATOR
-/**
- * @brief Function called once to initialize global values (e.g. configuration-specified constants)
- */
-void global_setup() {
-    init_uint32_from_configuration(&run_duration_min, "run_duration_min", 200);
-    init_uint32_from_configuration(&run_duration_max, "run_duration_max", 1200);
-    init_uint32_from_configuration(&tumble_duration_min, "tumble_duration_min", 100);
-    init_uint32_from_configuration(&tumble_duration_max, "tumble_duration_max", 1100);
-}
-#endif
-
-
 /**
  * @brief Function called each time the walls send a message
  *
@@ -353,7 +352,17 @@ void membranes_user_step(void) {
     // ...
 }
 
-
+#ifdef SIMULATOR
+/**
+ * @brief Function called once to initialize global values (e.g. configuration-specified constants)
+ */
+void global_setup() {
+    init_uint32_from_configuration(&run_duration_min, "run_duration_min", 200);
+    init_uint32_from_configuration(&run_duration_max, "run_duration_max", 1200);
+    init_uint32_from_configuration(&tumble_duration_min, "tumble_duration_min", 100);
+    init_uint32_from_configuration(&tumble_duration_max, "tumble_duration_max", 1100);
+}
+#endif
 
 
 /**
