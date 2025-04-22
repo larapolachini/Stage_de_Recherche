@@ -155,46 +155,58 @@ objects:
             delta: 1.2457
 
 
-#    robots2:
-#        type: pogobot
-#        nb: 5
-#        #initial_formation: disk
-#        geometry: disk                  # Pogobots are always disk-shaped
-#        radius: 16.5                    # In mm
-#
-#        body_linear_damping: 0.3
-#        body_angular_damping: 0.3
-#        body_density: 10.0
-#        body_friction: 0.3
-#        body_restitution: 0.5
-#        #body_collision_shape: circle
-#        #body_collision_radius: 0.00
-#        body_linear_noise_stddev: 0.5
-#        body_angular_noise_stddev: 2.0
-#
-#        communication_radius: 120.0     # In mm, from each IR emitter
-#        msg_success_rate:
-#            type: static
-#            rate: 0.9
-#
-#    robots3:
-#        type: pogobject
-#        nb: 2
-#        geometry: disk                  # Pogobots are always disk-shaped
-#        radius: 50.0                    # In mm
-#
-#        body_linear_damping: 0.3
-#        body_angular_damping: 0.3
-#        body_density: 1000.0
-#        body_friction: 0.3
-#        body_restitution: 0.5
-#        #body_collision_shape: circle
-#        #body_collision_radius: 0.00
-#
-#        communication_radius: 120.0     # In mm, from each IR emitter
-#        msg_success_rate:
-#            type: static
-#            rate: 0.9
+    # An object category containing other Pogobot robots
+    robots2:
+        type: pogobot       # Category type pertaining to Pogobots
+        nb: 100             # Number of objects (Pogobots) in this category
+        geometry: disk                  # Pogobots are always disk-shaped
+        radius: 16.5                    # In mm
+
+        # Physical properties
+        body_linear_damping: 0.3
+        body_angular_damping: 0.3
+        body_density: 10.0
+        body_friction: 0.3
+        body_restitution: 0.5
+        body_linear_noise_stddev: 0.5
+        body_angular_noise_stddev: 2.0
+
+        # Communication propeties
+        communication_radius: 80.0      # In mm, from each IR emitter. Pogobots typically have 4 IR emitters (front, left, back, right)
+        msg_success_rate:
+            type: static # Fixed msg success rate -- do not depend on the density, or message size
+            rate: 0.9
+            #type: dynamic # Msg success rate follows this formula: "1 / (1 + (alpha * msg_size**beta * p_send**gamma * cluster_size**delta))"
+            #alpha: 0.000004
+            #beta: 2.8096
+            #gamma: 2.3807
+            #delta: 1.2457
+
+
+    # An object category containing other Pogobjects, a special type of Pogobots that do not move
+    robots3:
+        type: pogobject
+        nb: 2
+        geometry: disk                  # Pogobjects are always disk-shaped
+        radius: 50.0                    # In mm
+
+        # Physical properties
+        body_linear_damping: 0.3
+        body_angular_damping: 0.3
+        body_density: 1000.0
+        body_friction: 0.3
+        body_restitution: 0.5
+
+        # Communication propeties
+        communication_radius: 120.0      # In mm, from each IR emitter. Pogobjects have several IR emitters, but they can only be accessed all at the same time.
+        msg_success_rate:
+            type: static # Fixed msg success rate -- do not depend on the density, or message size
+            rate: 0.9
+            #type: dynamic # Msg success rate follows this formula: "1 / (1 + (alpha * msg_size**beta * p_send**gamma * cluster_size**delta))"
+            #alpha: 0.000004
+            #beta: 2.8096
+            #gamma: 2.3807
+            #delta: 1.2457
 
 
 

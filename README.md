@@ -93,10 +93,12 @@ Example codes are compiled every time you launch the "./build.sh" script, alongs
 
 To launch examples code you can use the following commands:
 ```shell
-./examples/helloworld/helloworld -c conf/test.yaml      # Hello world, just robots rotating left then right. The first robot prints "HELLO WORLD !" messages
-./examples/run_and_tumble/run_and_tumble -c conf/test.yaml      # A very simple implementation of the run-and-tumble algorithm for locomotion
-./examples/hanabi/hanabi -c conf/test.yaml      # A simple code to showcase the diffusion of information in a swarm. Immobile robots by default (uncomment "MOVING_ROBOTS" to make then move)
-./examples/ssr/ssr -c conf/ssr.yaml         # More complex example. "Simple" implementation of the SSR algorithm from https://arxiv.org/abs/2403.17147  You can test it for a disk and annulus arena (see conf/ssr.yaml to change the arena).
+./examples/helloworld/helloworld -c conf/simple.yaml              # Hello world, just robots rotating left then right. The first robot prints "HELLO WORLD !" messages
+./examples/run_and_tumble/run_and_tumble -c conf/simple.yaml      # A very simple implementation of the run-and-tumble algorithm for locomotion
+./examples/hanabi/hanabi -c conf/simple.yaml                      # A simple code to showcase the diffusion of information in a swarm. Immobile robots by default (uncomment "MOVING_ROBOTS" to make then move)
+./examples/phototaxis/phototaxis -c conf/phototaxis.yaml          # An example showcasing phototaxis, with a fixed light spot in the middle of the arena
+./examples/walls/walls -c conf/walls_and_membranes.yaml           # An multi-controller example where robots can identify the presence of fixed walls (through Pogowalls) or mobile walls (through membranes).
+./examples/ssr/ssr -c conf/simple.yaml         # More complex example. "Simple" implementation of the SSR algorithm from https://arxiv.org/abs/2403.17147  You can test it for a disk and annulus arena (see conf/ssr.yaml to change the arena).
 ```
 
 
@@ -151,7 +153,9 @@ Here is a list of shortcuts that can be used to control the GUI:
  - F1: Help message
  - F3: Slow down the simulation
  - F4: Speed up the simulation
- - F5: Show the communication channels
+ - F5: Show/Hide the communication channels
+ - F6: Show/Hide the lateral LEDs
+ - F7: Show/Hide the light level
  - ESC: quit the simulation
  - SPACE: pause the simulation
  - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates
