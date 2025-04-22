@@ -112,20 +112,18 @@ bool is_point_within_polygon(const std::vector<b2Vec2>& polygon, float x, float 
 std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float offset);
 
 /**
- * @brief Generates a set of random points within a polygon with minimum separation.
+ * @brief  Generate N random points inside polygons[0] (outer polygon)
+ *         while keeping each point i at least reserve_radii[i] away
+ *         from any other accepted point ‑‑ and at least the same
+ *         distance from every polygon edge.
  *
- * This function generates N random points within the main polygon (first element in polygons),
- * ensuring that each point maintains at least minDistance from all others. Points are also checked
- * against exclusion zones defined by subsequent polygons.
- *
- * @param polygons A vector of polygons where the first polygon is the main area and others are exclusion zones.
- * @param minDistance The minimum distance required between points.
- * @param N The number of points to generate.
- * @return std::vector<b2Vec2> A vector containing the generated points.
- *
- * @throws std::runtime_error If any polygon has fewer than 3 points or if it is impossible to generate N valid points.
+ * @param  polygons        polygons[0] is the area in which to place points;
+ *                         polygons[1…] are “holes” that must be avoided
+ * @param  reserve_radii   size N vector holding the exclusion radius that
+ *                         must be kept around the *i‑th* point
+ * @return vector<b2Vec2>  the generated points (points.size()==reserve_radii.size()).
  */
-std::vector<b2Vec2> generate_random_points_within_polygon_safe(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance, unsigned int N);
+std::vector<b2Vec2> generate_random_points_within_polygon_safe( const std::vector<std::vector<b2Vec2>>& polygons, const std::vector<float>& reserve_radii);
 
 
 /**
@@ -176,19 +174,18 @@ b2Vec2 polygon_centroid(const std::vector<b2Vec2>& polygon);
 float point_to_line_segment_distance(const b2Vec2& p, const b2Vec2& a, const b2Vec2& b);
 
 /**
- * @brief Generates regularly spaced points within a polygon based on disk packing.
+ * @brief  Place points on (approximate) concentric rings inside polygons[0]
+ *         so that:
+ *           • point i stays ≥ reserve_radii[i] from every polygon edge,
+ *           • point i stays ≥ reserve_radii[i] + reserve_radii[j]
+ *             from every previously accepted point j,
+ *           • no point falls inside a hole (polygons[1…]).
  *
- * This function places points in concentric rings (from the centroid outward) ensuring that each point is at least
- * a minimum distance (minDistance) from others. Points are only accepted if they are inside the main polygon and outside any holes.
- *
- * @param polygons A vector of polygons, where the first polygon is the main area and subsequent polygons are holes.
- * @param minDistance The minimum distance required between generated points.
- * @param N The total number of points to generate.
- * @return std::vector<b2Vec2> A vector of generated points.
- *
- * @throws std::runtime_error If the main polygon has fewer than 3 vertices or if it is impossible to place N points.
+ * @param  polygons        polygons[0] is the main area; polygons[1…] are holes.
+ * @param  reserve_radii   exclusion radii for each requested point (size N).
+ * @return vector<b2Vec2>  the generated points (size == reserve_radii.size()).
  */
-std::vector<b2Vec2> generate_regular_disk_points_in_polygon(const std::vector<std::vector<b2Vec2>>& polygons, float minDistance, unsigned int N);
+std::vector<b2Vec2> generate_regular_disk_points_in_polygon( const std::vector<std::vector<b2Vec2>>& polygons, const std::vector<float>& reserve_radii);
 
 /**
  * @brief Draws a polygon using an SDL renderer.

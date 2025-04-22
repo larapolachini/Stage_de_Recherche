@@ -80,6 +80,9 @@ objects:
         geometry: disk
         colormap: qualitative
 
+        x: 500
+        y: 500
+
         radius: 200
         num_dots: 40
         dot_radius: 20

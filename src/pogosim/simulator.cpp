@@ -101,8 +101,8 @@ void Simulation::init_all() {
 void Simulation::create_objects() {
     uint16_t current_id = 0;
     uint16_t current_other_id = 65535;
-    float smallest_bounding_disk_radius = 1e5f;
     std::vector<std::shared_ptr<Object>> objects_to_move;
+    std::vector<float> objects_radii;
 
     // Create light map
     size_t num_bin_x = 100.0f;
@@ -130,17 +130,13 @@ void Simulation::create_objects() {
             // Create object from configuration
             if (std::isnan(x) or std::isnan(y)) {
                 obj_vec.emplace_back(object_factory(this, current_id, 0.0f, 0.0f, worldId, obj_config, light_map.get(), userdatasize, name));
-                if (obj_vec.back()->is_tangible())
+                if (obj_vec.back()->is_tangible()) {
                     objects_to_move.push_back(obj_vec.back());
+                    objects_radii.push_back(obj_vec.back()->get_geometry()->compute_bounding_disk().radius);
+                }
             } else {
                 obj_vec.emplace_back(object_factory(this, current_id, x, y, worldId, obj_config, light_map.get(), userdatasize, name));
             }
-
-            // Update largest bounding disk radius
-            auto* geom = obj_vec.back()->get_geometry();
-            float bounding_disk_radius = geom->compute_bounding_disk().radius;
-            if (bounding_disk_radius < smallest_bounding_disk_radius)
-                smallest_bounding_disk_radius = bounding_disk_radius;
 
             // Check if the object is a robot, and store it if this is the case
             if (auto wall = std::dynamic_pointer_cast<Pogowall>(obj_vec.back())) {
@@ -166,12 +162,12 @@ void Simulation::create_objects() {
     std::vector<b2Vec2> points;
     try {
         if (initial_formation == "random") {
-            points = generate_random_points_within_polygon_safe(arena_polygons, smallest_bounding_disk_radius, objects_to_move.size());
+            points = generate_random_points_within_polygon_safe(arena_polygons, objects_radii);
         } else if (initial_formation == "disk") {
-            points = generate_regular_disk_points_in_polygon(arena_polygons, smallest_bounding_disk_radius, objects_to_move.size());
+            points = generate_regular_disk_points_in_polygon(arena_polygons, objects_radii);
         } else {
             glogger->error("Unknown 'initial_formation' value: '{}'. Assuming random formation...", initial_formation);
-            points = generate_random_points_within_polygon_safe(arena_polygons, smallest_bounding_disk_radius, objects_to_move.size());
+            points = generate_random_points_within_polygon_safe(arena_polygons, objects_radii);
         }
     } catch (const std::exception& e) {
         throw std::runtime_error("Impossible to create robots (number may be too high for the provided arena): " + std::string(e.what()));
