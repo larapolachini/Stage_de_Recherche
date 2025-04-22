@@ -19,6 +19,7 @@ uint32_t run_duration_min    = 200;
 uint32_t run_duration_max    = 1200;
 uint32_t tumble_duration_min = 100;
 uint32_t tumble_duration_max = 1100;
+float test_vect[4]           = {1.f, 2.f, 3.f, 4.f};
 
 
 // Normal "Global" variables should be inserted within the USERDATA struct.
@@ -109,6 +110,12 @@ void user_init(void) {
     mydata->phase_start_time = current_time_milliseconds();  // Record the start time.
     mydata->phase_duration = get_run_duration();    // Set a random duration for running.
     mydata->tumble_direction = rand() % 2;            // Choose a random tumble direction.
+
+    // In simulation, test_vect values are directly set in configuration files.
+    // In experiments with real robots, test_vect has the default values set at initialization.
+    if (pogobot_helper_getid() == 0) {     // Only print messages for robot 0
+        printf("Test global values: (%d,%d,%d,%d)\n", (int)test_vect[0], (int)test_vect[1], (int)test_vect[2], (int)test_vect[3]);
+    }
 }
 
 /**
@@ -186,6 +193,7 @@ void global_setup() {
     init_uint32_from_configuration(&run_duration_max, "run_duration_max", 1200);
     init_uint32_from_configuration(&tumble_duration_min, "tumble_duration_min", 100);
     init_uint32_from_configuration(&tumble_duration_max, "tumble_duration_max", 1100);
+    init_float_array_from_configuration(test_vect, "test_vect", sizeof(test_vect)/sizeof(test_vect[0]));
 }
 #endif
 

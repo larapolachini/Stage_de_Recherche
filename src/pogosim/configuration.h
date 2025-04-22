@@ -48,7 +48,7 @@ public:
      *
      * If the current node is defined, attempts to cast it to type T; otherwise returns default_value.
      *
-     * @tparam T The expected type.
+     * @param T The expected type.
      * @param default_value The default value to return if the node is not defined or conversion fails.
      * @return T The value of the node cast to type T.
      */

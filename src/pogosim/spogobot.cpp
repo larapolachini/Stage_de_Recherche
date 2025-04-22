@@ -525,6 +525,22 @@ void init_uint32_from_configuration(uint32_t* var, char const* name, uint32_t co
     *var = simulation->get_config()[parameters_config_key][name].get(default_value);
 }
 
+void init_float_array_from_configuration(float* var, char const* name, size_t const size) {
+    auto key = simulation->get_config()[parameters_config_key][name];
+    if (key.exists()) {
+        std::vector<float> data = key.get<std::vector<float>>();
+        if (data.size() == 0) {
+            return;
+        } else if (data.size() < size) {
+            throw std::runtime_error("Configuration key '" + std::string(name) +
+                    "' does not have a correct size (current size: " + std::to_string(data.size()) +", expected: " + std::to_string(size) + ")'");
+        } else {
+            float* data_array = data.data();
+            std::memcpy(var, data_array, size * sizeof(float));
+        }
+    }
+}
+
 
 // MODELINE "{{{1
 // vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
