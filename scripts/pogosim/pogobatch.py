@@ -9,12 +9,51 @@ import tempfile
 import shutil
 import logging
 import pandas as pd
+import copy
+import re
+import string
+from typing import Any, Dict, Iterable, List
 
 from pogosim import utils
 from pogosim import __version__
 
 # Import Pool from multiprocessing for the default backend.
 from multiprocessing import Pool
+
+
+def set_in_dict(d: Dict[str, Any], dotted_key: str, value: Any, sep: str = ".") -> None:
+    """
+    Like d['a']['b']['c'] = value but with a single dotted string.
+    Creates intermediate dictionaries if needed.
+    """
+    keys = dotted_key.split(sep)
+    for k in keys[:-1]:
+        d = d.setdefault(k, {})
+    d[keys[-1]] = value
+
+
+class DotDict(dict):
+    """Allow attribute access (`obj.key`) as an alias for mapping access (`obj['key']`)."""
+
+    # read
+    def __getattr__(self, item):
+        try:
+            return self[item]
+        except KeyError as exc:
+            raise AttributeError(item) from exc
+
+    # write
+    def __setattr__(self, key, value):
+        self[key] = value
+
+
+def to_dotdict(obj):
+    """Recursively convert every plain dict in *obj* into a DotDict."""
+    if isinstance(obj, dict):
+        return DotDict({k: to_dotdict(v) for k, v in obj.items()})
+    if isinstance(obj, list):
+        return [to_dotdict(v) for v in obj]
+    return obj
 
 
 class PogobotLauncher:
@@ -170,34 +209,42 @@ class PogobotBatchRunner:
         # Initialize logging via utils.
         utils.init_logging(self.verbose)
 
-    def get_combinations(self, config):
+    def get_combinations(self, config: dict) -> List[dict]:
         """
-        Given a config dict where some values may be lists, return a list of dictionaries
-        representing every combination.
+        Scan the whole configuration tree looking for *either* a Python list
+        *or* a dict containing a key ``batch_options``; every such entry defines
+        a factor in the Cartesian product.  Everything else is kept fixed.
         """
-        fixed = {}
-        options = {}
-        for key, value in config.items():
-            # Reserve the special key "result_filename_format" for output naming.
-            if key == "result_filename_format":
-                fixed[key] = value
-            elif isinstance(value, list):
-                options[key] = value
-            else:
-                fixed[key] = value
+        option_paths: List[str] = []
+        option_values: List[Iterable[Any]] = []
 
-        if options:
-            keys = list(options.keys())
-            product_vals = list(itertools.product(*(options[k] for k in keys)))
-            combinations = []
-            for prod in product_vals:
-                comb = fixed.copy()
-                for i, k in enumerate(keys):
-                    comb[k] = prod[i]
-                combinations.append(comb)
-            return combinations
-        else:
-            return [fixed]
+        def recurse(node: Any, prefix: str = "") -> None:
+            if isinstance(node, dict):
+                # Dict that *itself* is a batch spec?
+                if "batch_options" in node and isinstance(node["batch_options"], list):
+                    option_paths.append(prefix.rstrip("."))
+                    option_values.append(node["batch_options"])
+                    return                                  # do NOT recurse further
+                # Otherwise walk deeper
+                for k, v in node.items():
+                    recurse(v, f"{prefix}{k}.")
+            elif isinstance(node, list):
+                option_paths.append(prefix.rstrip("."))
+                option_values.append(node)
+
+        recurse(config)
+
+        # If no options, trivial single combination
+        if not option_paths:
+            return [config]
+
+        combinations: List[dict] = []
+        for product in itertools.product(*option_values):
+            cfg_copy = copy.deepcopy(config)
+            for path, val in zip(option_paths, product):
+                set_in_dict(cfg_copy, path, val)
+            combinations.append(cfg_copy)
+        return combinations
 
     def write_temp_yaml(self, comb_config):
         """
@@ -212,33 +259,39 @@ class PogobotBatchRunner:
         logging.debug(f"Wrote temporary YAML config: {tmp_file.name}")
         return tmp_file.name
 
-    def compute_output_filename(self, comb_config):
-        """
-        If the combination config includes a key "result_filename_format", format it using the combination
-        dictionary. For any string value that appears to be a file path (i.e. has a directory part),
-        only its basename (without directories or extension) is used.
-        If output_dir is provided and the computed filename is relative, join it with output_dir.
-        """
+    def compute_output_filename(self, comb_config: dict) -> str:
         fmt = comb_config.get("result_filename_format")
         if not fmt:
-            return os.path.join(self.output_dir, "result.feather") if self.output_dir else "result.feather"
+            # exactly the same default as before
+            return (os.path.join(self.output_dir, "result.feather")
+                    if self.output_dir else "result.feather")
 
-        mod_config = {}
-        for key, value in comb_config.items():
-            if isinstance(value, str):
-                if os.path.dirname(value):  # Assume it's a path.
-                    base = os.path.basename(value)
-                    base, _ = os.path.splitext(base)
-                    mod_config[key] = base
-                else:
-                    mod_config[key] = value
-            else:
-                mod_config[key] = value
+        # ── 1. deep‑copy and basename‑shorten all path‑like strings ──────────
+        def normalise(node):
+            if isinstance(node, dict):
+                return {k: normalise(v) for k, v in node.items()}
+            if isinstance(node, list):
+                return [normalise(v) for v in node]
+            if isinstance(node, str) and os.path.dirname(node):
+                return os.path.splitext(os.path.basename(node))[0]
+            return node
+
+        cfg_for_fmt = normalise(copy.deepcopy(comb_config))
+
+        # ── 2. wrap every dict so dots act like nested keys ──────────────────
+        dot_cfg = to_dotdict(cfg_for_fmt)
+
+        # ── 3. run *standard* str.format_map (no custom formatter needed) ────
         try:
-            filename = fmt.format(**mod_config)
-        except Exception as e:
-            logging.error(f"Error formatting result filename: {e}")
+            filename = fmt.format_map(dot_cfg)
+        except KeyError as exc:
+            logging.error("Error formatting result filename: missing key %s", exc)
             filename = "result.feather"
+        except Exception as exc:                    # noqa: BLE001
+            logging.error("Error formatting result filename: %s", exc)
+            filename = "result.feather"
+
+        # ── 4. anchor in output directory if relative ────────────────────────
         if self.output_dir and not os.path.isabs(filename):
             filename = os.path.join(self.output_dir, filename)
         return filename
