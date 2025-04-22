@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
-# CMA-ES Parameter Tuning for Message Reception Probability Model
-
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-import seaborn as sns
-from scipy.optimize import minimize
-import cma
-import io
+from io import StringIO
+from cma import CMAEvolutionStrategy
+from sklearn.metrics import r2_score
 
-# Define the data as a string (replace this with loading from a file if needed)
-csv_data = """payload_size,cluster_size,p_send,success_probability,std_deviation
+# Load the message reception data
+data = """payload_size,cluster_size,p_send,success_probability,std_deviation
 3,18,0.1,0.998,0.0040
 3,18,0.25,0.996,0.0112
 3,18,0.5,0.993,0.0141
@@ -70,280 +65,214 @@ csv_data = """payload_size,cluster_size,p_send,success_probability,std_deviation
 100,2,0.9,0.189,0.1629
 100,2,1,0.131,0.1483"""
 
-# Load the data into a DataFrame
-df = pd.read_csv(io.StringIO(csv_data))
-print(f"Loaded {len(df)} data points")
+# Parse the data
+df = pd.read_csv(StringIO(data))
 
-# Extract the features and target
-X = df[['payload_size', 'cluster_size', 'p_send']].values
+# Add msg_size column (msg_size = 3 + payload_size)
+df['msg_size'] = df['payload_size'] + 3
+
+# Extract features and target
+X = df[['msg_size', 'cluster_size', 'p_send']].values
 y = df['success_probability'].values
 
-# Define the message reception probability model
-def model(params, payload, cluster, p_send):
-    """
-    Calculate the success probability using our model.
-    
-    params: [a, b, c, d] for the model:
-        success_prob = 1 / (1 + (a * payload^b * p_send^c / cluster^d))
-    
-    Returns: Predicted success probability
-    """
+# Model function: P(success) = 1 / (1 + (a * msg_size^b * p_send^c * cluster_size^d))
+def model(params, X):
     a, b, c, d = params
-    # Ensure all parameters are positive to maintain model structure
-    a = max(1e-6, a)  # a should be positive but can be very small
-    b = max(0, b)     # b should be non-negative
-    c = max(0, c)     # c should be non-negative
-    d = max(0, d)     # d should be non-negative
+    predictions = []
     
-    term = a * (payload ** b) * (p_send ** c) / (cluster ** d)
+    for x in X:
+        msg_size, cluster_size, p_send = x
+        term = a * (msg_size ** b) * (p_send ** c) * (cluster_size ** d)
+        prediction = 1 / (1 + term)
+        predictions.append(prediction)
+    
+    return np.array(predictions)
+
+# Objective function to maximize R²
+def objective_function(params):
+    # Ensure parameters are positive (except for potentially d)
+    a, b, c, d = params
+    a = abs(a)  # a should be positive
+    
+    # Predict using the model
+    y_pred = model([a, b, c, d], X)
+    
+    # Calculate R² score (negative because we want to maximize)
+    r2 = r2_score(y, y_pred)
+    
+    # Return negative R² (since CMA-ES minimizes)
+    return -r2
+
+# Calculate Mean Absolute Error for reporting
+def calculate_mae(params, X, y):
+    y_pred = model(params, X)
+    return np.mean(np.abs(y - y_pred))
+
+# Calculate MAE by msg_size
+def calculate_mae_by_msg_size(params, df):
+    results = {}
+    for msg_size in df['msg_size'].unique():
+        subset = df[df['msg_size'] == msg_size]
+        X_subset = subset[['msg_size', 'cluster_size', 'p_send']].values
+        y_subset = subset['success_probability'].values
+        y_pred = model(params, X_subset)
+        mae = np.mean(np.abs(y_subset - y_pred))
+        results[msg_size] = mae
+    return results
+
+# Run CMA-ES optimization
+def run_cmaes_optimization():
+    # Initial parameters [a, b, c, d] and step size
+    initial_params = [0.001, 1.5, 2.0, 1.0]
+    sigma = 0.5  # step size
+    
+    # Create CMA-ES optimizer with constraints
+    # Define lower and upper bounds separately
+    lower_bounds = [1e-6, 0.1, 0.1, -2.0]
+    upper_bounds = [10.0, 5.0, 5.0, 5.0]
+    options = {
+        'bounds': [lower_bounds, upper_bounds]
+    }
+    
+    es = CMAEvolutionStrategy(initial_params, sigma, options)
+    
+    # Optimization loop
+    print("Starting CMA-ES optimization...")
+    print(f"Initial parameters: a={initial_params[0]}, b={initial_params[1]}, "
+          f"c={initial_params[2]}, d={initial_params[3]}")
+    
+    iteration = 0
+    best_params = initial_params
+    best_score = objective_function(initial_params)
+    
+    while not es.stop():
+        iteration += 1
+        solutions = es.ask()
+        function_values = [objective_function(x) for x in solutions]
+        es.tell(solutions, function_values)
+        
+        # Update best parameters if better solution found
+        current_best_idx = np.argmin(function_values)
+        current_best_score = function_values[current_best_idx]
+        
+        if current_best_score < best_score:
+            best_score = current_best_score
+            best_params = solutions[current_best_idx]
+            a, b, c, d = best_params
+            r2 = -best_score  # Convert back to positive R²
+            
+            print(f"Iteration {iteration}: R² = {r2:.4f}, Parameters: a={a:.6f}, b={b:.4f}, c={c:.4f}, d={d:.4f}")
+    
+    return best_params, -best_score  # Return positive R²
+
+# Run the optimization
+best_params, best_r2 = run_cmaes_optimization()
+a, b, c, d = best_params
+
+# Calculate errors and evaluate final model
+mae = calculate_mae(best_params, X, y)
+mae_by_msg_size = calculate_mae_by_msg_size(best_params, df)
+
+# Print final results
+print("\n" + "="*50)
+print("Final Model Results:")
+print("="*50)
+print(f"Best Parameters: a={a:.6f}, b={b:.4f}, c={c:.4f}, d={d:.4f}")
+print(f"R² score: {best_r2:.4f}")
+print(f"Overall Mean Absolute Error: {mae:.4f}")
+print("\nMean Absolute Error by Message Size:")
+for msg_size, error in mae_by_msg_size.items():
+    print(f"  Message Size {msg_size}: {error:.4f}")
+
+# Print the final model equation
+print("\nFinal Model Equation:")
+if d >= 0:
+    print(f"P(success) = 1 / (1 + ({a:.6f} × msg_size^{b:.4f} × p_send^{c:.4f} × cluster_size^{d:.4f}))")
+else:
+    print(f"P(success) = 1 / (1 + ({a:.6f} × msg_size^{b:.4f} × p_send^{c:.4f} / cluster_size^{abs(d):.4f}))")
+
+# Perform additional analysis by comparing predictions vs actual values
+y_pred = model(best_params, X)
+df_results = pd.DataFrame({
+    'msg_size': df['msg_size'],
+    'cluster_size': df['cluster_size'],
+    'p_send': df['p_send'],
+    'actual': df['success_probability'],
+    'predicted': y_pred,
+    'absolute_error': np.abs(df['success_probability'] - y_pred)
+})
+
+# Find the worst predicted cases
+print("\nTop 5 Worst Predictions:")
+worst_predictions = df_results.sort_values('absolute_error', ascending=False).head(5)
+for _, row in worst_predictions.iterrows():
+    print(f"Msg Size: {row['msg_size']}, Cluster: {row['cluster_size']}, P_send: {row['p_send']:.2f}, "
+          f"Actual: {row['actual']:.4f}, Predicted: {row['predicted']:.4f}, Error: {row['absolute_error']:.4f}")
+
+# Group by msg_size and calculate average error
+print("\nAverage Error by Message Size:")
+msg_size_errors = df_results.groupby('msg_size')['absolute_error'].mean()
+for msg_size, error in msg_size_errors.items():
+    print(f"  Message Size {msg_size}: {error:.4f}")
+
+# Group by cluster size and calculate average error
+print("\nAverage Error by Cluster Size:")
+cluster_errors = df_results.groupby('cluster_size')['absolute_error'].mean()
+for cluster, error in cluster_errors.items():
+    print(f"  Cluster {cluster}: {error:.4f}")
+
+# Visualize model predictions (using matplotlib but commented out as we're generating code only)
+"""
+import matplotlib.pyplot as plt
+
+# Create a figure with subplots for each payload size
+plt.figure(figsize=(15, 12))
+for i, payload in enumerate([3, 20, 100]):
+    plt.subplot(3, 1, i+1)
+    
+    # Filter data for this payload
+    df_payload = df_results[df_results['payload_size'] == payload]
+    
+    # Create scatter plots for each cluster size
+    for cluster in [2, 4, 18]:
+        df_cluster = df_payload[df_payload['cluster_size'] == cluster]
+        df_cluster = df_cluster.sort_values('p_send')
+        
+        plt.scatter(df_cluster['p_send'], df_cluster['actual'], 
+                    label=f'Actual (Cluster {cluster})', marker='o')
+        plt.plot(df_cluster['p_send'], df_cluster['predicted'], 
+                 label=f'Predicted (Cluster {cluster})', linestyle='--')
+    
+    plt.title(f'Payload Size = {payload}')
+    plt.xlabel('Probability of Sending')
+    plt.ylabel('Success Probability')
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.ylim(0, 1.05)
+
+plt.tight_layout()
+plt.savefig('model_predictions.png')
+"""
+
+# Function to predict success probability for new data points
+def predict_success_probability(msg_size, cluster_size, p_send):
+    params = best_params
+    term = params[0] * (msg_size ** params[1]) * (p_send ** params[2]) * (cluster_size ** params[3])
     return 1 / (1 + term)
 
-# Define the loss function that CMA-ES will minimize
-def loss_function(params):
-    """
-    Calculate the mean squared error between model predictions and actual values.
-    """
-    predictions = np.array([model(params, *xi) for xi in X])
-    mse = np.mean((predictions - y) ** 2)
-    return mse
+# Example usage
+print("\nExample predictions:")
+test_cases = [
+    (6, 2, 0.5),    # Small message (3+3), small cluster, medium p_send
+    (23, 4, 0.75),  # Medium message (3+20), medium cluster, high p_send
+    (103, 18, 0.25) # Large message (3+100), large cluster, medium p_send
+]
 
-# Define a function to calculate R-squared
-def calculate_r_squared(params):
-    """
-    Calculate the R-squared value for the model.
-    """
-    predictions = np.array([model(params, *xi) for xi in X])
-    ss_total = np.sum((y - np.mean(y)) ** 2)
-    ss_residual = np.sum((y - predictions) ** 2)
-    r_squared = 1 - (ss_residual / ss_total)
-    return r_squared
+for msg_size, cluster, p_send in test_cases:
+    pred = predict_success_probability(msg_size, cluster, p_send)
+    print(f"Msg Size: {msg_size}, Cluster: {cluster}, P_send: {p_send:.2f} → Success Probability: {pred:.4f}")
 
-# Define a function to analyze residuals by payload size
-def analyze_residuals_by_payload(params):
-    """
-    Calculate mean absolute residuals grouped by payload size.
-    """
-    predictions = np.array([model(params, *xi) for xi in X])
-    residuals = np.abs(y - predictions)
-    
-    # Add residuals to the DataFrame
-    df_with_residuals = df.copy()
-    df_with_residuals['residual'] = residuals
-    
-    # Group by payload size and calculate mean residual
-    residuals_by_payload = df_with_residuals.groupby('payload_size')['residual'].mean()
-    return residuals_by_payload
-
-# Function to run CMA-ES optimization
-def run_cma_es(initial_params, sigma=0.5, maxiter=1000):
-    """
-    Run the CMA-ES optimization algorithm to find the best parameters.
-    
-    initial_params: Starting parameter values [a, b, c, d]
-    sigma: Initial step size
-    maxiter: Maximum number of iterations
-    
-    Returns: Best parameters found
-    """
-    print(f"Starting CMA-ES optimization with initial parameters: {initial_params}")
-    
-    # Create CMA-ES optimizer
-    es = cma.CMAEvolutionStrategy(initial_params, sigma)
-    
-    # Run optimization
-    iteration = 0
-    best_value = float('inf')
-    history = []
-    
-    while not es.stop() and iteration < maxiter:
-        # Ask for new parameter candidates
-        solutions = es.ask()
-        
-        # Evaluate candidates
-        values = [loss_function(sol) for sol in solutions]
-        
-        # Tell CMA-ES the results
-        es.tell(solutions, values)
-        
-        # Update best found solution
-        current_best = min(values)
-        if current_best < best_value:
-            best_value = current_best
-            best_params = solutions[values.index(current_best)]
-            print(f"Iteration {iteration}: MSE = {best_value:.6f}, Params = {best_params}")
-            
-        # Store history
-        history.append(best_value)
-        
-        # Next iteration
-        iteration += 1
-    
-    # Get final result
-    result = es.result
-    print(f"Optimization finished after {iteration} iterations")
-    print(f"Best MSE: {best_value:.6f}")
-    print(f"Best parameters: {result[0]}")
-    
-    # Plot convergence
-    plt.figure(figsize=(10, 6))
-    plt.plot(history)
-    plt.title('CMA-ES Convergence')
-    plt.xlabel('Iteration')
-    plt.ylabel('Mean Squared Error')
-    plt.yscale('log')
-    plt.grid(True)
-    plt.savefig('cma_es_convergence.png')
-    plt.close()
-    
-    return result[0]
-
-# Function to evaluate and visualize the model
-def evaluate_model(params):
-    """
-    Evaluate the model with the given parameters and create visualizations.
-    """
-    # Calculate overall metrics
-    predictions = np.array([model(params, *xi) for xi in X])
-    mse = np.mean((predictions - y) ** 2)
-    mae = np.mean(np.abs(predictions - y))
-    max_error = np.max(np.abs(predictions - y))
-    r_squared = calculate_r_squared(params)
-    
-    print("\nModel Evaluation:")
-    print(f"Mean Squared Error: {mse:.6f}")
-    print(f"Mean Absolute Error: {mae:.6f}")
-    print(f"Maximum Absolute Error: {max_error:.6f}")
-    print(f"R-squared: {r_squared:.6f}")
-    
-    # Analyze residuals by payload size
-    residuals_by_payload = analyze_residuals_by_payload(params)
-    print("\nMean absolute residuals by payload size:")
-    for payload, residual in residuals_by_payload.items():
-        print(f"Payload size {payload}: {residual:.6f}")
-    
-    # Create visualizations
-    
-    # 1. Actual vs Predicted scatter plot
-    plt.figure(figsize=(10, 6))
-    plt.scatter(y, predictions)
-    plt.plot([0, 1], [0, 1], 'k--')
-    plt.xlabel('Actual Success Probability')
-    plt.ylabel('Predicted Success Probability')
-    plt.title('Actual vs Predicted Success Probability')
-    plt.grid(True)
-    plt.savefig('actual_vs_predicted.png')
-    plt.close()
-    
-    # 2. Residuals plot
-    residuals = y - predictions
-    plt.figure(figsize=(10, 6))
-    plt.scatter(predictions, residuals)
-    plt.axhline(y=0, color='k', linestyle='--')
-    plt.xlabel('Predicted Success Probability')
-    plt.ylabel('Residuals')
-    plt.title('Residuals vs Predicted')
-    plt.grid(True)
-    plt.savefig('residuals.png')
-    plt.close()
-    
-    # 3. Create heatmaps for different payload sizes
-    payload_sizes = [3, 20, 100]
-    
-    for payload in payload_sizes:
-        p_send_values = np.linspace(0, 1, 100)
-        cluster_sizes = [2, 4, 18]
-        
-        # Create grid for the heatmap
-        p_send_grid, cluster_grid = np.meshgrid(p_send_values, cluster_sizes)
-        success_grid = np.zeros_like(p_send_grid, dtype=float)
-        
-        # Calculate model predictions for each grid point
-        for i in range(len(cluster_sizes)):
-            for j in range(len(p_send_values)):
-                success_grid[i, j] = model(params, payload, cluster_sizes[i], p_send_values[j])
-        
-        # Create heatmap
-        plt.figure(figsize=(12, 5))
-        plt.imshow(success_grid, cmap='viridis', origin='lower', aspect='auto', 
-                   extent=[0, 1, 0, len(cluster_sizes)-1])
-        plt.colorbar(label='Success Probability')
-        plt.xticks(np.linspace(0, 1, 11))
-        plt.yticks(np.arange(len(cluster_sizes)), cluster_sizes)
-        plt.xlabel('Send Probability (p_send)')
-        plt.ylabel('Cluster Size')
-        plt.title(f'Success Probability Heatmap (Payload Size = {payload})')
-        plt.savefig(f'heatmap_payload_{payload}.png')
-        plt.close()
-    
-    # 4. Create line plots for different configurations
-    # Plot success probability vs send probability for different payload sizes
-    plt.figure(figsize=(10, 6))
-    for payload in payload_sizes:
-        p_send_values = np.linspace(0, 1, 100)
-        cluster_size = 4  # Fix cluster size
-        
-        success_probs = [model(params, payload, cluster_size, p) for p in p_send_values]
-        plt.plot(p_send_values, success_probs, label=f'Payload {payload}')
-    
-    plt.xlabel('Send Probability')
-    plt.ylabel('Success Probability')
-    plt.title(f'Success Probability vs Send Probability (Cluster Size = {cluster_size})')
-    plt.legend()
-    plt.grid(True)
-    plt.savefig('success_vs_psend_by_payload.png')
-    plt.close()
-    
-    # Plot success probability vs send probability for different cluster sizes
-    plt.figure(figsize=(10, 6))
-    for cluster in [2, 4, 18]:
-        p_send_values = np.linspace(0, 1, 100)
-        payload_size = 20  # Fix payload size
-        
-        success_probs = [model(params, payload_size, cluster, p) for p in p_send_values]
-        plt.plot(p_send_values, success_probs, label=f'Cluster {cluster}')
-    
-    plt.xlabel('Send Probability')
-    plt.ylabel('Success Probability')
-    plt.title(f'Success Probability vs Send Probability (Payload Size = {payload_size})')
-    plt.legend()
-    plt.grid(True)
-    plt.savefig('success_vs_psend_by_cluster.png')
-    plt.close()
-    
-    # Return the equation for reporting
-    a, b, c, d = params
-    equation = f"P_success = 1 / (1 + ({a:.6f} * payload_size^{b:.4f} * p_send^{c:.4f} / cluster_size^{d:.4f}))"
-    return equation
-
-# Main execution
 if __name__ == "__main__":
-    # Initial parameters based on our previous analysis
-    initial_params = [0.001, 2.0, 1.5, 0.5]  # [a, b, c, d]
-    
-    # Set random seed for reproducibility
-    np.random.seed(42)
-    
-    # Run CMA-ES optimization
-    best_params = run_cma_es(initial_params, sigma=0.3, maxiter=500)
-    
-    # Evaluate the optimized model
-    equation = evaluate_model(best_params)
-    
-    # Print the final model equation
-    print("\nOptimized Model Equation:")
-    print(equation)
-    
-    # Save the best parameters to a CSV file
-    pd.DataFrame({
-        'parameter': ['a', 'b', 'c', 'd'],
-        'value': best_params,
-        'description': [
-            'Scaling factor',
-            'Payload size exponent',
-            'Send probability exponent',
-            'Cluster size exponent'
-        ]
-    }).to_csv('model_parameters.csv', index=False)
-    
-    print("\nAnalysis complete. Results saved to files.")
+    # Run the main optimization
+    pass
 
