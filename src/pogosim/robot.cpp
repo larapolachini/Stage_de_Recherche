@@ -582,6 +582,7 @@ MembraneObject::MembraneObject(uint16_t _id, float _x, float _y,
        float _density, float _friction, float _restitution,
        float _linear_noise_stddev, float _angular_noise_stddev,
        unsigned int _num_dots, float _dot_radius, int _cross_span,
+       float _stiffness,
        std::string _colormap,
        std::string const& _category)
     : Pogowall::Pogowall(_id, _x, _y, geom, world_id,
@@ -590,6 +591,7 @@ MembraneObject::MembraneObject(uint16_t _id, float _x, float _y,
       _density, _friction, _restitution,
       _linear_noise_stddev, _angular_noise_stddev, _category),
       num_dots(_num_dots), dot_radius(_dot_radius), cross_span(_cross_span),
+      stiffness(_stiffness),
       colormap(_colormap) {
     for (size_t i = 0; i != motorB; i++)
         set_motor(static_cast<motor_id>(i), 0);
@@ -611,6 +613,7 @@ void MembraneObject::parse_configuration(Configuration const& config, Simulation
     num_dots = config["num_dots"].get(100);
     dot_radius = config["dot_radius"].get(10.0f);
     cross_span = config["cross_span"].get(3);
+    stiffness = config["stiffness"].get(30.0f);
     colormap = config["colormap"].get(std::string("rainbow"));
 }
 
@@ -671,7 +674,7 @@ void MembraneObject::make_distance_joint(b2WorldId world_id,
     jd.localAnchorA  = {0.0f, 0.0f};
     jd.localAnchorB  = {0.0f, 0.0f};
     jd.length        = len;
-    jd.hertz         = 30.0f * stiffness_scale; // XXX
+    jd.hertz         = stiffness * stiffness_scale;
     jd.dampingRatio  = linear_damping;
 
     b2JointId j_id = b2CreateDistanceJoint(world_id, &jd);
@@ -685,6 +688,13 @@ void MembraneObject::create_robot_body([[maybe_unused]] b2WorldId world_id) {
     /* -------- 1. sample the outlines -------------------------------- */
     arena_polygons_t contours = geom->generate_contours(num_dots);
 
+    // Determine the size of dot_radius proportional to the contours
+    float const radius_bd = geom->compute_bounding_disk().radius;
+    float prop_dot_radius = dot_radius / radius_bd;
+    if (prop_dot_radius > 0.30f) {
+        prop_dot_radius = 0.30f;
+    }
+
     for (const auto& contour : contours) {
         const std::size_t first_idx = dots.size();      // index of 1st dot
         const std::size_t n         = contour.size();
@@ -694,8 +704,8 @@ void MembraneObject::create_robot_body([[maybe_unused]] b2WorldId world_id) {
         for (const b2Vec2& v_local : contour) {
             b2BodyDef body_def     = b2DefaultBodyDef();
             body_def.type          = b2_dynamicBody;
-            body_def.position      = {(x + v_local.x) / VISUALIZATION_SCALE,
-                                      (y + v_local.y) / VISUALIZATION_SCALE};
+            body_def.position      = {(x + v_local.x * (1 - prop_dot_radius)) / VISUALIZATION_SCALE,
+                                      (y + v_local.y * (1 - prop_dot_radius)) / VISUALIZATION_SCALE};
             //body_def.position      = {(x + v_local.x),
             //                          (y + v_local.y)};
 

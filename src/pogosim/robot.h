@@ -577,6 +577,7 @@ public:
      * @param _num_dots How many dots (≈ vertices) the membrane should have.
      * @param _dot_radius Physical radius for each dot (Box2D units, not pixels).
      * @param _cross_span Connect every i‑th neighbour to stiffen the sheet (≥ 1).
+     * @param _stiffness The stiffness of the joints.
      * @param _colormap Name of the colormap to use to set the color of the object
      * @param _category Name of the category of the object.
      */
@@ -590,6 +591,7 @@ public:
            float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
            float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f,
            unsigned int _num_dots = 100, float _dot_radius = 10.0f, int _cross_span = 3,
+           float _stiffness = 30.f,
            std::string _colormap = "rainbow",
            std::string const& _category = "robots");
 
@@ -682,6 +684,7 @@ protected:
     int num_dots;
     float dot_radius;
     int cross_span;
+    float stiffness;
     std::string colormap;
     std::vector<Dot> dots;
     std::vector<Joint> joints;
