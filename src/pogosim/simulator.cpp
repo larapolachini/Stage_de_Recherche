@@ -207,10 +207,15 @@ void Simulation::create_arena() {
     std::tie(arena_width, arena_height) = compute_polygon_dimensions(arena_polygons[0]);
 
     // Process each polygon
-    for (const auto& polygon : arena_polygons) {
+    for (auto& polygon : arena_polygons) {
         if (polygon.size() < 2) {
-            std::cerr << "Error: A polygon must have at least two points to create walls." << std::endl;
+            glogger->error("Error: A polygon must have at least two points to create walls.");
             continue;
+        }
+
+        // Remove the duplicate closing vertex, if it is present
+        if (!polygon.empty() && polygon.front() == polygon.back()) {
+            polygon.pop_back();
         }
 
         std::vector<b2Vec2> outer_polygon = offset_polygon(polygon, -1.0f * WALL_THICKNESS);
