@@ -1,10 +1,16 @@
 ---
 
+# Batch configuration use the key "batch_options" to specify configuration values options for a given key.
+#  The key "result_filename_format" contains the format of the exported feather files, depending on selected batch values.
+
+# Format of the generated dataframes, one for each configuration
+result_filename_format: "result_{arena_file}.feather"
+
 window_width: 600       # In pixels
 window_height: 600      # In pixels
 
-#arena_file: arenas/disk.csv
-arena_file: arenas/arena8.csv
+arena_file:        # Test the results on two arenas
+    batch_options: ["arenas/disk.csv", "arenas/arena8.csv", "arenas/annulus.csv", "arenas/star7.csv"]
 arena_surface: 1.0e6    # In mm²
 
 delete_old_files: true
@@ -13,17 +19,17 @@ data_filename: "frames/data.feather"
 enable_console_logging: true
 console_filename: "frames/console.txt"
 save_data_period: 1.0       # In s
-save_video_period: 1.0      # In s
+save_video_period: 1.0     # In s
 frames_name: "frames/f{:010.4f}.png"
 
 seed: 0
 show_communication_channels: false  # In the GUI, can enabled/disabled using F5
-show_lateral_LEDs: true             # In the GUI, can enabled/disabled using F6
-show_light_levels: true             # In the GUI, can enabled/disabled using F6
+show_lateral_LEDs: false            # In the GUI, can enabled/disabled using F6
+show_light_levels: false            # In the GUI, can enabled/disabled using F6
 GUI: true
 
 # Time
-simulation_time: 500.0     # In s
+simulation_time: 100.0     # In s
 time_step: 0.01            # In s
 GUI_speed_up: 10.0         # How much the visualisation in the GUI should be sped up
 
@@ -43,7 +49,6 @@ objects:
         photo_start_duration: 1.0   # Duration of the photo start period, in seconds
         photo_start_value: 32767    # Light value during the photo start period (between 0 and 32767). Should be very different from the normal value of the light
 
-
     # An object category containing a small light spot around the middle of the arena
     target_light:
         type: static_light  # The light is not active (does not move and does not have a controller)
@@ -53,11 +58,10 @@ objects:
         radius: 200         # Radius of the light spot. in mm
         value: 10000        # Value of the light between 0 and 32767. Corresponds to the light level detected by the Pogobots (e.g. by the pogobot_photosensors_read function)
 
-
     # An object category containing the Pogobot robots
     robots:
         type: pogobot       # Category type pertaining to Pogobots
-        nb: 100             # Number of objects (Pogobots) in this category
+        nb: 200                 # Number of objects (Pogobots) in this category
         geometry: disk                  # Pogobots are always disk-shaped
         radius: 26.5                    # In mm
 
@@ -89,6 +93,7 @@ parameters:
     run_duration_max: 2000
     tumble_duration_min: 100
     tumble_duration_max: 1100
+    test_vect: [42., 23., 11., 18.]
 
 # MODELINE "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
