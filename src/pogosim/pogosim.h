@@ -10,6 +10,18 @@
 #endif
 
 
+//// Useful macros ////
+#if defined(__GNUC__) || defined(__clang__)
+// Static compile-time strcmp. Only available on GCC and CLANG
+#define STATIC_STRCMP(a,b) __builtin_strcmp(a,b)
+#else
+// Normal strcmp
+#define STATIC_STRCMP(a,b) strcmp(a,b)
+#endif
+#define STRINGIFY_RAW(x)  #x
+#define STRINGIFY(x)      STRINGIFY_RAW(x)
+
+
 // Macros to declare the mydata pointer
 #ifdef SIMULATOR // Compiling for the simulator
 #include <stddef.h>
@@ -82,11 +94,13 @@ typedef enum {
     error_code_t_last_entry
 } error_code_t ;
 
+
 #define GET_MACRO_START(_1, _2, _3, NAME, ...) NAME
-#define STRINGIFY_RAW(x)  #x
-#define STRINGIFY(x)      STRINGIFY_RAW(x)
 
 #ifdef SIMULATOR // Compiling for the simulator
+const char* get_current_robot_category(void);
+bool current_robot_category_is(const char* category);
+
 void _pogobot_start(void (*user_init)(void), void (*user_step)(void), const char *object_category);
 #define pogobot_start_2(user_init, user_step) \
     _pogobot_start((user_init), (user_step), "robots")
@@ -97,18 +111,22 @@ void _pogobot_start(void (*user_init)(void), void (*user_step)(void), const char
 #define pogobot_start(...) GET_MACRO_START(__VA_ARGS__, pogobot_start_3, pogobot_start_2)(__VA_ARGS__)
 
 #else // Compiling for real robots
+#define get_current_robot_category()         (STRINGIFY(ROBOT_CATEGORY))
+#define current_robot_category_is(category)  (STATIC_STRCMP(get_current_robot_category(), category)==0)
+
 void _pogobot_start(void (*user_init)(void), void (*user_step)(void));
 #define pogobot_start_2(user_init, user_step) \
     _pogobot_start((user_init), (user_step))
 
 #define pogobot_start_3(user_init, user_step, object_category) \
     do { \
-        if (strcmp((object_category), STRINGIFY(ROBOT_CATEGORY)) == 0) { \
+        if (current_robot_category_is(object_category)) { \
             _pogobot_start((user_init), (user_step)); \
         } \
     } while (0)
 
 #define pogobot_start(...) GET_MACRO_START(__VA_ARGS__, pogobot_start_3, pogobot_start_2)(__VA_ARGS__)
+
 #endif
 
 void pogo_main_loop_step(void (*user_step)(void));

@@ -14,6 +14,14 @@ void _pogobot_start(void (*user_init)(void), void (*user_step)(void), const char
     current_robot->user_step = user_step;
 }
 
+const char* get_current_robot_category(void) {
+    return current_robot->category.c_str();
+}
+
+bool current_robot_category_is(const char* category) {
+    return strcmp(get_current_robot_category(), category) == 0;
+}
+
 #endif
 
 // MODELINE "{{{1

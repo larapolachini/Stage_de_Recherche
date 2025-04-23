@@ -255,7 +255,15 @@ bool walls_send_message(void) {
 
     // Composing a new message to send
     msg.msg_values.sender_id = pogobot_helper_getid();
-    msg.msg_values.msg_type = MSG_TYPE_WALL;
+    if (current_robot_category_is("walls")) {            // Static (so optimized, compile-time-only) comparison on real robots
+        msg.msg_values.msg_type = MSG_TYPE_WALL;
+        //printf("I'm a wall !\n");
+    } else if (current_robot_category_is("membranes")) { // Static (so optimized, compile-time-only) comparison on real robots
+        msg.msg_values.msg_type = MSG_TYPE_MEMBRANE;
+        //printf("I'm a membrane !\n");
+    } else {
+        return false;   // Unknown type of category! Don't send any message
+    }
 
     // Convert the message into an uint8_t pointer
     for ( uint16_t i = 0; i != MSG_SIZE; i++ )
@@ -298,60 +306,6 @@ void walls_user_step(void) {
     // ...
 }
 
-/**
- * @brief Function called each time the membranes send a message
- *
- * This function is called continuously at the frequency defined in membranes_user_init().
- */
-bool membranes_send_message(void) {
-    message msg;
-    uint8_t data[MSG_SIZE]; // message to send, containing uint8_t data
-
-    // Composing a new message to send
-    msg.msg_values.sender_id = pogobot_helper_getid();
-    msg.msg_values.msg_type = MSG_TYPE_MEMBRANE;
-
-    // Convert the message into an uint8_t pointer
-    for ( uint16_t i = 0; i != MSG_SIZE; i++ )
-        data[i] = msg.msg_array[i];
-
-    // Send message
-    return pogobot_infrared_sendLongMessage_omniGen((uint8_t *)(data), MSG_SIZE);
-}
-
-/**
- * @brief Initialization function for the membranes.
- *
- * This function is executed once at startup (cf 'pogobot_start' call in main()).
- */
-void membranes_user_init(void) {
-#ifndef SIMULATOR
-    printf("setup ok\n");
-#endif
-    // Initialize the random number generator
-    srand(pogobot_helper_getRandSeed());
-    pogobot_infrared_set_power(2); // Set the power level used to send all the next messages.
-
-    // Set the main loop frequency to 10 Hz (i.e., membranes_user_step() is called 10 times per second).
-    main_loop_hz = 10;
-    // Disable message reception, but enable message send by the membranes.
-    max_nb_processed_msg_per_tick = 0;
-    percent_msgs_sent_per_ticks = 75; // 75% of chance each step to send a message.
-    msg_rx_fn = NULL;
-    msg_tx_fn = membranes_send_message;
-    // Specify LED index for error codes (negative values disable this feature).
-    error_codes_led_idx = -1;
-}
-
-/**
- * @brief Main control loop for the Membranes
- *
- * This function is called continuously at the frequency defined in membranes_user_init().
- */
-void membranes_user_step(void) {
-    // ...
-}
-
 #ifdef SIMULATOR
 /**
  * @brief Function called once to initialize global values (e.g. configuration-specified constants)
@@ -385,10 +339,9 @@ int main(void) {
     // Use robots category "robots" by default. Same behavior as: pogobot_start(user_init, user_step, "robots");
     //   --> Make sure that the category "robots" is used to declare the pogobots in your configuration file. Cf conf/test.yaml
 
-    // Init and main loop functions for the walls (pogowalls). Ignored by the robots.
+    // Init and main loop functions for the walls (pogowalls) and membranes. Ignored by the robots.
     pogobot_start(walls_user_init, walls_user_step, "walls");
-    pogobot_start(membranes_user_init, membranes_user_step, "membranes");
-    //pogobot_start(walls_user_init, walls_user_step, "membranes");
+    pogobot_start(walls_user_init, walls_user_step, "membranes");
 
     // Specify the callback functions. Only called by the simulator.
     SET_CALLBACK(callback_global_setup, global_setup);              // Called once to initialize global values (e.g. configuration-specified constants)
