@@ -29,9 +29,9 @@ fp_t diffusion_min_abs_s = 0.e-05f;
 ///////////////////// GLOBAL CONSTANTS /////////////////////
 
 uint32_t const max_age = kiloticks_to_µs * 155;
-uint32_t const µs_initial_random_walk               = max_age * 100;
-uint32_t const µs_random_walk_choice                = max_age * 2;
-uint32_t const µs_randow_walk                       = max_age * 30;
+uint32_t const µs_initial_random_walk               = max_age * 20;
+uint32_t const µs_random_walk_choice                = max_age * 5;
+uint32_t const µs_randow_walk                       = max_age * 20;
 uint32_t const µs_diffusion                         = max_age * 100;
 uint32_t const µs_diffusion_it                      = max_age;
 uint32_t const µs_diffusion_burnin                  = max_age * 20;
