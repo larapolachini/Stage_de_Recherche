@@ -532,7 +532,7 @@ public:
     /**
      * @brief Returns whether this object is tangible (e.g. collisions, etc) or not.
      */
-    virtual bool is_tangible() const { return false; }
+    virtual bool is_tangible() const override { return false; }
 
     /**
      * @brief Move the object to a given coordinate
@@ -626,7 +626,7 @@ public:
      *
      * @return b2Vec2 The current position.
      */
-    virtual b2Vec2 get_position() const;
+    virtual b2Vec2 get_position() const override;
 
     /**
      * @brief Retrieves the IR emitters current positions
@@ -648,7 +648,7 @@ public:
     /**
      * @brief Returns whether this object is tangible (e.g. collisions, etc) or not.
      */
-    virtual bool is_tangible() const { return true; }
+    virtual bool is_tangible() const override { return true; }
 
     /**
      * @brief Move the object to a given coordinate

@@ -298,7 +298,7 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(
         }
 
         if (ok) {                       // accept candidate
-            points.emplace_back(x, y);
+            points.push_back({x, y});
             attempts = 0U;
         } else if (++attempts >= 10'000'000U) {
             throw std::runtime_error(

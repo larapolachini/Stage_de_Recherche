@@ -761,7 +761,7 @@ public:
      * @param renderer Pointer to the SDL_Renderer.
      * @param world_id The Box2D world identifier (unused in rendering).
      */
-    virtual void render(SDL_Renderer* renderer, b2WorldId world_id) const = 0;
+    virtual void render(SDL_Renderer* renderer, b2WorldId world_id) const override = 0 ;
 
     /**
      * @brief Move the object to a given coordinate
@@ -774,7 +774,7 @@ public:
     /**
      * @brief Returns whether this object is tangible (e.g. collisions, etc) or not.
      */
-    virtual bool is_tangible() const { return true; };
+    virtual bool is_tangible() const override { return true; };
 
     /**
      * @brief Return one or more polygonal contours that represent the geometry of the object.
