@@ -12,7 +12,7 @@
 
 ObjectGeometry::~ObjectGeometry() {
     if (shape_created && b2Shape_IsValid(shape_id))
-        b2DestroyShape(shape_id);
+        b2DestroyShape(shape_id, false);
 }
 
 float ObjectGeometry::get_distance_to(b2Vec2 orig, b2Vec2 point) const {
