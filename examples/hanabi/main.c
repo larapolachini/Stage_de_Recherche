@@ -18,7 +18,8 @@
  *    if the maximum age value is exceeded, or if a robot doesn't receive messages from aged neighbors and doesn't change its state autonomously.
  *
  * Leo Cazenille 2025-01.
- *  - adapted the hanabi code to be used in the pogosim simulator.
+ *  - Adapted the hanabi code to be used in the pogosim simulator.
+ *  - Updated photo start to use difference in light levels rather than direct threshold
 
  * This algorithm shows the rapidity of the diffusion of information among the swarm and by which path it propagates.
  * One robot changes autonomously its color and increments its age, this causes a cascade of changes affecting the robots with lower age.
@@ -33,7 +34,7 @@
 
 #define CODENAME "HANABI"
 
-#define INFRARED_POWER 2 // 1,2,3
+#define INFRARED_POWER 2    // 1,2,3
 
 #define FQCY 60             // control update frequency. 30Hz | 60 Hz | 90 Hz | etc.
 #define MAX_NB_OF_MSG 3     // max. number of messages per step which this robot can process
@@ -42,10 +43,13 @@
 #define SEND_MODE_ALLDIRECTION true // true: all direction at once; false: 4x one-direction
 #define MSG_MODE_FULL_HEADER true   // true: full header; false: short header
 
-#define DEBUG_LEVEL 0 // 0: nothing; 1: debug; 2: synchronzation; 3: communication
+#define DEBUG_LEVEL 0           // 0: nothing; 1: debug; 2: synchronzation; 3: communication
 
-#define BOOT_TIME 5   // waiting time before the start of the experience in seconds
-#define LIGHT_THRESHOLD 10
+#define BOOT_TIME 5             // Waiting time before the start of the experience in seconds
+#define ENABLE_PHOTO_START      // Whether to enable photo start, i.e. wait at the beginning of a experiment for a large instantaneous difference in light level
+                                //  --> allow robots to start the experiment all at the same time by just adjusting quickly the light level in the experimental setup.
+                                //  Comment this macro to disable photo start
+#define LIGHT_THRESHOLD 40      // You can tweak this parameter to change the sensitivity to the light changes
 
 // Uncomment to have moving robots
 //#define MOVING_ROBOTS
@@ -71,6 +75,7 @@ typedef union message_template {
 
 void process_message(message_t* mr);
 bool send_message(void);
+bool photo_start(void);
 
 
 // ********************************************************************************
@@ -111,12 +116,19 @@ uint16_t const den_p_change_led_color = 20000; // probability to change led colo
 // Non-const global variables used by each robot. They will be accessible through the mydata pointer, declared by the macro "REGISTER_USERDATA"
 typedef struct {
     uint32_t start_of_experiment_ms;
-    bool started;
 
     uint16_t my_pogobot_id;
     uint16_t age; // number of times this robot has changed color from the start of the algorithm, from 0 to max 65535 (16 bits unsigned)
 
     uint8_t rgb_colors_index; // index of the rgb_colors array
+
+    // Photo start values;
+#ifdef ENABLE_PHOTO_START
+    bool started;
+    int16_t last_data_b;
+    int16_t last_data_fl;
+    int16_t last_data_fr;
+#endif
 } USERDATA;
 
 // Call this macro in the same file (.h or .c) as the declaration of USERDATA
@@ -186,8 +198,7 @@ bool send_message(void) {        // Called by the pogobot main loop before 'user
         else
             pogobot_infrared_sendShortMessage_omni((uint8_t *)(data), MSG_SIZE);
     } else {
-        for (uint16_t i  = 0; i < 4 ; i++) // i is one of the 4 possible directions
-        {
+        for (uint16_t i  = 0; i < 4 ; i++) { // i is one of the 4 possible directions
             if (MSG_MODE_FULL_HEADER == true)
                 pogobot_infrared_sendLongMessage_uniSpe(i, (uint8_t *)(data), MSG_SIZE);
             else
@@ -222,6 +233,14 @@ void user_init(void) {
     error_codes_led_idx = 3; // Default value, negative values to disable
 
     mydata->my_pogobot_id = pogobot_helper_getid();
+    mydata->start_of_experiment_ms = current_time_milliseconds();
+
+#ifdef ENABLE_PHOTO_START
+    mydata->started = false;
+    mydata->last_data_b  = pogobot_photosensors_read(0);
+    mydata->last_data_fl = pogobot_photosensors_read(1);
+    mydata->last_data_fr = pogobot_photosensors_read(2);
+#endif
 
     if (DEBUG_LEVEL) {
         printf("\n");
@@ -245,25 +264,44 @@ void user_init(void) {
 }
 
 
+#ifdef ENABLE_PHOTO_START
+// ********************************************************************************
+// * Start-up phase for simultaneous start of the robots when the lights turn off
+// ********************************************************************************
+bool photo_start(void) {
+    if (mydata->started) {
+        return true;
+    }
+    // Set initial led color to red
+    pogobot_led_setColor(red.r, red.g, red.b);
+
+    // Stopping if the difference between the last value and the current value is more than the threshold
+    int16_t const data_b  = pogobot_photosensors_read(0);
+    int16_t const data_fl = pogobot_photosensors_read(1);
+    int16_t const data_fr = pogobot_photosensors_read(2);
+    int16_t const diff_b  = data_b  - mydata->last_data_b;  // Positive if data > last_data, i.e more light than before
+    int16_t const diff_fl = data_fl - mydata->last_data_fl;
+    int16_t const diff_fr = data_fr - mydata->last_data_fr;
+    mydata->last_data_b  = data_b;
+    mydata->last_data_fl = data_fl;
+    mydata->last_data_fr = data_fr;
+
+    if(diff_b >= LIGHT_THRESHOLD || diff_fl >= LIGHT_THRESHOLD || diff_fr >= LIGHT_THRESHOLD) {
+        mydata->started = true;
+        mydata->start_of_experiment_ms = current_time_milliseconds();
+        return true;
+    } else {
+        return false; // Quit function if experiment has not started
+    }
+}
+#endif
+
 // Step function. Called continuously at each step of the pogobot main loop
 void user_step(void) {
-    // ********************************************************************************
-    // * Start-up phase for simultaneous start of the robots when the lights turn off
-    // ********************************************************************************
-    if (!mydata->started) {
-        pogobot_led_setColor(red.r, red.g, red.b); // set initial led color to red
-
-        int16_t photo0 = pogobot_photosensors_read(0);
-        int16_t photo1 = pogobot_photosensors_read(1);
-        int16_t photo2 = pogobot_photosensors_read(2);
-
-        if (photo0 < LIGHT_THRESHOLD || photo1 < LIGHT_THRESHOLD || photo2 < LIGHT_THRESHOLD) {
-            mydata->started = true;
-            mydata->start_of_experiment_ms = current_time_milliseconds();
-        } else {
-            return; // Quit function if experiment has not started
-        }
-    }
+#ifdef ENABLE_PHOTO_START
+    if (!photo_start())
+        return;
+#endif
 
     // Experiment has started. Wait for some time
     if (current_time_milliseconds() - mydata->start_of_experiment_ms < BOOT_TIME * 1000) {
@@ -297,7 +335,6 @@ void user_step(void) {
     // ********************************************************************************
     // * Motility
     // ********************************************************************************
-
 #ifdef MOVING_ROBOTS
     if ((uint32_t)(current_time_milliseconds() / 10000) % 2 == 0) {
         pogobot_led_setColors(blue.r, blue.g, blue.b, 1);
