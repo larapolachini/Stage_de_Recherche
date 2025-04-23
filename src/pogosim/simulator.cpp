@@ -712,6 +712,7 @@ void Simulation::export_data() {
 
         // User-defined values
         if (robot->callback_export_data != nullptr) {
+            set_current_robot(*robot.get());
             robot->callback_export_data();
         }
 
