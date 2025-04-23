@@ -79,7 +79,7 @@ arena_polygons_t DiskGeometry::generate_contours(std::size_t n, b2Vec2 position)
     auto& poly = contours.front();
     poly.reserve(n);
 
-    const float step = 2.0f * b2_pi / static_cast<float>(n);
+    const float step = 2.0f * M_PI / static_cast<float>(n);
     for (std::size_t i = 0; i < n; ++i) {
         const float a = i * step;
         poly.push_back({position.x + radius * std::cos(a), position.y + radius * std::sin(a)});
