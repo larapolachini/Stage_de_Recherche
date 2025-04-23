@@ -108,8 +108,8 @@ void user_init(void) {
     // Initialize the run-and-tumble behavior.
     mydata->phase = PHASE_TUMBLE;                      // Start with the tumble phase.
     mydata->phase_start_time = current_time_milliseconds();  // Record the start time.
-    mydata->phase_duration = get_run_duration();    // Set a random duration for running.
-    mydata->tumble_direction = rand() % 2;            // Choose a random tumble direction.
+    mydata->phase_duration = get_run_duration();       // Set a random duration for running.
+    mydata->tumble_direction = rand() % 2;             // Choose a random tumble direction.
 
     // In simulation, test_vect values are directly set in configuration files.
     // In experiments with real robots, test_vect has the default values set at initialization.

@@ -186,6 +186,19 @@ Inside the robot prompt, type "enter" to obtain a new prompt line.
 If you connect to the robot through a Progboard, you can use the command "serialboot" to upload the code. Cf the [pogobot-SDK documentation](https://github.com/nekonaute/pogobot-sdk) for more details.
 If you use the IR remote device, follow the instructions described [here](https://github.com/nekonaute/pogobot/blob/main/readme-irRemote.md).
 
+#### Compiling binaries for multi-categories projects
+Note that if the project involve several robot categories that each have a different code (e.g. example "./examples/walls" where Pogobots, Pogowalls and Membranes have different code), it is possible to specify the category you want to compile for, using the following command:
+```shell
+cd ~/my_pogobot_project
+make clean && make bin ROBOT_CATEGORY=robots  # where "ROBOT_CATEGORY" is the category specified in the pogobot_start function.
+```
+Note that "robots" is the default category (e.g. with pogobot\_start calls with only 2 arguments).
+
+For instance, the following command can be used to compile the example code "./examples/walls" for Pogowalls:
+```shell
+cd examples/walls
+make clean && make bin ROBOT_CATEGORY=walls
+```
 
 
 ### Headless mode
@@ -231,20 +244,20 @@ import pandas as pd
 df = pd.read_feather("frames/data.feather")
 print(df)
 
-     time  robot_id  pogobot_ticks          x          y     angle
-0    1.00         0             64   6.130253   8.420820 -0.999992
-1    1.00         1             64   5.741853   0.787406  1.609105
-2    1.00         2             64   6.976273  10.846928  1.205084
-3    1.00         3             64   2.494493   9.393031  1.194923
-4    1.00         4             64  10.689711   7.483701  1.821597
-..    ...       ...            ...        ...        ...       ...
-895  6.05       145            380   2.619418   1.203837  3.132243
-896  6.05       146            380   5.100541   2.913250  0.923802
-897  6.05       147            380   6.158785  10.048936  2.966942
-898  6.05       148            380   6.318808   0.312880 -2.399829
-899  6.05       149            379   5.509576   7.346396 -0.368371
+       time robot_category  robot_id  pogobot_ticks         x         y       angle  
+0      1.00          walls     65535             63  5.001000  5.001000    0.000000  
+1      1.00      membranes     65534             63  6.824879  4.867349         NaN  
+2      1.00         robots         0             63  4.038734  0.959281    1.953128  
+3      1.00         robots         1             63  1.023770  8.115510    1.303922  
+4      1.00         robots         2             63  1.965905  3.455247   -2.005039  
+...     ...            ...       ...            ...       ...       ...         ...  
+1423  14.13         robots        95            884  0.654096  9.729611   -0.386542  
+1424  14.13         robots        96            884  8.011082  6.353422    1.812981  
+1425  14.13         robots        97            884  4.807075  7.854455    1.177420  
+1426  14.13         robots        98            884  4.021065  9.730083    1.626796  
+1427  14.13         robots        99            883  9.031286  1.299344   -0.168437  
 
-[900 rows x 6 columns]
+[1428 rows x 7 columns]
 ```
 
 Custom columns can be added into this file by using the callback mechanism. See examples "hanabi" (simple) and "ssr" (complex) for more information.
