@@ -61,7 +61,6 @@ objects:
     # An object category containing the Pogobot robots
     robots:
         type: pogobot       # Category type pertaining to Pogobots
-#        nb: 50                # Number of objects (Pogobots) in this category
         nb:                 # Number of objects (Pogobots) in this category
             batch_options: [50, 100, 150]          # Test the results on three different swarm sizes
         geometry: disk                  # Pogobots are always disk-shaped

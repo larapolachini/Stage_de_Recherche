@@ -77,8 +77,8 @@ class PogobotLauncher:
         # Set a unique seed for this instance.
         config['seed'] = seed
 
-        # Disable frame export.
-        config['save_video_period'] = -1
+        ## Disable frame export.
+        #config['save_video_period'] = -1
 
         # Create a directory for frame files inside the temporary directory.
         frames_dir = os.path.join(output_dir, "frames")
@@ -209,42 +209,50 @@ class PogobotBatchRunner:
         # Initialize logging via utils.
         utils.init_logging(self.verbose)
 
-    def get_combinations(self, config: dict) -> List[dict]:
-        """
-        Scan the whole configuration tree looking for *either* a Python list
-        *or* a dict containing a key ``batch_options``; every such entry defines
-        a factor in the Cartesian product.  Everything else is kept fixed.
-        """
-        option_paths: List[str] = []
-        option_values: List[Iterable[Any]] = []
 
-        def recurse(node: Any, prefix: str = "") -> None:
+    def get_combinations(self, config: dict) -> list[dict]:
+        """
+        Return every configuration obtained by choosing **exactly one** value
+        from each *batch_options* list found anywhere in the YAML tree.
+
+        • Ordinary Python lists that are *not* under a `batch_options` key are
+          treated as plain data (e.g. vectors, colour tables) and **do not**
+          create extra combinations.
+
+        • If no batch_options are present, the original config is returned.
+        """
+        option_paths: list[str] = []
+        option_values: list[list] = []
+
+        # ---------------------------------------------------------------------
+        # Collect every "...batch_options: [v1, v2, ...]" we can find
+        # ---------------------------------------------------------------------
+        def recurse(node: dict | list | Any, prefix: str = "") -> None:
             if isinstance(node, dict):
-                # Dict that *itself* is a batch spec?
                 if "batch_options" in node and isinstance(node["batch_options"], list):
-                    option_paths.append(prefix.rstrip("."))
-                    option_values.append(node["batch_options"])
-                    return                                  # do NOT recurse further
-                # Otherwise walk deeper
+                    option_paths.append(prefix.rstrip("."))       # where to set
+                    option_values.append(node["batch_options"])   # the choices
+                    return                                        # don't dive deeper
                 for k, v in node.items():
                     recurse(v, f"{prefix}{k}.")
-            elif isinstance(node, list):
-                option_paths.append(prefix.rstrip("."))
-                option_values.append(node)
+            # NOTE: plain lists are *ignored* on purpose.
 
         recurse(config)
 
-        # If no options, trivial single combination
-        if not option_paths:
+        # ---------------------------------------------------------------------
+        # Build the Cartesian product of every collected factor
+        # ---------------------------------------------------------------------
+        if not option_paths:                       # nothing to vary
             return [config]
 
-        combinations: List[dict] = []
-        for product in itertools.product(*option_values):
-            cfg_copy = copy.deepcopy(config)
-            for path, val in zip(option_paths, product):
-                set_in_dict(cfg_copy, path, val)
-            combinations.append(cfg_copy)
-        return combinations
+        combos: list[dict] = []
+        for prod in itertools.product(*option_values):
+            cfg = copy.deepcopy(config)
+            for path, val in zip(option_paths, prod, strict=True):
+                set_in_dict(cfg, path, val)        # overwrite dict→raw value
+            combos.append(cfg)
+        return combos
+
 
     def write_temp_yaml(self, comb_config):
         """
