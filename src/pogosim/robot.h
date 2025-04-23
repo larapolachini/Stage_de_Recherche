@@ -658,6 +658,22 @@ public:
      */
     virtual void move([[maybe_unused]] float x, [[maybe_unused]] float y) override;
 
+    /**
+     * @brief Return one or more polygonal contours that represent the current geometry of the object.
+     *
+     * @param points_per_contour  Desired number of vertices for each contour
+     *                            (a rectangle has one contour, a disk has one,
+     *                             an arena may have many – one per wall).
+     *                            If this value is 0, the function will determine
+     *                            automatically the best number of points to represent
+     *                            the shape.
+     *
+     * @return arena_polygons_t   A vector of closed polygons (counter‑clockwise,
+     *                            last vertex different from the first – the caller
+     *                            may close the loop if needed).
+     */
+    virtual arena_polygons_t generate_contours(std::size_t points_per_contour = 0) const override;
+
 
 protected:
     /**
@@ -682,6 +698,7 @@ protected:
 
     // Physical information
     int num_dots;
+    std::vector<size_t> size_contours;
     float dot_radius;
     int cross_span;
     float stiffness;

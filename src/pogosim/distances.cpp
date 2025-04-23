@@ -206,7 +206,7 @@ void find_neighbors_to_pogowalls(std::vector<std::shared_ptr<Pogowall>>& pogowal
     size_t N = robots.size();
 
     for (auto wall : pogowalls) {
-        arena_polygons_t contours = wall->get_geometry()->generate_contours(0, wall->get_position());
+        arena_polygons_t contours = wall->generate_contours();
 
         auto dists = compute_wall_distances(dir, robots, contours);
         for (size_t i = 0; i < N; i++) {

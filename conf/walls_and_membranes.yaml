@@ -69,9 +69,9 @@ objects:
         x: 500      # X coordinate of the center of the create membrane, in mm
         y: 500      # Y coordinate of the center of the create membrane, in mm
 
-        radius: 200             # In mm, if geometry is a disk
-        #body_width: 100        # In mm, if geometry is a rectangle
-        #body_height: 100       # In mm, if geometry is a rectangle
+        radius: 250             # In mm, if geometry is a disk
+        #body_width: 400        # In mm, if geometry is a rectangle
+        #body_height: 400       # In mm, if geometry is a rectangle
 
         # Membrane dots and joints
         num_dots: 40            # Number of dots of the membrane, i.e. of disk-shaped elements.
@@ -101,7 +101,7 @@ objects:
     # An object category containing the Pogobot robots
     robots:
         type: pogobot       # Category type pertaining to Pogobots
-        nb: 100             # Number of objects (Pogobots) in this category
+        nb: 150             # Number of objects (Pogobots) in this category
         geometry: disk                  # Pogobots are always disk-shaped
         radius: 26.5                    # In mm
 

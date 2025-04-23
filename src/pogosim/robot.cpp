@@ -699,6 +699,7 @@ void MembraneObject::create_robot_body([[maybe_unused]] b2WorldId world_id) {
         const std::size_t first_idx = dots.size();      // index of 1st dot
         const std::size_t n         = contour.size();
         if (n < 2) continue;                            // skip degenerate
+        size_contours.push_back(n);
 
         /* ---- 2. create one Box2D body per vertex ------------------- */
         for (const b2Vec2& v_local : contour) {
@@ -760,6 +761,66 @@ void MembraneObject::move(float _x, float _y) {
     }
 
     PogobotObject::move(_x, _y); 
+}
+
+static std::vector<b2Vec2>
+resample_polygon(const std::vector<b2Vec2>& src, std::size_t out_count) {
+    if (out_count == 0 || src.size() < 2) return {};
+
+    /* compute cumulative edge lengths */
+    const std::size_t n = src.size();
+    std::vector<float> cum(n + 1, 0.0f);          // cum[0] = 0
+    for (std::size_t i = 1; i <= n; ++i) {
+        const auto& a = src[i - 1];
+        const auto& b = src[i % n];
+        const float dx = b.x - a.x, dy = b.y - a.y;
+        cum[i] = cum[i - 1] + std::sqrt(dx * dx + dy * dy);
+    }
+    const float perimeter = cum.back();
+    const float step      = perimeter / out_count;
+
+    std::vector<b2Vec2> dst;  dst.reserve(out_count);
+    /* walk around the polygon and pick points every *step* millimetres */
+    std::size_t edge = 0;
+    float target = 0.0f;
+
+    for (std::size_t k = 0; k < out_count; ++k, target += step) {
+        while (cum[edge + 1] < target) ++edge;
+
+        const auto& a = src[edge];
+        const auto& b = src[(edge + 1) % n];
+        const float  t = (target - cum[edge]) / (cum[edge + 1] - cum[edge]);
+
+        dst.push_back({a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)});
+    }
+    return dst;
+}
+
+arena_polygons_t MembraneObject::generate_contours(std::size_t points_per_contour) const {
+    arena_polygons_t contours;
+    contours.reserve(size_contours.size());
+
+    std::size_t dot_index = 0;
+
+    for (std::size_t contour = 0; contour < size_contours.size(); ++contour) {
+        const std::size_t n = size_contours[contour];
+
+        std::vector<b2Vec2> poly;   poly.reserve(n);
+
+        for (std::size_t k = 0; k < n; ++k, ++dot_index) {
+            b2Vec2 wp = b2Body_GetPosition(dots[dot_index].body_id);   // world units
+            /* convert to millimetres, then to local coords around the membrane centre */
+            poly.push_back({wp.x * VISUALIZATION_SCALE,
+                            wp.y * VISUALIZATION_SCALE});
+        }
+
+        /* optional uniform resampling */
+        if (points_per_contour != 0 && points_per_contour != poly.size())
+            contours.push_back(resample_polygon(poly, points_per_contour));
+        else
+            contours.push_back(std::move(poly));
+    }
+    return contours;
 }
 
 

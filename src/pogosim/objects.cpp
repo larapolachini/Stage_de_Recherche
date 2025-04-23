@@ -561,6 +561,10 @@ void Object::move(float _x, float _y) {
     y = _y;
 }
 
+arena_polygons_t Object::generate_contours(std::size_t points_per_contour) const {
+    return geom->generate_contours(points_per_contour, {x, y});
+}
+
 
 /************* StaticLightObject *************/ // {{{1
 
@@ -725,6 +729,10 @@ void PhysicalObject::move(float _x, float _y) {
         b2Rot rotation = b2Body_GetRotation(body_id);
         b2Body_SetTransform(body_id, position, rotation);
     }
+}
+
+arena_polygons_t PhysicalObject::generate_contours(std::size_t points_per_contour) const {
+    return geom->generate_contours(points_per_contour, get_position());
 }
 
 

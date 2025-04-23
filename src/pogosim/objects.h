@@ -588,6 +588,19 @@ public:
      */
     virtual bool is_tangible() const { return false; };
 
+    /**
+     * @brief Return one or more polygonal contours that represent the geometry of the object.
+     *
+     * @param points_per_contour  Desired number of vertices for each contour
+     *                            (a rectangle has one contour, a disk has one,
+     *                             an arena may have many – one per wall).
+     *
+     * @return arena_polygons_t   A vector of closed polygons (counter‑clockwise,
+     *                            last vertex different from the first – the caller
+     *                            may close the loop if needed).
+     */
+    virtual arena_polygons_t generate_contours(std::size_t points_per_contour = 0) const;
+
     // Physical information
     float x;                            ///< X position
     float y;                            ///< Y position
@@ -762,6 +775,19 @@ public:
      * @brief Returns whether this object is tangible (e.g. collisions, etc) or not.
      */
     virtual bool is_tangible() const { return true; };
+
+    /**
+     * @brief Return one or more polygonal contours that represent the geometry of the object.
+     *
+     * @param points_per_contour  Desired number of vertices for each contour
+     *                            (a rectangle has one contour, a disk has one,
+     *                             an arena may have many – one per wall).
+     *
+     * @return arena_polygons_t   A vector of closed polygons (counter‑clockwise,
+     *                            last vertex different from the first – the caller
+     *                            may close the loop if needed).
+     */
+    virtual arena_polygons_t generate_contours(std::size_t points_per_contour = 0) const override;
 
 
 protected:

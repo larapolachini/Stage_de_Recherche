@@ -116,13 +116,17 @@ void process_message(message_t* mr) {
         msg.msg_array[i] = mr->payload[i];
 
     // Check if we received a message from a membrane
-    if (msg.msg_values.msg_type != MSG_TYPE_MEMBRANE) {
-        pogobot_led_setColors(255, 255, 0, 0);
+    if (msg.msg_values.msg_type == MSG_TYPE_MEMBRANE) {
+        pogobot_led_setColor(255, 255, 0);
         pogobot_led_setColors(255, 255, 0, 1);
+        // If the goal was reached, change phase to tumble
+        if (mydata->phase == PHASE_GOAL)
+            mydata->phase = PHASE_TUMBLE;
     }
 
     // Check if we received a message from a wall
     if (msg.msg_values.msg_type != MSG_TYPE_WALL)
+    //if (msg.msg_values.msg_type != MSG_TYPE_WALL && msg.msg_values.msg_type != MSG_TYPE_MEMBRANE)
         return; // No. Just quit.
 
     // Debug: Print phase information for robot with ID 0.
@@ -193,6 +197,7 @@ void user_step(void) {
 
     // Check if the current phase duration has elapsed.
     if (now - mydata->phase_start_time >= mydata->phase_duration) {
+        pogobot_led_setColors(0, 0, 0, 1);
         // Transition between phases.
         if (mydata->phase == PHASE_RUN) {
             // Switch from run to tumble.
@@ -200,10 +205,14 @@ void user_step(void) {
             mydata->phase_duration = get_tumble_duration();
             // Randomly choose a tumble direction: 0 for left, 1 for right.
             mydata->tumble_direction = rand() % 2;
+            // Set LED color to red to indicate tumbling.
+            pogobot_led_setColor(255, 0, 0);
         } else {
             // Switch from tumble back to run.
             mydata->phase = PHASE_RUN;
             mydata->phase_duration = get_run_duration();
+            // Set LED color to green to indicate running.
+            pogobot_led_setColor(0, 255, 0);
         }
         // Reset the phase start time.
         mydata->phase_start_time = now;
@@ -212,15 +221,11 @@ void user_step(void) {
     // Execute behavior based on the current phase.
     if (mydata->phase == PHASE_RUN) {
         // Run phase: the robot moves forward.
-        // Set LED color to green to indicate running.
-        pogobot_led_setColor(0, 255, 0);
         // Set both motors to full speed for straight-line motion.
         pogobot_motor_set(motorL, motorFull);
         pogobot_motor_set(motorR, motorFull);
     } else {
         // Tumble phase: the robot rotates in place.
-        // Set LED color to red to indicate tumbling.
-        pogobot_led_setColor(255, 0, 0);
         // Rotate the robot by driving one motor while stopping the other.
         if (mydata->tumble_direction == 0) {
             // Tumble left: stop the left motor.
