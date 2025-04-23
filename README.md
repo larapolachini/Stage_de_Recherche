@@ -225,7 +225,7 @@ Options:
 - Parameter "-g" enables headless mode: no GUI shown, but the program still export frames.
 - Parameter "-v" enables verbose mode (show debug messages).
 - Parameter "-nr" disables messages from the robots (printf in robot code).
-- Parameter "-P" displays a progress bar of the simulation, depending on the parameter value "SimulationTime" defined in the configuration file.
+- Parameter "-P" displays a progress bar of the simulation, depending on the parameter value "simulation\_time" defined in the configuration file.
 
 
 ## Access the pose and states of the robots in Python
@@ -286,14 +286,20 @@ pogobatch -c conf/test.yaml -S ./examples/hanabi/hanabi -r 10 -t tmp -o results
 This command with launch 10 runs of the Hanabi example using configuration file conf/test.yaml. Temporary files of the runs will be stored in the "tmp" directory.
 After all runs are completed, the script will compile a dataframe of all results and save it into "results/result.feather". It can then be opened as described in previous section. An additional column "run" is added to the dataframe to distinguish results from the different runs.
 
-It is also possible to launch the pogobatch script on several variations of a given configuration, e.g. with a list of different numbers of robots or arena. The list of possibly configuration combination is specified in the configuration file, by using list of values rather than single values.
+It is also possible to launch the pogobatch script on several variations of a given configuration, e.g. with a list of different numbers of robots or arena. The list of possibly configuration combination is specified in the configuration file, by adding a subkey "batch\_options" with the list of possible values.
 E.g.:
 ```yaml
-arena_file: ["arenas/disk.csv", "arenas/arena8.csv"]        # Test the results on two arenas
-nBots: [100, 200]           # Test configurations with two total numbers of robots
+arena_file:        # Test the results on two arenas
+    batch_options: ["arenas/disk.csv", "arenas/arena8.csv"]
+objects:
+        type: pogobot       # Category type pertaining to Pogobots
+        nb:                 # Number of objects (Pogobots) in this category
+            batch_options: [100, 200]          # Test the results on three different swarm sizes
+        geometry: disk                  # Pogobots are always disk-shaped
+        radius: 26.5                    # In mm
 
 # Format of the generated dataframes, one for each configuration
-result_filename_format: "result_{nBots}_{arena_file}.feather"
+result_filename_format: "result_{objects.robots.nb}_{arena_file}.feather"
 ```
 These configuration entries specify that either 100 or 200 robots should be considered, on arenas "disk" and "8", resulting in 4 possibly configurations. The configuration entry "result\_filename\_format" corresponds to the name of a given configuration combination.
 See "conf/batch/test.yaml" for a complete example.
