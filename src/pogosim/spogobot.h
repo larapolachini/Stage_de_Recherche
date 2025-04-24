@@ -1042,6 +1042,27 @@ void init_double_array_from_configuration(double* var, char const* name, size_t 
 }
 #endif
 
+// Generic variable initialization from configuration (only from C code)
+#ifndef __cplusplus
+#define init_from_configuration(x)                                          \
+    _Generic ((x),                                                          \
+        double:   init_double_from_configuration,                           \
+        float:    init_float_from_configuration,                            \
+        int32_t:  init_int32_from_configuration,                            \
+        uint32_t: init_uint32_from_configuration,                           \
+        int16_t:  init_int16_from_configuration,                            \
+        uint16_t: init_uint16_from_configuration,                           \
+        int8_t:   init_int8_from_configuration,                             \
+        uint8_t:  init_uint8_from_configuration                             \
+    )(&(x), #x, (x))
+
+#define init_array_from_configuration(a)                                   \
+    _Generic (&(a),                                                        \
+        float  (*)[] : init_float_array_from_configuration,                \
+        double (*)[] : init_double_array_from_configuration                \
+    )((a), #a, sizeof(a) / sizeof((a)[0]))
+#endif
+
 // Define custom printf as the default in files including pogosim.h
 #define printf pogosim_printf
 #define putchar pogosim_putchar

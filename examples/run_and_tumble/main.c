@@ -189,11 +189,11 @@ void user_step(void) {
  * @brief Function called once to initialize global values (e.g. configuration-specified constants)
  */
 void global_setup() {
-    init_uint32_from_configuration(&run_duration_min, "run_duration_min", 200);
-    init_uint32_from_configuration(&run_duration_max, "run_duration_max", 1200);
-    init_uint32_from_configuration(&tumble_duration_min, "tumble_duration_min", 100);
-    init_uint32_from_configuration(&tumble_duration_max, "tumble_duration_max", 1100);
-    init_float_array_from_configuration(test_vect, "test_vect", sizeof(test_vect)/sizeof(test_vect[0]));
+    init_from_configuration(run_duration_min);
+    init_from_configuration(run_duration_max);
+    init_from_configuration(tumble_duration_min);
+    init_from_configuration(tumble_duration_max);
+    init_array_from_configuration(test_vect);
 }
 #endif
 
