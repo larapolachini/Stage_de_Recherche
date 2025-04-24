@@ -221,24 +221,42 @@ std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float off
 }
 
 
+/**
+ * Generate random points inside a (possibly holed) polygonal domain while
+ * respecting a per‑point exclusion radius and a global connectivity limit.
+ *
+ * A candidate is accepted only if it is:
+ *   1. Inside the outer polygon and outside every “hole” polygon.
+ *   2. At a distance ≥ r_i + r_j from every previously accepted point j.
+ *   3. Within `max_neighbor_distance` of at least one previously accepted
+ *      point (unless it is the very first point or `max_neighbor_distance`
+ *      is +∞).
+ *
+ * If it fails to build the whole set after `attempts_per_point` rejected
+ * candidates, the algorithm discards all progress and restarts.  It will
+ * attempt the whole sampling process up to `max_restarts` times before
+ * throwing.
+ */
 std::vector<b2Vec2> generate_random_points_within_polygon_safe(
-        const std::vector<std::vector<b2Vec2>>& polygons,
-        const std::vector<float>& reserve_radii) {
+        const std::vector<std::vector<b2Vec2>> &polygons,
+        const std::vector<float> &reserve_radii,
+        float max_neighbor_distance,
+        std::uint32_t attempts_per_point,
+        std::uint32_t max_restarts) {
+    // ─── basic sanity checks ──────────────────────────────────────────────
     if (polygons.empty()) {
         throw std::runtime_error("At least one polygon must be supplied.");
     }
-    for (const auto& p : polygons) {
+    for (const auto &p : polygons) {
         if (p.size() < 3) {
-            throw std::runtime_error("Every polygon needs ≥ 3 vertices.");
+            throw std::runtime_error("Every polygon needs ≥ 3 vertices.");
         }
     }
 
     const std::size_t n_points = reserve_radii.size();
     if (n_points == 0U) { return {}; }
 
-    /* --- build a conservative bounding box: contract by the                *
-     *     largest exclusion radius so that every random candidate           *
-     *     automatically satisfies the “stay away from the outer edge” rule. */
+    // ─── conservative bounding‑box (contracted by largest radius) ─────────
     const float bb_margin = *std::max_element(reserve_radii.begin(), reserve_radii.end());
 
     float min_x = std::numeric_limits<float>::max();
@@ -246,8 +264,8 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(
     float max_x = std::numeric_limits<float>::lowest();
     float max_y = std::numeric_limits<float>::lowest();
 
-    const auto& outer_poly = polygons.front();
-    for (const auto& v : outer_poly) {
+    const auto &outer_poly = polygons.front();
+    for (const auto &v : outer_poly) {
         min_x = std::min(min_x, v.x);
         min_y = std::min(min_y, v.y);
         max_x = std::max(max_x, v.x);
@@ -260,54 +278,64 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(
         throw std::runtime_error("Reserve radii are too large for the given polygon.");
     }
 
-    /* --- RNG ------------------------------------------------------------- */
+    // ─── random‑number engine ─────────────────────────────────────────────
     std::random_device rd;
-    std::mt19937                 gen(rd());
+    std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dis_x(min_x, max_x);
     std::uniform_real_distribution<float> dis_y(min_y, max_y);
 
-    std::vector<b2Vec2> points;   points.reserve(n_points);
-    std::uint32_t attempts = 0U;
+    // ─── outer restart loop ───────────────────────────────────────────────
+    for (std::uint32_t restart = 0U; restart < max_restarts; ++restart) {
+        std::vector<b2Vec2> points; points.reserve(n_points);
+        std::uint32_t attempts = 0U;
 
-    /* --- rejection sampling --------------------------------------------- */
-    while (points.size() < n_points) {
-        const float x = dis_x(gen);
-        const float y = dis_y(gen);
+        // ─── rejection‑sampling loop ──────────────────────────────────────
+        while (points.size() < n_points) {
+            const float x = dis_x(gen);
+            const float y = dis_y(gen);
 
-        /* Candidate’s personal exclusion radius. */
-        const float r_curr = reserve_radii[points.size()];
+            const float r_curr = reserve_radii[points.size()];
 
-        /* 1️⃣  inside outer polygon? (ignore if outside) */
-        if (!is_point_within_polygon(outer_poly, x, y)) { continue; }
+            // 1️⃣ inside outer polygon?
+            if (!is_point_within_polygon(outer_poly, x, y)) { continue; }
 
-        /* 2️⃣  outside every “hole” polygon? */
-        bool ok = true;
-        for (std::size_t i = 1; i < polygons.size() && ok; ++i) {
-            if (is_point_within_polygon(polygons[i], x, y)) { ok = false; }
-        }
+            // 2️⃣ outside every hole polygon?
+            bool ok = true;
+            for (std::size_t i = 1; i < polygons.size() && ok; ++i) {
+                if (is_point_within_polygon(polygons[i], x, y)) { ok = false; }
+            }
 
-        /* 3️⃣  far enough from all previously accepted points? */
-        if (ok) {
-            for (std::size_t i = 0; i < points.size(); ++i) {
-                const float min_sep = reserve_radii[i] + r_curr;
-                if (euclidean_distance(points[i], {x, y}) < min_sep) {
-                    ok = false;
-                    break;
+            // 3️⃣ exclusion radius + connectivity checks
+            if (ok && !points.empty()) {
+                float min_dist = std::numeric_limits<float>::infinity();
+                for (std::size_t i = 0; i < points.size(); ++i) {
+                    const float min_sep = reserve_radii[i] + r_curr;
+                    const float d = euclidean_distance(points[i], {x, y});
+                    if (d < min_sep) { ok = false; break; } // too close
+                    min_dist = std::min(min_dist, d);
                 }
+                if (ok && min_dist > max_neighbor_distance) { ok = false; }
+            }
+
+            // 4️⃣ accept or reject
+            if (ok) {
+                points.push_back({x, y});
+                attempts = 0U;                  // reset attempt counter
+            } else if (++attempts >= attempts_per_point) {
+                // Give up on this run and start over.
+                break; // triggers outer restart loop
             }
         }
 
-        if (ok) {                       // accept candidate
-            points.push_back({x, y});
-            attempts = 0U;
-        } else if (++attempts >= 10'000'000U) {
-            throw std::runtime_error(
-                "Impossible to create random points within polygon: "
-                "too many points or radii too large.");
+        if (points.size() == n_points) {
+            return points; // success
         }
     }
-    return points;
+
+    // If we fall through the loop, all restarts failed.
+    throw std::runtime_error("Impossible to create random points within polygon: too many points or radii too large, even after multiple restarts.");
 }
+
 
 std::pair<float, float> compute_polygon_dimensions(const std::vector<b2Vec2>& polygon) {
     float minX = std::numeric_limits<float>::max();

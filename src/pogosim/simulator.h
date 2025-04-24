@@ -72,11 +72,13 @@ class Simulation {
 
     // Objects
     std::map<std::string, std::vector<std::shared_ptr<Object>>> objects;    ///< Dictionary of simulation objects, by category name.
-    std::vector<std::shared_ptr<Pogowall>> wall_objects;              ///< Vector of pogowalls in the simulation.
+    std::vector<std::shared_ptr<Pogowall>> wall_objects;                    ///< Vector of pogowalls in the simulation.
     std::vector<std::shared_ptr<PogobotObject>> robots;                     ///< Vector of robots in the simulation.
     std::vector<std::shared_ptr<Object>> non_robots;                        ///< Vector of objects that are not robots in the simulation.
     std::unique_ptr<LightLevelMap> light_map;                               ///< Light map of the arena.
     std::string initial_formation;                                          ///< Type of initial formation of the objects.
+    float formation_min_space_between_neighbors;                            ///< Min space between neighbors when creating the initial formation.
+    float formation_max_space_between_neighbors;                            ///< Max space between neighbors when creating the initial formation.
 
     double last_frame_shown_t = -1.0;     ///< Time when the last frame was rendered.
     double last_frame_saved_t = -1.0;     ///< Time when the last frame was saved.

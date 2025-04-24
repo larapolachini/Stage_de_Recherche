@@ -132,7 +132,10 @@ void Simulation::create_objects() {
                 obj_vec.emplace_back(object_factory(this, current_id, 0.0f, 0.0f, worldId, obj_config, light_map.get(), userdatasize, name));
                 if (obj_vec.back()->is_tangible()) {
                     objects_to_move.push_back(obj_vec.back());
-                    objects_radii.push_back(obj_vec.back()->get_geometry()->compute_bounding_disk().radius);
+                    float radius = obj_vec.back()->get_geometry()->compute_bounding_disk().radius;
+                    if (radius < formation_min_space_between_neighbors)
+                        radius = formation_min_space_between_neighbors;
+                    objects_radii.push_back(radius);
                 }
             } else {
                 obj_vec.emplace_back(object_factory(this, current_id, x, y, worldId, obj_config, light_map.get(), userdatasize, name));
@@ -162,12 +165,12 @@ void Simulation::create_objects() {
     std::vector<b2Vec2> points;
     try {
         if (initial_formation == "random") {
-            points = generate_random_points_within_polygon_safe(arena_polygons, objects_radii);
+            points = generate_random_points_within_polygon_safe(arena_polygons, objects_radii, formation_max_space_between_neighbors);
         } else if (initial_formation == "disk") {
             points = generate_regular_disk_points_in_polygon(arena_polygons, objects_radii);
         } else {
             glogger->error("Unknown 'initial_formation' value: '{}'. Assuming random formation...", initial_formation);
-            points = generate_random_points_within_polygon_safe(arena_polygons, objects_radii);
+            points = generate_random_points_within_polygon_safe(arena_polygons, objects_radii, formation_max_space_between_neighbors);
         }
     } catch (const std::exception& e) {
         throw std::runtime_error("Impossible to create robots (number may be too high for the provided arena): " + std::string(e.what()));
@@ -346,6 +349,8 @@ void Simulation::init_config() {
     show_light_levels = config["show_light_levels"].get(false);
 
     initial_formation = config["initial_formation"].get(std::string("random"));
+    formation_min_space_between_neighbors = config["formation_min_space_between_neighbors"].get(0.0f);
+    formation_max_space_between_neighbors = config["formation_max_space_between_neighbors"].get(INFINITY);
 
     enable_gui = config["GUI"].get(true);
     GUI_speed_up = config["GUI_speed_up"].get(1.0f);

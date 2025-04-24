@@ -28,6 +28,8 @@ time_step: 0.01            # In s
 GUI_speed_up: 10.0         # How much the visualisation in the GUI should be sped up
 
 initial_formation: random # Can be "random" (all robots are placed randomly in the arena), or "disk" (robots are placed uniformly in a disk shape at the center of the arena)
+formation_min_space_between_neighbors: 0.0
+formation_max_space_between_neighbors: .inf
 
 
 # List of objects created in the simulation, by category

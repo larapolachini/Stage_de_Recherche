@@ -111,19 +111,29 @@ bool is_point_within_polygon(const std::vector<b2Vec2>& polygon, float x, float 
  */
 std::vector<b2Vec2> offset_polygon(const std::vector<b2Vec2>& polygon, float offset);
 
+
 /**
- * @brief  Generate N random points inside polygons[0] (outer polygon)
- *         while keeping each point i at least reserve_radii[i] away
- *         from any other accepted point ‑‑ and at least the same
- *         distance from every polygon edge.
+ * Generate random points inside a (possibly holed) polygonal domain while
+ * respecting a per‑point exclusion radius and a global connectivity limit.
  *
- * @param  polygons        polygons[0] is the area in which to place points;
- *                         polygons[1…] are “holes” that must be avoided
- * @param  reserve_radii   size N vector holding the exclusion radius that
- *                         must be kept around the *i‑th* point
- * @return vector<b2Vec2>  the generated points (points.size()==reserve_radii.size()).
+ * A candidate is accepted only if it is:
+ *   1. Inside the outer polygon and outside every “hole” polygon.
+ *   2. At a distance ≥ r_i + r_j from every previously accepted point j.
+ *   3. Within `max_neighbor_distance` of at least one previously accepted
+ *      point (unless it is the very first point or `max_neighbor_distance`
+ *      is +∞).
+ *
+ * If it fails to build the whole set after `attempts_per_point` rejected
+ * candidates, the algorithm discards all progress and restarts.  It will
+ * attempt the whole sampling process up to `max_restarts` times before
+ * throwing.
  */
-std::vector<b2Vec2> generate_random_points_within_polygon_safe( const std::vector<std::vector<b2Vec2>>& polygons, const std::vector<float>& reserve_radii);
+std::vector<b2Vec2> generate_random_points_within_polygon_safe(
+        const std::vector<std::vector<b2Vec2>> &polygons,
+        const std::vector<float> &reserve_radii,
+        float max_neighbor_distance = std::numeric_limits<float>::infinity(),
+        std::uint32_t attempts_per_point = 1'000'000U,
+        std::uint32_t max_restarts = 100U);
 
 
 /**
