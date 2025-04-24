@@ -1027,10 +1027,16 @@ void data_set_value_double(char const* name, double value);
 void data_set_value_string(char const* name, char const* value);
 void data_set_value_bool(char const* name, bool value);
 
+void init_double_from_configuration(double* var, char const* name, double const default_value);
 void init_float_from_configuration(float* var, char const* name, float const default_value);
 void init_int32_from_configuration(int32_t* var, char const* name, int32_t const default_value);
 void init_uint32_from_configuration(uint32_t* var, char const* name, uint32_t const default_value);
+void init_int16_from_configuration(int16_t* var, char const* name, int16_t const default_value);
+void init_uint16_from_configuration(uint16_t* var, char const* name, uint16_t const default_value);
+void init_int8_from_configuration(int8_t* var, char const* name, int8_t const default_value);
+void init_uint8_from_configuration(uint8_t* var, char const* name, uint8_t const default_value);
 void init_float_array_from_configuration(float* var, char const* name, size_t const size);
+void init_double_array_from_configuration(double* var, char const* name, size_t const size);
 
 #ifdef __cplusplus
 }
