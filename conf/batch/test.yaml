@@ -4,7 +4,13 @@
 #  The key "result_filename_format" contains the format of the exported feather files, depending on selected batch values.
 
 # Format of the generated dataframes, one for each configuration
-result_filename_format: "result_{objects.robots.nb}_{arena_file}.feather"
+#result_filename_format: "result_{objects.robots.nb}_{arena_file}.feather"
+result_filename_format: "result_{objects.robots.nb}.feather"
+
+# List of new columns to add in the generated dataframes
+#result_new_columns: ["objects.robots.nb", "arena_file"]
+result_new_columns: ["arena_file"]
+
 
 window_width: 600       # In pixels
 window_height: 600      # In pixels

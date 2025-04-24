@@ -13,6 +13,7 @@ import copy
 import re
 import string
 from typing import Any, Dict, Iterable, List
+import uuid
 
 from pogosim import utils
 from pogosim import __version__
@@ -35,14 +36,14 @@ def set_in_dict(d: Dict[str, Any], dotted_key: str, value: Any, sep: str = ".") 
 class DotDict(dict):
     """Allow attribute access (`obj.key`) as an alias for mapping access (`obj['key']`)."""
 
-    # read
+    # Read
     def __getattr__(self, item):
         try:
             return self[item]
         except KeyError as exc:
             raise AttributeError(item) from exc
 
-    # write
+    # Write
     def __setattr__(self, key, value):
         self[key] = value
 
@@ -56,8 +57,15 @@ def to_dotdict(obj):
     return obj
 
 
+def get_by_dotted_path(node: dict, dotted: str, sep: str = "."):
+    """Return cfg['a']['b']['c'] when dotted == 'a.b.c'."""
+    for part in dotted.split(sep):
+        node = node[part]
+    return node
+
+
 class PogobotLauncher:
-    def __init__(self, num_instances, base_config_path, combined_output_path, simulator_binary, temp_base_path, backend="multiprocessing", keep_temp=False):
+    def __init__(self, num_instances, base_config_path, combined_output_path, simulator_binary, temp_base_path, backend="multiprocessing", keep_temp=False, extra_columns=None):
         self.num_instances = num_instances
         self.base_config_path = base_config_path
         self.combined_output_path = combined_output_path
@@ -67,6 +75,7 @@ class PogobotLauncher:
         self.keep_temp = keep_temp
         self.temp_dirs = []
         self.dataframes = []  # Will hold DataFrames loaded from each run
+        self.extra_columns = extra_columns or {}
 
     @staticmethod
     def modify_config_static(base_config_path, output_dir, seed):
@@ -177,6 +186,12 @@ class PogobotLauncher:
         self.temp_dirs = [result[0] for result in results]
         self.dataframes = [result[1] for result in results if result[1] is not None]
 
+        # Inject the EXTRA columns (same constant value for every row)
+        if self.extra_columns and self.dataframes:
+            for df in self.dataframes:
+                for col, val in self.extra_columns.items():
+                    df[col] = val
+
         # Combine the loaded DataFrames.
         self.combine_feather_files(self.dataframes)
 
@@ -267,6 +282,7 @@ class PogobotBatchRunner:
         logging.debug(f"Wrote temporary YAML config: {tmp_file.name}")
         return tmp_file.name
 
+
     def compute_output_filename(self, comb_config: dict) -> str:
         fmt = comb_config.get("result_filename_format")
         if not fmt:
@@ -304,25 +320,57 @@ class PogobotBatchRunner:
             filename = os.path.join(self.output_dir, filename)
         return filename
 
-    def run_launcher_for_combination(self, temp_config_path, output_file):
-        """
-        Launch a PogobotLauncher for a single configuration combination.
-        """
-        logging.info(f"Launching PogobotLauncher for config: {temp_config_path} with output: {output_file}")
+
+    def run_launcher_for_combination(self,
+                                     temp_config_path: str,
+                                     final_output: str,
+                                     comb_config: dict) -> str:
+        # ── Build extra-columns dict (same as before) ──────────────────────────
+        extra_columns: dict[str, Any] = {}
+        for path in comb_config.get("result_new_columns", []):
+            try:
+                raw = get_by_dotted_path(comb_config, path)
+                if isinstance(raw, str) and os.path.dirname(raw):
+                    raw = os.path.splitext(os.path.basename(raw))[0]
+                extra_columns[path] = raw
+            except KeyError:
+                logging.error("result_new_columns: path '%s' not found", path)
+
+        # ── 1. Choose a *temporary* output Feather for this run ────────────────
+        tmp_output = os.path.join(self.temp_base,
+                                  f"run_{uuid.uuid4().hex}.feather")
+
+        logging.info("Launch → tmp %s  (will merge into %s)",
+                     tmp_output, final_output)
+
+        # ── 2. Run the simulator ------------------------------------------------
         launcher = PogobotLauncher(
-            num_instances=self.runs,
-            base_config_path=temp_config_path,
-            combined_output_path=output_file,
-            simulator_binary=self.simulator_binary,
-            temp_base_path=self.temp_base,
-            backend=self.backend,
-            keep_temp=self.keep_temp
+            num_instances        = self.runs,
+            base_config_path     = temp_config_path,
+            combined_output_path = tmp_output,          #  ←  TEMP
+            simulator_binary     = self.simulator_binary,
+            temp_base_path       = self.temp_base,
+            backend              = self.backend,
+            keep_temp            = self.keep_temp,
+            extra_columns        = extra_columns,
         )
         launcher.launch_all()
-        # Remove the temporary YAML configuration file.
         os.remove(temp_config_path)
-        logging.debug(f"Removed temporary YAML config: {temp_config_path}")
-        return output_file
+
+        # ── 3. Merge tmp → final (append or create) ----------------------------
+        try:
+            new_df = pd.read_feather(tmp_output)
+            if os.path.exists(final_output):
+                old_df = pd.read_feather(final_output)
+                pd.concat([old_df, new_df], ignore_index=True).to_feather(final_output)
+                logging.info("Appended %d rows to %s", len(new_df), final_output)
+            else:
+                new_df.to_feather(final_output)
+                logging.info("Created %s with %d rows", final_output, len(new_df))
+        finally:
+            os.remove(tmp_output)                      # always clean up temp
+
+        return final_output
 
     def run_all(self):
         """
@@ -351,12 +399,18 @@ class PogobotBatchRunner:
         for comb in combinations:
             temp_yaml = self.write_temp_yaml(comb)
             output_file = self.compute_output_filename(comb)
-            tasks.append((temp_yaml, output_file))
+            tasks.append((temp_yaml, output_file, comb))
             logging.info(f"Task: Config file {temp_yaml} -> Output: {output_file}")
 
+        # Remove any pre-existing result_*.feather before first append
+        for outfile in {t[1] for t in tasks}:                   # unique names
+            if os.path.exists(outfile):
+                os.remove(outfile)
+                logging.info("Removed stale result file: %s", outfile)
+
         results = []
-        for temp_yaml, output_file in tasks:
-            result = self.run_launcher_for_combination(temp_yaml, output_file)
+        for temp_yaml, output_file, comb in tasks:
+            result = self.run_launcher_for_combination(temp_yaml, output_file, comb)
             results.append(result)
 
         logging.info("Batch run completed. Generated output files:")
