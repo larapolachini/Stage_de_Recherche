@@ -100,10 +100,20 @@ private:
 template<typename T>
 T Configuration::get(const T& default_value) const {
     try {
-        if (node_)
+        if (node_) {
+            /* Give priority to "default_option" if the node is a map */
+            if (node_.IsMap()) {
+                const YAML::Node opt = node_["default_option"];
+                if (opt) {
+                    return opt.as<T>();   // may still throw → caught below
+                }
+            }
+
+            /* Normal behaviour */
             return node_.as<T>();
+        }
     } catch (const YAML::Exception&) {
-        // Fall through to return default value.
+        // fall through
     }
     return default_value;
 }
