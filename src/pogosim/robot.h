@@ -162,8 +162,10 @@ public:
      * @param _density Density of the body shape (default is 10.0f).
      * @param _friction Friction coefficient of the body shape (default is 0.3f).
      * @param _restitution Restitution (bounciness) of the body shape (default is 0.5f).
-     * @param _linear_noise_stddev Standard deviation of the gaussian noise to apply to linear velocity, or 0.0 for deterministic velocity
-     * @param _angular_noise_stddev Standard deviation of the gaussian noise to apply to angular velocity, or 0.0 for deterministic velocity
+     * @param _max_linear_speed Max speed value in mm.s^-1.
+     * @param _max_angular_speed Max speed value in rad.s^-1.
+     * @param _linear_noise_stddev Standard deviation of the gaussian noise to apply to linear velocity, or 0.0 for deterministic velocity.
+     * @param _angular_noise_stddev Standard deviation of the gaussian noise to apply to angular velocity, or 0.0 for deterministic velocity.
      * @param category Name of the category of the object.
      */
     PogobotObject(uint16_t _id, float _x, float _y,
@@ -174,6 +176,7 @@ public:
            float _temporal_noise_stddev = 0.0f,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
            float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
+           float _max_linear_speed = 100.0f, float _max_angular_speed = 1.0f,
            float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f,
            std::string const& _category = "robots");
 
@@ -358,6 +361,8 @@ protected:
     float temporal_noise_stddev;
 
     // Physical information
+    float max_linear_speed;
+    float max_angular_speed;
     float linear_noise_stddev;
     float angular_noise_stddev;
 
@@ -485,6 +490,7 @@ public:
            float _temporal_noise_stddev = 0.0f,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
            float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
+           float _max_linear_speed = 100.0f, float _max_angular_speed = 1.0f,
            float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f,
            std::string const& _category = "robots");
 
@@ -589,6 +595,7 @@ public:
            float _temporal_noise_stddev = 0.0f,
            float _linear_damping = 0.0f, float _angular_damping = 0.0f,
            float _density = 10.0f, float _friction = 0.3f, float _restitution = 0.5f,
+           float _max_linear_speed = 100.0f, float _max_angular_speed = 1.0f,
            float _linear_noise_stddev = 0.0f, float _angular_noise_stddev = 0.0f,
            unsigned int _num_dots = 100, float _dot_radius = 10.0f, int _cross_span = 3,
            float _stiffness = 30.f,

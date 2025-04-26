@@ -92,6 +92,7 @@ PogobotObject::PogobotObject(uint16_t _id, float _x, float _y,
        float _temporal_noise_stddev,
        float _linear_damping, float _angular_damping,
        float _density, float _friction, float _restitution,
+       float _max_linear_speed, float _max_angular_speed,
        float _linear_noise_stddev, float _angular_noise_stddev,
        std::string const& _category)
     : PhysicalObject(_x, _y, geom, world_id,
@@ -100,6 +101,7 @@ PogobotObject::PogobotObject(uint16_t _id, float _x, float _y,
     id(_id),
     communication_radius(_communication_radius), msg_success_rate(std::move(_msg_success_rate)),
     temporal_noise_stddev(_temporal_noise_stddev),
+    max_linear_speed(_max_linear_speed), max_angular_speed(_max_angular_speed),
     linear_noise_stddev(_linear_noise_stddev), angular_noise_stddev(_angular_noise_stddev) {
     data = malloc(_userdatasize);
     initialize_time();
@@ -119,10 +121,12 @@ PogobotObject::PogobotObject(Simulation* simulation, uint16_t _id, float _x, flo
 void PogobotObject::parse_configuration(Configuration const& config, Simulation* simulation) {
     PhysicalObject::parse_configuration(config, simulation);
     msg_success_rate.reset(msg_success_rate_factory(config["msg_success_rate"]));
-    communication_radius = config["communication_radius"].get(80.0f);
+    communication_radius  = config["communication_radius"].get(80.0f);
     temporal_noise_stddev = config["temporal_noise_stddev"].get(0.0f);
-    linear_noise_stddev  = config["linear_noise_stddev"].get(0.0f);
-    angular_noise_stddev = config["angular_noise_stddev"].get(0.0f);
+    max_linear_speed      = config["max_linear_speed"].get(100.0f);
+    max_angular_speed     = config["max_angular_speed"].get(1.0f);
+    linear_noise_stddev   = config["linear_noise_stddev"].get(0.0f);
+    angular_noise_stddev  = config["angular_noise_stddev"].get(0.0f);
 }
 
 
@@ -321,7 +325,7 @@ void PogobotObject::set_motor(motor_id motor, int speed) {
 
     // Compute the desired linear velocity based on motor speeds.
     b2Rot const rot = b2Body_GetRotation(body_id);
-    float const v = 1.0f * (left_motor_speed / static_cast<float>(motorFull) +
+    float const v = (max_linear_speed / VISUALIZATION_SCALE) * (left_motor_speed / static_cast<float>(motorFull) +
                             right_motor_speed / static_cast<float>(motorFull)) / 2.0f;
     b2Vec2 linear_velocity = {rot.c * v, rot.s * v};
 
@@ -335,7 +339,7 @@ void PogobotObject::set_motor(motor_id motor, int speed) {
     b2Body_SetLinearVelocity(body_id, linear_velocity);
 
     // Compute the desired angular velocity based on motor speed difference.
-    float angular_velocity = 1.0f / (static_cast<float>(motorFull) * 0.5f) *
+    float angular_velocity = (max_angular_speed) / (static_cast<float>(motorFull) * 0.5f) *
                              (left_motor_speed - right_motor_speed);
 
     // Add Gaussian noise to angular velocity if the standard deviation is greater than 0.0.
@@ -438,7 +442,7 @@ PogobjectObject::PogobjectObject(uint16_t _id, float _x, float _y,
       _userdatasize, _communication_radius, std::move(_msg_success_rate),
       _temporal_noise_stddev, _linear_damping, _angular_damping,
       _density, _friction, _restitution,
-      0.0f, 0.0f, _category) {
+      0.0f, 0.0f, 0.0f, 0.0f, _category) {
     for (size_t i = 0; i != motorB; i++)
         set_motor(static_cast<motor_id>(i), 0);
 }
@@ -546,12 +550,14 @@ Pogowall::Pogowall(uint16_t _id, float _x, float _y,
        float _temporal_noise_stddev,
        float _linear_damping, float _angular_damping,
        float _density, float _friction, float _restitution,
+       float _max_linear_speed, float _max_angular_speed,
        float _linear_noise_stddev, float _angular_noise_stddev,
        std::string const& _category)
     : PogobotObject::PogobotObject(_id, _x, _y, _geom, world_id,
       _userdatasize, _communication_radius, std::move(_msg_success_rate),
       _temporal_noise_stddev, _linear_damping, _angular_damping,
       _density, _friction, _restitution,
+      _max_linear_speed, _max_angular_speed,
       _linear_noise_stddev, _angular_noise_stddev,
       _category) {
     auto bd = geom->compute_bounding_disk();
@@ -580,6 +586,7 @@ MembraneObject::MembraneObject(uint16_t _id, float _x, float _y,
        float _temporal_noise_stddev,
        float _linear_damping, float _angular_damping,
        float _density, float _friction, float _restitution,
+       float _max_linear_speed, float _max_angular_speed,
        float _linear_noise_stddev, float _angular_noise_stddev,
        unsigned int _num_dots, float _dot_radius, int _cross_span,
        float _stiffness,
@@ -589,6 +596,7 @@ MembraneObject::MembraneObject(uint16_t _id, float _x, float _y,
       _userdatasize, _communication_radius, std::move(_msg_success_rate),
       _temporal_noise_stddev, _linear_damping, _angular_damping,
       _density, _friction, _restitution,
+      _max_linear_speed, _max_angular_speed,
       _linear_noise_stddev, _angular_noise_stddev, _category),
       num_dots(_num_dots), dot_radius(_dot_radius), cross_span(_cross_span),
       stiffness(_stiffness),
