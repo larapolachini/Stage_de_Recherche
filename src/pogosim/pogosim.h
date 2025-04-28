@@ -59,7 +59,7 @@ extern void (*callback_global_setup)(void);
 #define mydata (get_mydata())
 
 #define REGISTER_USERDATA(UDT) 		\
-	UDT myuserdata;
+	UDT myuserdata = {0};
 
 #define SET_CALLBACK(CALLBACK_FN, FN)
 

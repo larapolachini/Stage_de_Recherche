@@ -132,7 +132,7 @@ std::vector<b2Vec2> generate_random_points_within_polygon_safe(
         const std::vector<std::vector<b2Vec2>> &polygons,
         const std::vector<float> &reserve_radii,
         float max_neighbor_distance = std::numeric_limits<float>::infinity(),
-        std::uint32_t attempts_per_point = 1'000'000U,
+        std::uint32_t attempts_per_point = 100U,
         std::uint32_t max_restarts = 100U);
 
 
