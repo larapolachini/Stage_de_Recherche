@@ -93,8 +93,8 @@ From: ubuntu:24.04
 
     # Install last version of pogobatch
     cd /opt/pogosim/scripts
-    python setup.py sdist bdist_wheel
-    pip install -U .
+    python3 setup.py sdist bdist_wheel
+    pip3 install -U .
 
     cd /
     git clone https://github.com/leo-cazenille/pogobot-sdk.git
