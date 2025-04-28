@@ -361,7 +361,7 @@ void Simulation::init_config() {
 
 void Simulation::init_SDL() {
     if (!enable_gui) {
-        setenv("SDL_VIDEODRIVER", "dummy", 1);
+        SDL_SetHint(SDL_HINT_VIDEODRIVER, "offscreen");
     }
 
     // Initialize SDL
