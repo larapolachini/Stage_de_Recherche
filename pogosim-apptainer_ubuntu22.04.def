@@ -26,6 +26,7 @@ From: ubuntu:22.04
     ./fonts /opt/pogosim/fonts
     ./arenas /opt/pogosim/arenas
     ./scripts /opt/pogosim/scripts
+    ./README.md /opt/pogosim/README.md
 
     # Copy CMakeLists.txt to the container
     ./CMakeLists.txt /opt/pogosim/CMakeLists.txt
