@@ -87,6 +87,11 @@ From: ubuntu:22.04
     # Compile and install
     /opt/pogosim/build.sh
 
+    # Install last version of pogobatch
+    cd /opt/pogosim/scripts
+    python setup.py sdist bdist_wheel
+    pip install -U .
+
 
     # Required to compile pogobot binaries
     apt-get -y install wget bison build-essential clang clang-format cmake flex gawk git graphviz libboost-all-dev libboost-dev libboost-filesystem-dev libboost-iostreams-dev libboost-program-options-dev libboost-python-dev libboost-system-dev libboost-thread-dev libeigen3-dev libffi-dev libftdi-dev libreadline-dev mercurial pkg-config python3 python3-dev python3-pip python3-setuptools tcl-dev xdot zlib1g-dev

@@ -78,6 +78,11 @@ From: ubuntu:24.04
     # Compile and install
     /opt/pogosim/build.sh
 
+    # Install last version of pogobatch
+    cd /opt/pogosim/scripts
+    python setup.py sdist bdist_wheel
+    pip install -U .
+
     # Compile also pogo-utils
     cd /opt
     git clone https://github.com/Adacoma/pogo-utils.git
