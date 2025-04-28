@@ -360,6 +360,10 @@ void Simulation::init_config() {
 
 
 void Simulation::init_SDL() {
+    if (!enable_gui) {
+        SDL_SetHint(SDL_HINT_VIDEODRIVER, "offscreen");
+    }
+
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
