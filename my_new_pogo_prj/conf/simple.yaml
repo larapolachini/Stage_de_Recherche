@@ -13,8 +13,8 @@ enable_data_logging: true
 data_filename: "frames/data.feather"
 enable_console_logging: true
 console_filename: "frames/console.txt"
-save_data_period: 1.0       # In s
-save_video_period: 1.0      # In s
+save_data_period: 1.0       # In s, or -1 to disable data export (see also "enable_data_logging")
+save_video_period: 1.0      # In s, or -1 to disable frame export
 frames_name: "frames/f{:010.4f}.png"
 
 seed: 0
@@ -25,7 +25,7 @@ show_light_levels: false            # In the GUI, can enabled/disabled using F6
 GUI: true
 
 # Time
-simulation_time: 30.0     # In s
+simulation_time: 500.0     # In s
 time_step: 0.01            # In s
 GUI_speed_up: 10.0         # How much the visualisation in the GUI should be sped up
 
@@ -72,7 +72,7 @@ objects:
     # An object category containing the Pogobot robots
     robots:
         type: pogobot       # Category type pertaining to Pogobots
-        nb: 200           # Number of objects (Pogobots) in this category
+        nb: 200             # Number of objects (Pogobots) in this category
         geometry: disk                  # Pogobots are always disk-shaped
         radius: 26.5                    # In mm
 
@@ -94,19 +94,19 @@ objects:
             #type: static # Fixed msg success rate -- do not depend on the density, or message size
             #rate: 0.9
             type: dynamic # Msg success rate follows this formula: "1 / (1 + (alpha * msg_size**beta * p_send**gamma * cluster_size**delta))"
-            alpha: 0.000004
-            beta: 2.8096
-            gamma: 2.3807
-            delta: 1.2457
+            alpha: 0.000001
+            beta: 3.0708
+            gamma: 2.3234
+            delta: 1.1897
 
 
 ########### Parameters used to directly initialize variables from the C code of the robots ###########
 parameters:
     # Configuration parameters for the run_and_tumble example
     run_duration_min: 100
-    run_duration_max: 500
-    tumble_duration_min: 2000
-    tumble_duration_max: 5000
+    run_duration_max: 2000
+    tumble_duration_min: 100
+    tumble_duration_max: 1100
     enable_backward_dir: true
 
 # MODELINE "{{{1
