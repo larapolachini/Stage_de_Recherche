@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
+from scipy.spatial.distance import pdist
 
 dist = pd.read_feather("results/result.feather")
 print(dist)
@@ -22,25 +22,20 @@ def interindividual_distance_mean(feather_path: str, communication_radius: float
         last_positions = run_df[run_df["time"] == last_time][["x", "y"]].to_numpy()
 
         # If we have at least 2 robots
-        if last_positions.shape[0] < 2:  #não é isso, preciso mudar para avaliar se tem um robo vizinho dentro do raio de communication_radius: 80.0 
-            continue
+        if last_positions.shape[0] >= 2:
+            distances = pdist(last_positions, metric = 'euclidean')
+            # Takes just the robots that are neighbors
+            filtered_distances = distances[distances <= communication_radius]
 
-        # Calculation of Euclidean distances between all pairs of agents
-        distance_matrix = pdist(last_positions, metric = 'euclidean')
 
-        # Filter juts the distances <= communication_radius
-        filtered_distances = distance_matrix[distance_matrix <= communication_radius]
+            if len(filtered_distances) > 0:
+                # Average distances for this run
+                mean_distance = np.mean(filtered_distances)
+                run_distances.append(mean_distance)
 
-        if len(filtered_distances) == 0:
-            continue  # Aucun voisin trouvé
-
-        mean_filtered_distances = filtered_distances.mean()
-        run_distances.append(mean_filtered_distances)
-        #print(last_positions)
-
-    # Average distances over all runs
+    # Average for all runs
     if len(run_distances) == 0:
-        return  float('nan')
+        return float('nan')
     return np.mean(run_distances)
 
 score = interindividual_distance_mean("results/result.feather", communication_radius=80.0)
