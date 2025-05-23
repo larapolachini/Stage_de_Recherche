@@ -1,9 +1,0 @@
-[2025-05-23 18:03:23.718] [info] Initializing SDL version 2.30.0
-[2025-05-23 18:03:23.751] [info] Arena walls created from CSV file: /usr/local/share/pogosim/arenas/disk.csv
-[2025-05-23 18:03:23.807] [info] Initializing all robots...
-[2025-05-23 18:03:23.807] [info] Global initialization...
-[2025-05-23 18:03:23.807] [info] [ROBOT #0] [PRINTF] Test global values: (1,2,3,4)
-[2025-05-23 18:03:23.809] [info] Deleting old data files in directory: frames
-[2025-05-23 18:03:23.810] [info] Launching the main simulation loop.
-[2025-05-23 18:03:23.830] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 360ms, Elapsed: 0ms
-[2025-05-23 18:03:24.528] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 3098ms, Elapsed: 576ms
