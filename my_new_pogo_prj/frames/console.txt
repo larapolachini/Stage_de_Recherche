@@ -1,0 +1,22 @@
+[2025-05-23 17:41:44.126] [info] Initializing SDL version 2.30.0
+[2025-05-23 17:41:44.158] [info] Arena walls created from CSV file: /usr/local/share/pogosim/arenas/disk.csv
+[2025-05-23 17:41:44.322] [info] Initializing all robots...
+[2025-05-23 17:41:44.322] [info] Global initialization...
+[2025-05-23 17:41:44.322] [info] [ROBOT #0] [PRINTF] Test global values: (1,2,3,4)
+[2025-05-23 17:41:44.324] [info] Deleting old data files in directory: frames
+[2025-05-23 17:41:44.324] [info] Launching the main simulation loop.
+[2025-05-23 17:41:44.324] [info] Welcome to the Pogosim's GUI. This is an help message...
+[2025-05-23 17:41:44.324] [info] Here is a list of shortcuts that can be used to control the GUI:
+[2025-05-23 17:41:44.324] [info]  - F1: Help message
+[2025-05-23 17:41:44.324] [info]  - F3: Slow down the simulation
+[2025-05-23 17:41:44.324] [info]  - F4: Speed up the simulation
+[2025-05-23 17:41:44.324] [info]  - F5: Show/Hide the communication channels, below/above the other objects
+[2025-05-23 17:41:44.324] [info]  - F6: Show/Hide the lateral LEDs
+[2025-05-23 17:41:44.324] [info]  - F7: Show/Hide the light level
+[2025-05-23 17:41:44.324] [info]  - ESC: quit the simulation
+[2025-05-23 17:41:44.324] [info]  - SPACE: pause the simulation
+[2025-05-23 17:41:44.324] [info]  - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates
+[2025-05-23 17:41:44.324] [info]  - Right-Click + Mouse move: move the visualisation coordinates
+[2025-05-23 17:41:44.324] [info]  - PLUS, MINUS or Mouse Wheel: Zoom up or down
+[2025-05-23 17:41:44.324] [info]  - 0: Reset the zoom and visualization coordinates
+[2025-05-23 17:41:44.385] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 1928ms, Elapsed: 0ms
