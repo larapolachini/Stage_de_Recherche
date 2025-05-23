@@ -15,7 +15,7 @@ console_filename: "frames/console.txt"
 
 seed: 0
 nBots: 150
-initial_formation: random
+initial_robot_formation: random
 simulationTime: 500.0   # In s
 robot_radius: 26.5      # In mm
 commRadius: 133.0       # In mm, from center of a focal robot to the center of a neighboring robot
