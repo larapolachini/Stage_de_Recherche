@@ -25,7 +25,7 @@ PARAMETER_KEYS = [
 ]
 INITIAL_VALUES = [100, 500, 2000, 5000]
 SIGMA = 300  # Initial step size for CMA-ES
-MAX_ITER = 5  # Maximum number of CMA-ES iterations
+MAX_ITER = 3  # Maximum number of CMA-ES iterations
 
 #  Create temporary configuration file with parameters
 def create_temp_config(base_config_path, output_dir, parameters):

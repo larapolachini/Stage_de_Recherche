@@ -6,7 +6,7 @@ dist = pd.read_feather("results/result.feather")
 #print(dist)
 
 
-def interindividual_distance_mean(feather_path: str, communication_radius: float = 133.0) -> float:  # communication radius en mm et x, y en cm?
+def interindividual_distance_mean(feather_path: str, communication_radius: float = 133.0) -> float:  # communication radius + 2 robot's radius
     # Get the data
     df = pd.read_feather(feather_path)
     
