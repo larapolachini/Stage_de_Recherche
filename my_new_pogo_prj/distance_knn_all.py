@@ -23,32 +23,32 @@ def interindividual_distance_knn_over_time_plot(
 
             if current_positions.shape[0] > k:
                 tree = KDTree(current_positions)
-                distances, _ = tree.query(current_positions, k=k+1)  # k+1 inclui o próprio
+                distances, _ = tree.query(current_positions, k=k+1)  
 
-                knn_distances = distances[:, 1:]  # Remover o 0
+                knn_distances = distances[:, 1:]  
                 filtered_knn = knn_distances[knn_distances <= communication_radius]
 
                 if len(filtered_knn) > 0:
                     mean_distance = np.mean(filtered_knn)
                     time_distances.append((t, mean_distance))
                 else:
-                    time_distances.append((t, np.nan))  # Nenhum vizinho dentro do raio
+                    time_distances.append((t, np.nan))  # No neighbors within radius
             else:
-                time_distances.append((t, np.nan))  # Não há robôs suficientes
+                time_distances.append((t, np.nan))  # There are not enough robots
 
         if time_distances:
             df_time = pd.DataFrame(time_distances, columns=["time", "mean_distance"])
             df_time["run"] = run_id
             all_distances.append(df_time)
 
-    # Combina os dados de todas as runs
+    # Combines data from all runs
     if not all_distances:
-        print("Nenhuma métrica válida foi calculada.")
+        print("No valid metrics were calculated.")
         return
 
     result_df = pd.concat(all_distances)
 
-    # Plotar o gráfico
+    # Graphic
     plt.figure(figsize=(10, 6))
     for run_id, group in result_df.groupby("run"):
         plt.plot(group["time"], group["mean_distance"], label=f"Run {run_id}", alpha=0.7)
@@ -63,7 +63,6 @@ def interindividual_distance_knn_over_time_plot(
     plt.savefig("knn_distance_over_time.png")
     plt.show()
 
-    # Retorna DataFrame para uso posterior, se quiser
     #return result_df
 
 interindividual_distance_knn_over_time_plot("results/result.feather", k=3, communication_radius=133.0)
