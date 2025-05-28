@@ -6,8 +6,8 @@ import subprocess
 import numpy as np
 import pandas as pd
 from cma import CMAEvolutionStrategy
-from distance import interindividual_distance_mean
-
+#from distance import interindividual_distance_mean
+from distance_knn import interindividual_distance_knn_mean
 # Force software rendering to avoid any accidental GPU or /dev/dri device usage
 os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
 
@@ -116,7 +116,7 @@ def objective_function(parameters):
         # Calculate interindividual distance if simulation succeeded
         if feather_file:
             try:
-                dist = interindividual_distance_mean(feather_file)
+                dist = interindividual_distance_knn_mean(feather_file)
                 distances.append(dist)
                 print(f" Mean distance : {dist:.4f} for parameters : {parameters}")
             except Exception as e:

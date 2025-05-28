@@ -1,4 +1,4 @@
 import pandas as pd
-
-dist = pd.read_feather("frames/data.feather")
-print(dist)
+df = pd.read_feather("results/result.feather")
+print(df.columns)
+print(df.head())
