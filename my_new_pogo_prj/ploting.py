@@ -1,59 +1,14 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.collections import LineCollection
 from scipy.spatial import KDTree, Voronoi
-from shapely.geometry import Polygon, box, Point, LineString
+from shapely.geometry import Polygon, box, Point, LineString, MultiLineString
 import yaml
 from shapely import affinity
-
-
-# ---------- Utility: Load arena info from YAML and CSV ----------
-
-def load_arena_polygon_and_surface(yaml_path: str):
-    with open(yaml_path, "r") as f:
-        conf = yaml.safe_load(f)
-    arena_file = conf["arena_file"]
-    arena_surface = conf["arena_surface"]
-
-    # Read CSV file - handle both comma and other separators
-    try:
-        df_arena = pd.read_csv(arena_file, header=None, names=["x", "y"])
-    except Exception as e:
-        print(f"Error reading CSV file: {e}")
-        print("Trying with different separator...")
-        df_arena = pd.read_csv(arena_file, header=None, names=["x", "y"], sep=None, engine='python')
-    
-    print(f"Loaded {len(df_arena)} points from arena file")
-    print(f"First few points:\n{df_arena.head()}")
-    
-    polygon = Polygon(df_arena[["x", "y"]].to_numpy())
-
-    if not polygon.is_valid:
-        print("Arena polygon is invalid, attempting to fix...")
-        # Try to fix invalid polygon
-        polygon = polygon.buffer(0)
-        if not polygon.is_valid:
-            raise ValueError("Arena polygon is invalid and cannot be fixed.")
-
-    bounds = polygon.bounds  # (minx, miny, maxx, maxy)
-    
-    # Convert arena_surface to numeric type
-    try:
-        if isinstance(arena_surface, str):
-            arena_surface = float(arena_surface)
-        elif arena_surface is None:
-            # Calculate area from polygon if not provided
-            arena_surface = polygon.area
-            print(f"Arena surface not provided, calculated from polygon: {arena_surface}")
-    except (ValueError, TypeError):
-        # Fallback: calculate area from polygon
-        arena_surface = polygon.area
-        print(f"Could not parse arena_surface, calculated from polygon: {arena_surface}")
-    
-    print(f"Arena bounds: {bounds}")
-    print(f"Arena surface: {arena_surface}")
-    
-    return polygon, bounds, arena_surface
+import math
+from data import arena_polygon, arena_bounds, arena_surface
 
 
 # ---------- k-NN Distance Plotting ----------
@@ -71,7 +26,7 @@ def interindividual_distance_knn_over_time_plot(
     all_distances = []
 
     for run_id, run_df in df.groupby("run"):
-        time_points = sorted(df["time"].unique())
+        time_points = sorted(run_df["time"].unique())
         time_distances = []
 
         for t in time_points:
@@ -235,8 +190,6 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point, run_id=0, 
     """
     Plot Voronoi diagram for agents at a specific time point
     """
-    import matplotlib.patches as patches
-    from matplotlib.collections import LineCollection
     
     # Get agent positions at the specified time
     if "run" not in df.columns:
@@ -302,11 +255,18 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point, run_id=0, 
             # Only plot edges that intersect with the arena
             if edge_geom.intersects(arena_polygon):
                 clipped_edge = edge_geom.intersection(arena_polygon)
-                if hasattr(clipped_edge, 'coords'):
+                if isinstance(clipped_edge, LineString):
                     coords = list(clipped_edge.coords)
                     if len(coords) >= 2:
-                        ax.plot([coords[0][0], coords[1][0]], [coords[0][1], coords[1][1]], 
-                               'b-', linewidth=0.8, alpha=0.8)
+                        ax.plot([coords[0][0], coords[1][0]], [coords[0][1], coords[1][1]],
+                            'b-', linewidth=0.5, alpha=0.7)
+
+                elif isinstance(clipped_edge, MultiLineString):
+                    for line in clipped_edge.geoms:
+                        coords = list(line.coords)
+                        if len(coords) >= 2:
+                            ax.plot([coords[0][0], coords[1][0]], [coords[0][1], coords[1][1]],
+                            'b-', linewidth=0.5, alpha=0.7)
     
     # Plot communication ranges (only show parts inside arena)
     for point in points:
@@ -329,15 +289,15 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point, run_id=0, 
     ax.set_aspect('equal')
     
     # Calculate arena center and size for better framing
-    arena_center_x = (arena_bounds[0] + arena_bounds[2]) / 2
-    arena_center_y = (arena_bounds[1] + arena_bounds[3]) / 2
-    arena_width = arena_bounds[2] - arena_bounds[0]
-    arena_height = arena_bounds[3] - arena_bounds[1]
-    max_dim = max(arena_width, arena_height)
+    #arena_center_x = (arena_bounds[0] + arena_bounds[2]) / 2
+    #arena_center_y = (arena_bounds[1] + arena_bounds[3]) / 2
+    #arena_width = arena_bounds[2] - arena_bounds[0]
+    #arena_height = arena_bounds[3] - arena_bounds[1]
+    #max_dim = max(arena_width, arena_height)
     
-    margin = max_dim * 0.1  # 10% margin
-    ax.set_xlim(arena_center_x - max_dim/2 - margin, arena_center_x + max_dim/2 + margin)
-    ax.set_ylim(arena_center_y - max_dim/2 - margin, arena_center_y + max_dim/2 + margin)
+    #margin = max_dim * 0.1  # 10% margin
+    #ax.set_xlim(arena_center_x - max_dim/2 - margin, arena_center_x + max_dim/2 + margin)
+    #ax.set_ylim(arena_center_y - max_dim/2 - margin, arena_center_y + max_dim/2 + margin)
     
     # Labels and title
     ax.set_xlabel('X coordinate (mm)', fontsize=12)
@@ -382,8 +342,8 @@ def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=
     max_dim = max(arena_width, arena_height)
     margin = max_dim * 0.05  # 5% margin for subplots
     
-    xlim = [arena_center_x - max_dim/2 - margin, arena_center_x + max_dim/2 + margin]
-    ylim = [arena_center_y - max_dim/2 - margin, arena_center_y + max_dim/2 + margin]
+    #xlim = [arena_center_x - max_dim/2 - margin, arena_center_x + max_dim/2 + margin]
+    #ylim = [arena_center_y - max_dim/2 - margin, arena_center_y + max_dim/2 + margin]
     
     for i, time_point in enumerate(time_points):
         row = i // cols
@@ -443,11 +403,18 @@ def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=
                 
                 if edge_geom.intersects(arena_polygon):
                     clipped_edge = edge_geom.intersection(arena_polygon)
-                    if hasattr(clipped_edge, 'coords'):
+                    if isinstance(clipped_edge, LineString):
                         coords = list(clipped_edge.coords)
                         if len(coords) >= 2:
-                            ax.plot([coords[0][0], coords[1][0]], [coords[0][1], coords[1][1]], 
-                                   'b-', linewidth=0.5, alpha=0.7)
+                            ax.plot([coords[0][0], coords[1][0]], [coords[0][1], coords[1][1]],
+                                'b-', linewidth=0.5, alpha=0.7)
+
+                    elif isinstance(clipped_edge, MultiLineString):
+                        for line in clipped_edge.geoms:
+                            coords = list(line.coords)
+                            if len(coords) >= 2:
+                                ax.plot([coords[0][0], coords[1][0]], [coords[0][1], coords[1][1]],
+                                    'b-', linewidth=0.5, alpha=0.7)
         
         # Plot agent positions
         ax.scatter(points[:, 0], points[:, 1], c='red', s=40, zorder=10, 
@@ -455,8 +422,8 @@ def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=
         
         # Set equal aspect and consistent limits
         ax.set_aspect('equal')
-        ax.set_xlim(xlim)
-        ax.set_ylim(ylim)
+        #ax.set_xlim(xlim)
+        #ax.set_ylim(ylim)
         ax.set_title(f'Time {time_point:.1f}\n({len(points)} agents)', fontsize=11)
         ax.grid(True, alpha=0.3)
         
@@ -486,8 +453,8 @@ def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=
 # -------------------------------
 # Example usage
 # -------------------------------
-yaml_path = "conf/simple.yaml"
-arena_polygon, arena_bounds, arena_surface = load_arena_polygon_and_surface(yaml_path)
+#yaml_path = "conf/simple.yaml"
+#arena_polygon, arena_bounds, arena_surface = load_arena_polygon_and_surface(yaml_path)
 
 feather_path = "results/result.feather"
 df = pd.read_feather(feather_path)
