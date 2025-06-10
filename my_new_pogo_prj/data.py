@@ -92,7 +92,7 @@ for interior in arena_polygon.interiors:
     plt.fill(xh, yh, color='white', label='Hole')
 
 plt.gca().set_aspect('equal')
-plt.title("Scaled Arena Polygon with Holes")
+plt.title("Scaled Arena Polygon")
 plt.grid(True)
 plt.legend()
 plt.show()
