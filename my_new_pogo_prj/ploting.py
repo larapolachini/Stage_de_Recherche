@@ -95,7 +95,7 @@ def compute_voronoi_metrics(df, arena_polygon, arena_bounds, arena_surface, comm
 
         for t in time_points:
             points = run_df[run_df["time"] == t][["x", "y"]].to_numpy()
-            if len(points) < 4:
+            if len(points) < 2:
                 continue
 
             vor = Voronoi(points)
@@ -235,6 +235,7 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point, run_id=0, 
                     clipped = cell_polygon.intersection(arena_polygon)
                     
                     if hasattr(clipped, 'exterior') and clipped.area > 0:
+                        print(f'Cell {idx} area: {clipped.area:.2f}')
                         # Plot the clipped cell
                         x_coords, y_coords = clipped.exterior.xy
                         ax.fill(x_coords, y_coords, color=color, alpha=0.6, 
@@ -245,6 +246,7 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point, run_id=0, 
                                 x_coords, y_coords = geom.exterior.xy
                                 ax.fill(x_coords, y_coords, color=color, alpha=0.6, 
                                        edgecolor='darkblue', linewidth=0.8)
+                                
     
     # Plot Voronoi edges (only those inside the arena)
     for simplex in vor.ridge_vertices:
@@ -288,16 +290,6 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point, run_id=0, 
     # Set equal aspect ratio and proper limits
     ax.set_aspect('equal')
     
-    # Calculate arena center and size for better framing
-    #arena_center_x = (arena_bounds[0] + arena_bounds[2]) / 2
-    #arena_center_y = (arena_bounds[1] + arena_bounds[3]) / 2
-    #arena_width = arena_bounds[2] - arena_bounds[0]
-    #arena_height = arena_bounds[3] - arena_bounds[1]
-    #max_dim = max(arena_width, arena_height)
-    
-    #margin = max_dim * 0.1  # 10% margin
-    #ax.set_xlim(arena_center_x - max_dim/2 - margin, arena_center_x + max_dim/2 + margin)
-    #ax.set_ylim(arena_center_y - max_dim/2 - margin, arena_center_y + max_dim/2 + margin)
     
     # Labels and title
     ax.set_xlabel('X coordinate (mm)', fontsize=12)

@@ -1,58 +1,14 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import KDTree, Voronoi
-from shapely.geometry import Polygon, box, Point
+import matplotlib.patches as patches
+from matplotlib.collections import LineCollection
+from scipy.spatial import KDTree, Voronoi, voronoi_plot_2d
+from shapely.geometry import Polygon, box, Point, LineString, MultiLineString
 import yaml
-
-
-# ---------- Utility: Load arena info from YAML and CSV ----------
-
-def load_arena_polygon_and_surface(yaml_path: str):
-    with open(yaml_path, "r") as f:
-        conf = yaml.safe_load(f)
-    arena_file = conf["arena_file"]
-    arena_surface = conf["arena_surface"]
-
-    # Read CSV file - handle both comma and other separators
-    try:
-        df_arena = pd.read_csv(arena_file, header=None, names=["x", "y"])
-    except Exception as e:
-        print(f"Error reading CSV file: {e}")
-        print("Trying with different separator...")
-        df_arena = pd.read_csv(arena_file, header=None, names=["x", "y"], sep=None, engine='python')
-    
-    print(f"Loaded {len(df_arena)} points from arena file")
-    print(f"First few points:\n{df_arena.head()}")
-    
-    polygon = Polygon(df_arena[["x", "y"]].to_numpy())
-
-    if not polygon.is_valid:
-        print("Arena polygon is invalid, attempting to fix...")
-        # Try to fix invalid polygon
-        polygon = polygon.buffer(0)
-        if not polygon.is_valid:
-            raise ValueError("Arena polygon is invalid and cannot be fixed.")
-
-    bounds = polygon.bounds  # (minx, miny, maxx, maxy)
-    
-    # Convert arena_surface to numeric type
-    try:
-        if isinstance(arena_surface, str):
-            arena_surface = float(arena_surface)
-        elif arena_surface is None:
-            # Calculate area from polygon if not provided
-            arena_surface = polygon.area
-            print(f"Arena surface not provided, calculated from polygon: {arena_surface}")
-    except (ValueError, TypeError):
-        # Fallback: calculate area from polygon
-        arena_surface = polygon.area
-        print(f"Could not parse arena_surface, calculated from polygon: {arena_surface}")
-    
-    print(f"Arena bounds: {bounds}")
-    print(f"Arena surface: {arena_surface}")
-    
-    return polygon, bounds, arena_surface
+from shapely import affinity
+import math
+from data import arena_polygon, arena_bounds, arena_surface
 
 
 # ---------- k-NN Distance Plotting ----------
@@ -70,7 +26,7 @@ def interindividual_distance_knn_over_time_plot(
     all_distances = []
 
     for run_id, run_df in df.groupby("run"):
-        time_points = sorted(df["time"].unique())
+        time_points = sorted(run_df["time"].unique())
         time_distances = []
 
         for t in time_points:
@@ -135,29 +91,27 @@ def compute_voronoi_metrics(df, arena_polygon, arena_bounds, arena_surface, comm
         df["run"] = 0
 
     for run_id, run_df in df.groupby("run"):
-        time_points = sorted(df["time"].unique())
+        time_points = sorted(run_df["time"].unique())
 
         for t in time_points:
             points = run_df[run_df["time"] == t][["x", "y"]].to_numpy()
-            if len(points) < 4:
+            if len(points) < 2:
                 continue
 
             vor = Voronoi(points)
             areas = []
             covered_area = 0.0
 
-            for idx, region_index in enumerate(vor.point_region):
-                region = vor.regions[region_index]
-                if not region or -1 in region:
+            regions, vertices = voronoi_finite_polygons_2d(vor, radius=2 * max(arena_bounds[2] - arena_bounds[0],
+                                                                  arena_bounds[3] - arena_bounds[1]))
+            for region in regions:
+                polygon = vertices[region]
+                poly = Polygon(polygon)
+                if not poly.is_valid or poly.is_empty:
                     continue
-
-                polygon = Polygon([vor.vertices[i] for i in region])
-                if not polygon.is_valid:
-                    continue
-
-                clipped = polygon.intersection(bounding_box)
-                if clipped.area > 0:
-                    areas.append(clipped.area)
+                clipped_poly = poly.intersection(arena_polygon)
+                if not clipped_poly.is_empty:
+                    areas.append(clipped_poly.area)
 
             # Coverage estimate using circular communication ranges
             for pt in points:
@@ -170,11 +124,77 @@ def compute_voronoi_metrics(df, arena_polygon, arena_bounds, arena_surface, comm
                 var_area = np.var(areas)
                 coverage_ratio = covered_area / arena_surface  # Now arena_surface is guaranteed to be numeric
                 results.append((run_id, t, mean_area, std_area, var_area, len(areas), coverage_ratio))
+                
 
     result_df = pd.DataFrame(results, columns=[
         "run", "time", "mean_area", "std_area", "var_area", "n_cells", "coverage_ratio"
     ])
     return result_df
+
+
+def voronoi_finite_polygons_2d(vor, radius=1000000):
+    """
+    Reconstruct infinite Voronoi regions to finite ones.
+
+    Parameters
+    ----------
+    vor : scipy.spatial.Voronoi
+    radius : float
+        Distance to 'send' the rays.  Large enough to cover plotting window.
+
+    Returns
+    -------
+    regions : list  (each item: list[int]  indices into vertices)
+    vertices : ndarray (N x 2)  All vertex coordinates (original + new)
+    """
+    from collections import defaultdict
+
+    new_regions = []
+    new_vertices = vor.vertices.tolist()
+
+    center = vor.points.mean(axis=0)
+    ridge_map = defaultdict(list)       # point -> list of (neighbor, v1, v2)
+
+    # Build a map of ridges for each point
+    for (p1, p2), (v1, v2) in zip(vor.ridge_points, vor.ridge_vertices):
+        ridge_map[p1].append((p2, v1, v2))
+        ridge_map[p2].append((p1, v1, v2))
+
+    # Reconstruct each region
+    for p_idx, region_idx in enumerate(vor.point_region):
+        vertices = vor.regions[region_idx]
+
+        if all(v >= 0 for v in vertices):          # already finite
+            new_regions.append(vertices)
+            continue
+
+        # Start with the finite part of the region
+        region = [v for v in vertices if v >= 0]
+
+        for p2, v1, v2 in ridge_map[p_idx]:
+            if v2 < 0:          # swap so v2 is finite
+                v1, v2 = v2, v1
+            if v1 >= 0:         # both finite → nothing to extend
+                continue
+
+            # Direction of the ray: perpendicular to the ridge
+            tangent = vor.points[p2] - vor.points[p_idx]
+            tangent /= np.linalg.norm(tangent)
+            normal = np.array([-tangent[1], tangent[0]])
+
+            midpoint = vor.points[[p_idx, p2]].mean(axis=0)
+            direction = np.sign(np.dot(midpoint - center, normal)) * normal
+            far_vertex = vor.vertices[v2] + direction * radius
+
+            new_vertices.append(far_vertex.tolist())
+            region.append(len(new_vertices) - 1)
+
+        new_regions.append(region)
+
+    return new_regions, np.asarray(new_vertices)
+
+
+
 
 
 def plot_voronoi_variance(df_voronoi):
@@ -230,11 +250,230 @@ def plot_coverage_ratio(df_voronoi):
     plt.show()
 
 
+def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point,
+                         run_id=0, communication_radius=133.0,
+                         figsize=(10, 10)):
+    """
+    Plot a Voronoi diagram at a single time, clipping ALL (finite + originally
+    infinite) cells to the arena polygon.
+    """
+    # ---------------- Data selection ----------------
+    if "run" not in df.columns:
+        df["run"] = 0
+    run_data = df[df["run"] == run_id]
+    points = run_data[run_data["time"] == time_point][["x", "y"]].to_numpy()
+
+    if len(points) < 3:
+        print(f"Not enough points at time {time_point} for run {run_id}")
+        return
+
+    # ---------------- Build Voronoi -----------------
+    vor = Voronoi(points)
+    regions, vertices = voronoi_finite_polygons_2d(vor)
+
+
+    # ---------------- Figure & arena ----------------
+    fig, ax = plt.subplots(figsize=figsize)
+    arena_x, arena_y = arena_polygon.exterior.xy
+    ax.fill(arena_x, arena_y, color='lightgray', alpha=0.3, label='Arena')
+    ax.plot(arena_x, arena_y, 'k-', linewidth=2)
+
+    # ---------------- Plot cells --------------------
+    colors = plt.cm.Set3(np.linspace(0, 1, len(points)))
+    for idx, (region, color) in enumerate(zip(regions, colors)):
+        poly = Polygon(vertices[region])
+        if not poly.is_valid or poly.is_empty:
+            continue
+
+        # clip EVERY cell (even those reconstructed from infinity)
+        clipped = poly.intersection(arena_polygon)
+        if clipped.is_empty:
+            continue
+
+        # Handle Polygon or MultiPolygon
+        geoms = [clipped] if isinstance(clipped, Polygon) else clipped.geoms
+        for i, geom in enumerate(geoms):
+            if geom.is_empty or not geom.is_valid:
+                continue
+            x, y = geom.exterior.xy
+            ax.fill(x, y, color=color, alpha=0.6,
+                edgecolor='darkblue', linewidth=0.8)
+            print(f"Agent {idx}, Cell {i}: Area = {geom.area:.2f}")
+
+
+    # ---------------- Communication circles ----------
+    for pt in points:
+        circle = Point(pt).buffer(communication_radius)
+        comm_area = circle.intersection(arena_polygon)
+        geoms = [comm_area] if isinstance(comm_area, Polygon) else comm_area.geoms
+        for g in geoms:
+            x, y = g.exterior.xy
+            ax.plot(x, y, 'r--', alpha=0.5, linewidth=1)
+
+    # ---------------- Agents -------------------------
+    ax.scatter(points[:, 0], points[:, 1], c='red', s=80, zorder=10,
+               edgecolors='darkred', linewidth=1,
+               label=f'Agents (n={len(points)})')
+
+    # ---------------- Formatting ---------------------
+    ax.set_aspect('equal')
+    ax.set_xlabel('X coordinate (mm)', fontsize=12)
+    ax.set_ylabel('Y coordinate (mm)', fontsize=12)
+    ax.set_title(f'Voronoi Diagram at Time {time_point:.2f} (Run {run_id})\n'
+                 f'{len(points)} agents, Communication radius: {communication_radius} mm',
+                 fontsize=14)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+    return fig, ax
+
+
+
+def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=0, communication_radius=133.0, figsize=(16, 12)):
+    """
+    Plot Voronoi diagrams at multiple time points to show evolution
+    """
+    from shapely.geometry import LineString
+    
+    n_times = len(time_points)
+    cols = min(3, n_times)
+    rows = (n_times + cols - 1) // cols
+    
+    fig, axes = plt.subplots(rows, cols, figsize=figsize)
+    if n_times == 1:
+        axes = [axes]
+    elif rows == 1:
+        axes = axes.reshape(1, -1)
+    
+    # Get data for the specific run
+    if "run" not in df.columns:
+        df["run"] = 0
+    run_data = df[df["run"] == run_id]
+    
+    # Calculate consistent limits for all subplots
+    arena_center_x = (arena_bounds[0] + arena_bounds[2]) / 2
+    arena_center_y = (arena_bounds[1] + arena_bounds[3]) / 2
+    arena_width = arena_bounds[2] - arena_bounds[0]
+    arena_height = arena_bounds[3] - arena_bounds[1]
+    max_dim = max(arena_width, arena_height)
+    margin = max_dim * 0.05  # 5% margin for subplots
+    
+    #xlim = [arena_center_x - max_dim/2 - margin, arena_center_x + max_dim/2 + margin]
+    #ylim = [arena_center_y - max_dim/2 - margin, arena_center_y + max_dim/2 + margin]
+    
+    for i, time_point in enumerate(time_points):
+        row = i // cols
+        col = i % cols
+        ax = axes[row, col] if rows > 1 else axes[col]
+        
+        # Get agent positions at this time
+        points = run_data[run_data["time"] == time_point][["x", "y"]].to_numpy()
+        
+        if len(points) < 3:
+            ax.text(0.5, 0.5, f'Not enough points\nat time {time_point:.2f}', 
+                   ha='center', va='center', transform=ax.transAxes, fontsize=10)
+            ax.set_title(f'Time {time_point:.2f}')
+            continue
+        
+        # Plot arena boundary and fill
+        if hasattr(arena_polygon, 'exterior'):
+            arena_x, arena_y = arena_polygon.exterior.xy
+            ax.fill(arena_x, arena_y, color='lightgray', alpha=0.2)
+            ax.plot(arena_x, arena_y, 'k-', linewidth=1.5)
+        
+        # Create Voronoi diagram
+        vor = Voronoi(points)
+        
+        # Plot Voronoi cells
+        colors = plt.cm.Set3(np.linspace(0, 1, len(points)))
+        
+        for idx, (point, color) in enumerate(zip(points, colors)):
+            if idx < len(vor.point_region):
+                region_index = vor.point_region[idx]
+                region = vor.regions[region_index]
+                
+                if region and -1 not in region and len(region) > 2:
+                    cell_vertices = [vor.vertices[i] for i in region]
+                    cell_polygon = Polygon(cell_vertices)
+                    
+                    if cell_polygon.is_valid:
+                        # Clip to arena polygon
+                        clipped = cell_polygon.intersection(arena_polygon)
+                        
+                        if hasattr(clipped, 'exterior') and clipped.area > 0:
+                            x_coords, y_coords = clipped.exterior.xy
+                            ax.fill(x_coords, y_coords, color=color, alpha=0.6, 
+                                  edgecolor='darkblue', linewidth=0.5)
+                        elif hasattr(clipped, 'geoms'):  # MultiPolygon case
+                            for geom in clipped.geoms:
+                                if hasattr(geom, 'exterior'):
+                                    x_coords, y_coords = geom.exterior.xy
+                                    ax.fill(x_coords, y_coords, color=color, alpha=0.6, 
+                                           edgecolor='darkblue', linewidth=0.5)
+        voronoi_plot_2d(vor, ax) # ADICIONAR ISSO
+
+        # Plot Voronoi edges (clipped to arena)
+        for simplex in vor.ridge_vertices:
+            if -1 not in simplex:
+                edge_line = [vor.vertices[simplex[0]], vor.vertices[simplex[1]]]
+                edge_geom = LineString(edge_line)
+                
+                if edge_geom.intersects(arena_polygon):
+                    clipped_edge = edge_geom.intersection(arena_polygon)
+                    if isinstance(clipped_edge, LineString):
+                        coords = list(clipped_edge.coords)
+                        if len(coords) >= 2:
+                            ax.plot([coords[0][0], coords[1][0]], [coords[0][1], coords[1][1]],
+                                'b-', linewidth=0.5, alpha=0.7)
+
+                    elif isinstance(clipped_edge, MultiLineString):
+                        for line in clipped_edge.geoms:
+                            coords = list(line.coords)
+                            if len(coords) >= 2:
+                                ax.plot([coords[0][0], coords[1][0]], [coords[0][1], coords[1][1]],
+                                    'b-', linewidth=0.5, alpha=0.7)
+        
+        # Plot agent positions
+        ax.scatter(points[:, 0], points[:, 1], c='red', s=40, zorder=10, 
+                  edgecolors='darkred', linewidth=0.8)
+        
+        # Set equal aspect and consistent limits
+        ax.set_aspect('equal')
+        #ax.set_xlim(xlim)
+        #ax.set_ylim(ylim)
+        ax.set_title(f'Time {time_point:.1f}\n({len(points)} agents)', fontsize=11)
+        ax.grid(True, alpha=0.3)
+        
+        # Only show axis labels on bottom and left edges
+        if row == rows - 1:
+            ax.set_xlabel('X (mm)', fontsize=10)
+        if col == 0:
+            ax.set_ylabel('Y (mm)', fontsize=10)
+    
+    # Hide unused subplots
+    for i in range(n_times, rows * cols):
+        row = i // cols
+        col = i % cols
+        if rows > 1:
+            axes[row, col].set_visible(False)
+        elif cols > 1:
+            axes[col].set_visible(False)
+    
+    plt.suptitle(f'Voronoi Diagram Evolution (Run {run_id})\nCommunication radius: {communication_radius} mm', 
+                fontsize=14, y=0.95)
+    plt.tight_layout()
+    plt.show()
+    
+    return fig, axes
+
+
 # -------------------------------
 # Example usage
 # -------------------------------
-yaml_path = "conf/simple.yaml"
-arena_polygon, arena_bounds, arena_surface = load_arena_polygon_and_surface(yaml_path)
+#yaml_path = "conf/simple.yaml"
+#arena_polygon, arena_bounds, arena_surface = load_arena_polygon_and_surface(yaml_path)
 
 feather_path = "results/result.feather"
 df = pd.read_feather(feather_path)
@@ -248,3 +487,15 @@ df_voronoi = compute_voronoi_metrics(df, arena_polygon, arena_bounds, arena_surf
 plot_voronoi_variance(df_voronoi)
 plot_voronoi_global_variance(df_voronoi)
 plot_coverage_ratio(df_voronoi)
+
+# NEW: Plot Voronoi diagrams
+print("\nPlotting Voronoi diagrams...")
+
+# Plot single Voronoi diagram at a specific time
+available_times = sorted(df["time"].unique())
+mid_time = available_times[len(available_times)//2]  # Middle time point
+plot_voronoi_diagram(df, arena_polygon, arena_bounds, mid_time, run_id=0, communication_radius=133.0)
+
+# Plot evolution of Voronoi diagrams at multiple time points
+sample_times = [available_times[i] for i in [0, len(available_times)//4, len(available_times)//2, 3*len(available_times)//4, -1]]
+plot_voronoi_evolution(df, arena_polygon, arena_bounds, sample_times, run_id=0, communication_radius=133.0) 
