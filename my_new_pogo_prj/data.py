@@ -60,10 +60,10 @@ arena_file = config["arena_file"]
 arena_surface = float(config["arena_surface"])
 arena_polygon = load_arena_polygon_from_csv(arena_file)
 scale_factor = (arena_surface/arena_polygon.area) ** 0.5  # Scale in x and y
-arena_polygon = affinity.scale(arena_polygon, xfact=scale_factor, yfact=scale_factor, origin=(10, 10))
+arena_polygon = affinity.scale(arena_polygon, xfact=scale_factor, yfact=scale_factor, origin=(8, 30))
 arena_bounds = get_bounds_from_polygon(arena_polygon)
 # annulus: origin=(8,30)
-# square, annulusBared: origin=(0,0)
+# square, annulusBarred: origin=(0,0)
 # disk, triangle: origin = (10,10)
 # star: origin=(-500, -550)
 #arrow2: origin = (300, -50)

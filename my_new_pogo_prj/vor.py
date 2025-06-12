@@ -9,6 +9,9 @@ import yaml
 from shapely import affinity
 import math
 from data import arena_polygon, arena_bounds, arena_surface
+from shapely.ops import unary_union
+import seaborn as sns
+
 
 
 # ---------- k-NN Distance Plotting ----------
@@ -113,20 +116,31 @@ def compute_voronoi_metrics(df, arena_polygon, arena_bounds, arena_surface, comm
                     areas.append(clipped_poly.area)
 
             # Coverage estimate using circular communication ranges
+            coverage_geometries = []
+
             for pt in points:
-                circle = Point(pt).buffer(communication_radius)  
-                covered_area += circle.intersection(arena_polygon).area
+                circle = Point(pt).buffer(communication_radius)        # full circle
+                clipped = circle.intersection(arena_polygon)           # keep only the part inside the arena
+                if not clipped.is_empty:
+                    coverage_geometries.append(clipped)
+                
+            if coverage_geometries:
+                covered_union = unary_union(coverage_geometries)       # merge all clipped circles
+                covered_area = covered_union.area                      # total unique area covered
+            else:
+                covered_area = 0.0
 
             if areas:
                 mean_area = np.mean(areas)
                 std_area = np.std(areas)
                 var_area = np.var(areas)
+                cv_area = std_area/mean_area if mean_area > 0 else 0.0
                 coverage_ratio = covered_area/arena_surface  
-                results.append((run_id, t, mean_area, std_area, var_area, len(areas), coverage_ratio))
+                results.append((run_id, t, mean_area, std_area, var_area, cv_area, len(areas), coverage_ratio))
                 
 
     result_df = pd.DataFrame(results, columns=[
-        "run", "time", "mean_area", "std_area", "var_area", "n_cells", "coverage_ratio"
+        "run", "time", "mean_area", "std_area", "var_area", "cv_area","n_cells", "coverage_ratio"
     ])
     return result_df
 
@@ -213,7 +227,7 @@ def voronoi_finite_polygons_2d(vor, radius=None):
 
     return new_regions, np.asarray(new_vertices)
 
-
+sns.set(font_scale = 1.3)   # Scale the font size for the entire script
 
 def plot_voronoi_variance(df_voronoi):
     plt.figure(figsize=(10, 6))
@@ -224,6 +238,33 @@ def plot_voronoi_variance(df_voronoi):
     plt.title("Voronoi Cell Area Variance Over Time")
     plt.grid(True)
     plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_voronoi_std(df_voronoi):
+    plt.figure(figsize=(10, 6))
+    for run_id, group in df_voronoi.groupby("run"):
+        plt.plot(group["time"], group["std_area"], label=f"Run {run_id}")
+    plt.xlabel("Time")
+    plt.ylabel("Std-dev of cell area(mm²)")
+    plt.title("Std-dev of cell area(mm²) Over Time")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+def plot_cv(df_voronoi):
+    # Example: Plot CV over time for each run
+    for run_id in df_voronoi["run"].unique():
+        run_df = df_voronoi[df_voronoi["run"] == run_id]
+        plt.plot(run_df["time"], run_df["cv_area"], label=f"Run {run_id}")
+
+    plt.xlabel("Time")
+    plt.ylabel("Coefficient of Variation (CV)")
+    plt.title("Voronoi Cell Area CV Over Time")
+    plt.legend()
+    plt.grid(True)
     plt.tight_layout()
     plt.show()
 
@@ -255,11 +296,14 @@ def plot_coverage_ratio(df_voronoi):
 
     plt.figure(figsize=(10, 6))
     plt.plot(global_mean.index, global_mean.values, label="Coverage ratio mean", color="purple")
+    plt.xlabel("Time")
+    y_min = df_voronoi["coverage_ratio"].min() - 0.01 * abs(df_voronoi["coverage_ratio"].min())
+    y_max = df_voronoi["coverage_ratio"].max() + 0.01 * abs(df_voronoi["coverage_ratio"].max())
     plt.fill_between(global_mean.index,
                      global_mean - global_std,
                      global_mean + global_std,
                      color="purple", alpha=0.3, label="± 1 stddev")
-    plt.xlabel("Time")
+    plt.ylim(y_min, y_max)
     plt.ylabel("Coverage Ratio")
     plt.title("Communication Coverage Over Time")
     plt.legend()
@@ -284,20 +328,22 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point,
     if len(points) < 3:
         print(f"Not enough points at time {time_point} for run {run_id}")
         return
-
-    # ---------------- Build Voronoi -----------------
-    vor = Voronoi(points)
-    regions, vertices = voronoi_finite_polygons_2d(vor)
-
-
+    
     # ---------------- Figure & arena ----------------
     fig, ax = plt.subplots(figsize=figsize)
     arena_x, arena_y = arena_polygon.exterior.xy
     ax.fill(arena_x, arena_y, color='lightgray', alpha=0.3, label='Arena')
     ax.plot(arena_x, arena_y, 'k-', linewidth=2)
-    voronoi_plot_2d(vor, ax) #to see the whole image
+    
+
+    # ---------------- Build Voronoi -----------------
+    vor = Voronoi(points)
+    #voronoi_plot_2d(vor, ax) #to see the whole image
+    regions, vertices = voronoi_finite_polygons_2d(vor)
+    
 
     # ---------------- Plot cells --------------------
+    sum = 0.0
     colors = plt.cm.Set3(np.linspace(0, 1, len(points)))
     for idx, (region, color) in enumerate(zip(regions, colors)):
         poly = Polygon(vertices[region])
@@ -317,9 +363,10 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point,
             x, y = geom.exterior.xy
             ax.fill(x, y, color=color, alpha=0.6,
                 edgecolor='darkblue', linewidth=0.8)
-            print(f"Cell {idx}: Area = {geom.area:.2f}")
-
-
+            print(f"Cell {idx}: Area = {geom.area:.2f}")   
+            sum += geom.area
+            
+    print(f"\nTotal Voronoi cell area inside arena: {sum:.2f} mm²")
     # ---------------- Communication circles ----------
     for pt in points:
         circle = Point(pt).buffer(communication_radius)
@@ -336,11 +383,10 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point,
 
     # ---------------- Formatting ---------------------
     ax.set_aspect('equal')
-    ax.set_xlabel('X coordinate (mm)', fontsize=12)
-    ax.set_ylabel('Y coordinate (mm)', fontsize=12)
+    ax.set_xlabel('X coordinate (mm)')
+    ax.set_ylabel('Y coordinate (mm)')
     ax.set_title(f'Voronoi Diagram at Time {time_point:.2f} (Run {run_id})\n'
-                 f'{len(points)} agents, Communication radius: {communication_radius} mm',
-                 fontsize=14)
+                 f'{len(points)} agents, Communication radius: {communication_radius} mm')
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
@@ -425,14 +471,14 @@ def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=
         
         # Set equal aspect and consistent limits
         ax.set_aspect('equal')
-        ax.set_title(f'Time {time_point:.1f}\n({len(points)} agents)', fontsize=11)
+        ax.set_title(f'Time {time_point:.1f}\n({len(points)} agents)')
         ax.grid(True, alpha=0.3)
         
         # Only show axis labels on bottom and left edges
         if row == rows - 1:
-            ax.set_xlabel('X (mm)', fontsize=10)
+            ax.set_xlabel('X (mm)')
         if col == 0:
-            ax.set_ylabel('Y (mm)', fontsize=10)
+            ax.set_ylabel('Y (mm)')
     
     # Hide unused subplots
     for i in range(n_times, rows * cols):
@@ -443,8 +489,7 @@ def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=
         elif cols > 1:
             axes[col].set_visible(False)
     
-    plt.suptitle(f'Voronoi Diagram Evolution (Run {run_id})\nCommunication radius: {communication_radius} mm', 
-                fontsize=14, y=0.95)
+    plt.suptitle(f'Voronoi Diagram Evolution (Run {run_id})\nCommunication radius: {communication_radius} mm')
     plt.tight_layout()
     plt.show()
     
@@ -460,6 +505,8 @@ def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=
 feather_path = "results/result.feather"
 df = pd.read_feather(feather_path)
 
+
+
 # k-NN plot
 interindividual_distance_knn_over_time_plot(feather_path, k=3, communication_radius=133.0, time_step=100)
 
@@ -467,6 +514,8 @@ interindividual_distance_knn_over_time_plot(feather_path, k=3, communication_rad
 df_voronoi = compute_voronoi_metrics(df, arena_polygon, arena_bounds, arena_surface, communication_radius=133.0)
 
 plot_voronoi_variance(df_voronoi)
+plot_voronoi_std(df_voronoi)
+plot_cv(df_voronoi)
 plot_voronoi_global_variance(df_voronoi)
 plot_coverage_ratio(df_voronoi)
 
