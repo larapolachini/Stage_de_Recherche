@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE catalog PUBLIC "-//OASIS//DTD XML Catalogs V1.0//EN"
+  "file:///usr/share/xml/schema/xml-core/catalog.dtd">
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+<delegatePublic publicIdStartString="-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN" catalog="file:///usr/share/xml/dbus-1/catalog.xml"/>
+<delegatePublic publicIdStartString="-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" catalog="file:///usr/share/xml/dbus-1/catalog.xml"/>
+<delegateSystem systemIdStartString="http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd" catalog="file:///usr/share/xml/dbus-1/catalog.xml"/>
+<delegateSystem systemIdStartString="http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" catalog="file:///usr/share/xml/dbus-1/catalog.xml"/>
+</catalog>

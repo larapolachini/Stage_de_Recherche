@@ -1,0 +1,5 @@
+Types: deb deb-src
+URIs: https://packages.apache.org/artifactory/arrow/ubuntu/
+Suites: noble
+Components: main
+Signed-By: /usr/share/keyrings/apache-arrow-apt-source.asc

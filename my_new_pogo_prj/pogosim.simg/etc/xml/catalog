@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE catalog PUBLIC "-//OASIS//DTD XML Catalogs V1.0//EN"
+  "file:///usr/share/xml/schema/xml-core/catalog.dtd">
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+<delegatePublic publicIdStartString="-//GlobalTransCorp//DTD XML Catalogs V1.0-Based Extension V1.0//EN" catalog="file:///etc/xml/xml-core.xml"/>
+<delegatePublic publicIdStartString="-//OASIS//DTD XML Catalogs V1.0//EN" catalog="file:///etc/xml/xml-core.xml"/>
+<delegatePublic publicIdStartString="-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN" catalog="file:///etc/xml/libdbus-1-dev.xml"/>
+<delegatePublic publicIdStartString="-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" catalog="file:///etc/xml/libdbus-1-dev.xml"/>
+<delegateSystem systemIdStartString="http://globaltranscorp.org/oasis/catalog/xml/tr9401.dtd" catalog="file:///etc/xml/xml-core.xml"/>
+<delegateSystem systemIdStartString="http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd" catalog="file:///etc/xml/libdbus-1-dev.xml"/>
+<delegateSystem systemIdStartString="http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" catalog="file:///etc/xml/libdbus-1-dev.xml"/>
+<delegateSystem systemIdStartString="http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd" catalog="file:///etc/xml/xml-core.xml"/>
+</catalog>

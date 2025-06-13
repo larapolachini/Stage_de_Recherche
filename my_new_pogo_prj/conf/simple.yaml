@@ -3,10 +3,10 @@
 window_width: 600       # In pixels
 window_height: 600      # In pixels
 
-arena_file: arenas/annulus.csv
+arena_file: arenas/disk.csv
 #arena_file: arenas/star8.csv
 #arena_file: arenas/star_scaled.csv
-arena_surface: 1.5e5    # In mm²
+arena_surface: 1.0e6    # In mm²
 
 delete_old_files: true
 enable_data_logging: true
@@ -50,7 +50,7 @@ GUI_speed_up: 10.0         # How much the visualisation in the GUI should be spe
 #               imported_formation_min_coords: [0.0, 0.0]
 #               imported_formation_max_coords: [17.0, 17.0]
 #       Note that the angle (aka "theta") column is optional: if it is not provided, the angle will be sampled from a [-pi, pi] uniform distribution.
-initial_formation: power_lloyd
+initial_formation: random
 
 # Whether or not to ignore occlusions (e.g. other robots, focal robot) when computing communication exchanges and neighbors lists
 communication_ignore_occlusions: false
@@ -72,7 +72,7 @@ objects:
     # An object category containing the Pogobot robots
     robots:
         type: pogobot       # Category type pertaining to Pogobots
-        nb: 15            # Number of objects (Pogobots) in this category
+        nb: 100            # Number of objects (Pogobots) in this category
         geometry: disk                  # Pogobots are always disk-shaped
         radius: 26.5                    # In mm
 
@@ -103,10 +103,10 @@ objects:
 ########### Parameters used to directly initialize variables from the C code of the robots ###########
 parameters:
     # Configuration parameters for the run_and_tumble example
-    run_duration_min: 100
-    run_duration_max: 500
-    tumble_duration_min: 2000
-    tumble_duration_max: 5000
+    run_duration_min: 485
+    run_duration_max: 1511
+    tumble_duration_min: 3517
+    tumble_duration_max: 4202
     enable_backward_dir: true
 
 # MODELINE "{{{1

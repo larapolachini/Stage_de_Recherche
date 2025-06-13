@@ -1,0 +1,9 @@
+[2025-06-13 12:59:00.146] [info] Initializing SDL version 2.30.0
+[2025-06-13 12:59:00.189] [info] Arena walls created from CSV file: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/arenas/disk.csv
+[2025-06-13 12:59:00.197] [info] Initializing all robots...
+[2025-06-13 12:59:00.197] [info] Global initialization...
+[2025-06-13 12:59:00.197] [info] [ROBOT #0] [PRINTF] Test global values: (1,2,3,4)
+[2025-06-13 12:59:00.200] [info] Deleting old data files in directory: frames
+[2025-06-13 12:59:00.200] [info] Launching the main simulation loop.
+[2025-06-13 12:59:00.248] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 722ms, Elapsed: 0ms
+[2025-06-13 12:59:02.496] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 4839ms, Elapsed: 3712ms

@@ -1,0 +1,12 @@
+{
+	"Author": "leo.cazenille@gmail.com",
+	"Version": "0.1.0",
+	"org.label-schema.build-arch": "amd64",
+	"org.label-schema.build-date": "Wednesday_28_May_2025_14:59:34_CEST",
+	"org.label-schema.schema-version": "1.0",
+	"org.label-schema.usage.apptainer.version": "1.3.0",
+	"org.label-schema.usage.singularity.deffile.bootstrap": "docker",
+	"org.label-schema.usage.singularity.deffile.from": "ubuntu:24.04",
+	"org.opencontainers.image.ref.name": "ubuntu",
+	"org.opencontainers.image.version": "24.04"
+}

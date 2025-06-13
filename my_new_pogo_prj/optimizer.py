@@ -24,7 +24,7 @@ PARAMETER_KEYS = [
     "tumble_duration_max"
 ]
 INITIAL_VALUES = [100, 500, 2000, 5000]
-SIGMA = 300  # Initial step size for CMA-ES
+SIGMA = 800  # Initial step size for CMA-ES
 MAX_ITER = 3  # Maximum number of CMA-ES iterations
 
 #  Create temporary configuration file with parameters
