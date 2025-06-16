@@ -17,7 +17,7 @@ os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
 SIMULATOR_BINARY = "./examples/run_and_tumble/run_and_tumble"
 BASE_CONFIG_PATH = "conf/simple.yaml"
 TEMP_DIR = "tmp_cma"  # Temporary directory for CMA-ES runs
-N_RUNS_PER_INDIVIDUAL = 2    #10
+N_RUNS_PER_INDIVIDUAL = 10    
 PARAMETER_KEYS = [
     "run_duration_min",
     "run_duration_max",
@@ -26,7 +26,7 @@ PARAMETER_KEYS = [
 ]
 INITIAL_VALUES = [0, 0, 0, 0] 
 SIGMA = 800  # Initial step size for CMA-ES
-MAX_ITER = 5  #100 # Maximum number of CMA-ES iterations
+MAX_ITER = 100  # Maximum number of CMA-ES iterations
 
 #  Create temporary configuration file with parameters
 def create_temp_config(base_config_path, output_dir, parameters):
