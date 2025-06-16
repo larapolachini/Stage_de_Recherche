@@ -17,7 +17,7 @@ os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
 SIMULATOR_BINARY = "./examples/run_and_tumble/run_and_tumble"
 BASE_CONFIG_PATH = "conf/simple.yaml"
 TEMP_DIR = "tmp_cma"  # Temporary directory for CMA-ES runs
-N_RUNS_PER_INDIVIDUAL = 10    
+N_RUNS_PER_INDIVIDUAL = 5    
 PARAMETER_KEYS = [
     "run_duration_min",
     "run_duration_max",
@@ -26,7 +26,9 @@ PARAMETER_KEYS = [
 ]
 INITIAL_VALUES = [0, 0, 0, 0] 
 SIGMA = 800  # Initial step size for CMA-ES
-MAX_ITER = 100  # Maximum number of CMA-ES iterations
+MAX_ITER = 20  # Maximum number of CMA-ES iterations
+OUTPUT_CSV = "cmaes_results.csv"
+
 
 #  Create temporary configuration file with parameters
 def create_temp_config(base_config_path, output_dir, parameters):
@@ -120,6 +122,11 @@ def objective_function(parameters):
                     mean_cv = cv_series.mean()
                     cv_values.append(mean_cv)
                     print(f"Mean CV: {mean_cv:.4f} for parameters: {parameters}")
+
+                    # Save to CSV
+                    with open(OUTPUT_CSV, 'a') as f:
+                        line = ",".join(map(str, p)) + f",{mean_cv:.6f}\n"
+                        f.write(line)
             except Exception as e:
                 print(f"Error during analysis: {e}")
         else:
@@ -145,6 +152,11 @@ def main():
         'bounds': bounds,
         'maxiter': MAX_ITER,
     })
+
+    # Initialize output file
+    with open(OUTPUT_CSV, 'w') as f:
+        f.write("run_duration_min,run_duration_max,tumble_duration_min,tumble_duration_max,mean_cv\n")
+
 
     es.optimize(objective_function)
 

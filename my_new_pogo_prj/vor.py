@@ -11,6 +11,11 @@ import math
 from data import arena_polygon, arena_bounds, arena_surface
 from shapely.ops import unary_union
 import seaborn as sns
+import os
+
+# Folder to save figures
+figure_folder = "figures"
+os.makedirs(figure_folder, exist_ok=True)
 
 
 
@@ -79,7 +84,8 @@ def interindividual_distance_knn_over_time_plot(
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
+    save_figure("knn.png")
+
 
     return result_df
 
@@ -229,6 +235,12 @@ def voronoi_finite_polygons_2d(vor, radius=None):
 
 sns.set(font_scale = 1.3)   # Scale the font size for the entire script
 
+def save_figure(filename, dpi=300):
+    path = os.path.join(figure_folder, filename)
+    plt.savefig(path, dpi=dpi)
+    plt.close()
+
+
 def plot_voronoi_variance(df_voronoi):
     plt.figure(figsize=(10, 6))
     for run_id, group in df_voronoi.groupby("run"):
@@ -239,7 +251,8 @@ def plot_voronoi_variance(df_voronoi):
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    save_figure("voronoi_variance_over_time.png")
+
 
 
 def plot_voronoi_std(df_voronoi):
@@ -252,7 +265,8 @@ def plot_voronoi_std(df_voronoi):
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    save_figure("voronoi_std_over_time.png")
+
 
 def plot_cv(df_voronoi):
     # Example: Plot CV over time for each run
@@ -266,7 +280,8 @@ def plot_cv(df_voronoi):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
+    save_figure("CV_over_time.png")
+
 
 
 def plot_voronoi_global_variance(df_voronoi):
@@ -286,7 +301,8 @@ def plot_voronoi_global_variance(df_voronoi):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
+    save_figure("voronoi_global_var_over_time.png")
+
 
 
 def plot_coverage_ratio(df_voronoi):
@@ -309,7 +325,8 @@ def plot_coverage_ratio(df_voronoi):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
+    save_figure("coverage_ratio.png")
+
 
 
 def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point,
@@ -390,7 +407,8 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point,
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.show()
+    save_figure("voronoi_diagram.png")
+
 
     return fig, ax
 
@@ -491,7 +509,8 @@ def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=
     
     plt.suptitle(f'Voronoi Diagram Evolution (Run {run_id})\nCommunication radius: {communication_radius} mm')
     plt.tight_layout()
-    plt.show()
+    save_figure("voronoi_diagram_evolution.png")
+
     
     return fig, axes
 
