@@ -103,10 +103,10 @@ objects:
 ########### Parameters used to directly initialize variables from the C code of the robots ###########
 parameters:
     # Configuration parameters for the run_and_tumble example
-    run_duration_min: 8270
-    run_duration_max: 8275
-    tumble_duration_min: 2782
-    tumble_duration_max: 2783
+    run_duration_min: 100
+    run_duration_max: 500
+    tumble_duration_min: 2000
+    tumble_duration_max: 5000
     enable_backward_dir: true
 
 # MODELINE "{{{1

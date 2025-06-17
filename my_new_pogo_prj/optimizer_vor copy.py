@@ -86,59 +86,51 @@ def run_simulation(config_path):
         return feather_path
 
 # Objective function to minimize coefficient of variation (CV) of Voronoi cell areas
+import concurrent.futures
+
+def run_single_simulation(p):
+    run_dir = tempfile.mkdtemp(dir=TEMP_DIR)
+    config_path = create_temp_config(BASE_CONFIG_PATH, run_dir, p)
+    feather_file = run_simulation(config_path)
+
+    result = None
+    if feather_file:
+        try:
+            df = feather.read_feather(feather_file)
+            metrics_df = compute_voronoi_metrics(
+                df=df,
+                arena_polygon=arena_polygon,
+                arena_bounds=arena_bounds,
+                arena_surface=arena_surface,
+                communication_radius=133.0
+            )
+            cv_series = metrics_df["cv_area"]
+            if not cv_series.empty:
+                mean_cv = cv_series.mean()
+                result = (p, mean_cv)
+        except Exception as e:
+            print(f"Error during analysis: {e}")
+    shutil.rmtree(run_dir, ignore_errors=True)
+    return result
+
 def objective_function(parameters):
     p = list(map(int, parameters))
-
-    # Validate logical constraints
     if not (p[0] < p[1] and p[2] < p[3]):
-        return 1e6  # heavy penalty
-
-    cv_values = []
-    run_dirs = []
-
-    for _ in range(N_RUNS_PER_INDIVIDUAL):
-        run_dir = tempfile.mkdtemp(dir=TEMP_DIR)
-        run_dirs.append(run_dir)
-
-        config_path = create_temp_config(BASE_CONFIG_PATH, run_dir, p)
-        feather_file = run_simulation(config_path)
-
-        if feather_file:
-            try:
-                # Load simulation data
-                df = feather.read_feather(feather_file)
-
-                # Compute metrics (you must define arena_polygon and bounds globally or pass them)
-                metrics_df = compute_voronoi_metrics(
-                    df=df,
-                    arena_polygon = arena_polygon,        # Must define globally
-                    arena_bounds = arena_bounds,          # Must define globally
-                    arena_surface = arena_surface,        # Must define globally
-                    communication_radius=133.0
-                )
-
-                # Get mean CV (e.g., last frame or average over time)
-                cv_series = metrics_df["cv_area"]
-                if not cv_series.empty:
-                    mean_cv = cv_series.mean()
-                    cv_values.append(mean_cv)
-                    print(f"Mean CV: {mean_cv:.4f} for parameters: {parameters}")
-
-                    # Save to CSV
-                    with open(OUTPUT_CSV, 'a') as f:
-                        line = ",".join(map(str, p)) + f",{mean_cv:.6f}\n"
-                        f.write(line)
-            except Exception as e:
-                print(f"Error during analysis: {e}")
-        else:
-            print("Simulation failed for:", p)
-
-    for d in run_dirs:
-        shutil.rmtree(d, ignore_errors=True)
-
-    if not cv_values:
         return 1e6
-  
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [executor.submit(run_single_simulation, p) for _ in range(N_RUNS_PER_INDIVIDUAL)]
+        results = [f.result() for f in futures if f.result()]
+
+    if not results:
+        return 1e6
+
+    cv_values = [r[1] for r in results]
+    for _, mean_cv in results:
+        print(f"Mean CV: {mean_cv:.4f} for parameters: {p}")
+        with open(OUTPUT_CSV, 'a') as f:
+            line = ",".join(map(str, p)) + f",{mean_cv:.6f}\n"
+            f.write(line)
 
     return -np.mean(cv_values)  # CMA-ES minimizes: lower CV is better
 

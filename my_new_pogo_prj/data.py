@@ -95,7 +95,7 @@ plt.gca().set_aspect('equal')
 plt.title("Scaled Arena Polygon")
 plt.grid(True)
 plt.legend()
-#plt.show()
+plt.show()
 
 
 print(arena_bounds)
