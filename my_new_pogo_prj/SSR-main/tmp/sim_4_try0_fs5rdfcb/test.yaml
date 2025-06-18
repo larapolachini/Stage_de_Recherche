@@ -1,0 +1,89 @@
+GUI: true
+GUI_speed_up: 10.0
+arena_file: arenas/disk.csv
+arena_surface: 1.5e5
+communication_ignore_occlusions: false
+console_filename: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/SSR-main/tmp/sim_4_try0_fs5rdfcb/frames/console.txt
+data_filename: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/SSR-main/tmp/sim_4_try0_fs5rdfcb/frames/data.feather
+delete_old_files: true
+enable_console_logging: true
+enable_data_logging: true
+formation_filename: /tmp/hndshk_quality_positions.csv
+formation_max_space_between_neighbors: 80.0
+formation_min_space_between_neighbors: 30.0
+frames_name: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/SSR-main/tmp/sim_4_try0_fs5rdfcb/frames/f{:010.4f}.png
+imported_formation_max_coords:
+- 700.0
+- 700.0
+imported_formation_min_coords:
+- 300.0
+- 300.0
+initial_formation: power_lloyd
+objects:
+  global_light:
+    geometry: global
+    photo_start_at: 1.0
+    photo_start_duration: 1.0
+    photo_start_value: 32767
+    type: static_light
+    value: 200
+  robots:
+    angular_noise_stddev: 0
+    body_angular_damping: 0.3
+    body_density: 10.0
+    body_friction: 0.3
+    body_linear_damping: 0.3
+    body_restitution: 0.5
+    communication_radius: 80.0
+    geometry: disk
+    linear_noise_stddev: 0
+    max_angular_speed: 2.0
+    max_linear_speed: 100.0
+    msg_success_rate:
+      rate: 0.3
+      type: static
+    nb: 25
+    radius: 26.5
+    temporal_noise_stddev: 2000
+    type: pogobot
+parameters:
+  age_collective_avg_lambda: 10
+  age_collective_avg_lambda_it: 1
+  age_collective_final_lambda: 10
+  age_collective_final_lambda_it: 1
+  age_diffusion: 100
+  age_diffusion_burnin: 10
+  age_diffusion_it: 1
+  age_handshake: 10
+  age_initial_random_walk: 0
+  age_random_walk_choice: 30
+  age_randow_walk: 0
+  age_start_it_waiting_time: 1
+  diffusion_convergence_threshold: 0.1
+  diffusion_min_abs_s: 0.0
+  diffusion_min_nb_points: 3
+  enable_backward_dir: true
+  initial_s_max_val: 1.0
+  max_age: 1.5e3
+  min_s_val_to_update_led: 0.01
+  run_duration_max: 500
+  run_duration_min: 100
+  tau: 0.01
+  tau_inc: 0.002
+  tau_max: 0.12
+  tumble_duration_max: 5000
+  tumble_duration_min: 2000
+  wait_for_min_nb_neighbors: 1
+result_filename_format: result_{arena_file}.feather
+result_new_columns:
+- arena_file
+save_data_period: 1.0
+save_video_period: -0.5
+seed: 4
+show_communication_channels: false
+show_lateral_LEDs: false
+show_light_levels: false
+simulation_time: 20.0
+time_step: 0.01
+window_height: 600
+window_width: 600
