@@ -59,8 +59,14 @@ with open("conf/simple.yaml", "r") as f:
 arena_file = config["arena_file"]
 arena_surface = float(config["arena_surface"])
 arena_polygon = load_arena_polygon_from_csv(arena_file)
+
 scale_factor = (arena_surface/arena_polygon.area) ** 0.5  # Scale in x and y
-arena_polygon = affinity.scale(arena_polygon, xfact=scale_factor, yfact=scale_factor, origin=(10, 10))
+
+minx, miny, _, _ = arena_polygon.bounds
+arena_polygon = affinity.translate(arena_polygon, xoff=-minx, yoff=-miny)
+arena_polygon = affinity.scale(arena_polygon, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+
+
 arena_bounds = get_bounds_from_polygon(arena_polygon)
 # annulus: origin=(8,30)
 # square, annulusBarred: origin=(0,0)
