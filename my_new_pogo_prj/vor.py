@@ -22,7 +22,7 @@ os.makedirs(figure_folder, exist_ok=True)
 # ---------- k-NN Distance Plotting ----------
 
 def interindividual_distance_knn_over_time_plot(
-    feather_path: str, k: int = 5, communication_radius: float = 133.0, time_step: int = 100
+    feather_path: str, figure_folder, k: int = 5, communication_radius: float = 133.0, time_step: int = 100
 ):
     df = pd.read_feather(feather_path)
     print("Unique time values:", df["time"].unique())
@@ -84,7 +84,7 @@ def interindividual_distance_knn_over_time_plot(
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    save_figure("knn.png")
+    save_figure("knn.png", figure_folder)
 
 
     return result_df
@@ -235,13 +235,14 @@ def voronoi_finite_polygons_2d(vor, radius=None):
 
 sns.set(font_scale = 1.3)   # Scale the font size for the entire script
 
-def save_figure(filename, dpi=300):
+def save_figure(filename, figure_folder, dpi=300):
     path = os.path.join(figure_folder, filename)
+    print(f"Saving figure to: {path}")
     plt.savefig(path, dpi=dpi)
     plt.close()
 
 
-def plot_voronoi_variance(df_voronoi):
+def plot_voronoi_variance(df_voronoi, figure_folder):
     plt.figure(figsize=(10, 6))
     for run_id, group in df_voronoi.groupby("run"):
         plt.plot(group["time"], group["var_area"], label=f"Run {run_id}")
@@ -251,11 +252,11 @@ def plot_voronoi_variance(df_voronoi):
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
-    save_figure("voronoi_variance_over_time.png")
+    save_figure("voronoi_variance_over_time.png", figure_folder)
 
 
 
-def plot_voronoi_std(df_voronoi):
+def plot_voronoi_std(df_voronoi, figure_folder):
     plt.figure(figsize=(10, 6))
     for run_id, group in df_voronoi.groupby("run"):
         plt.plot(group["time"], group["std_area"], label=f"Run {run_id}")
@@ -265,10 +266,10 @@ def plot_voronoi_std(df_voronoi):
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
-    save_figure("voronoi_std_over_time.png")
+    save_figure("voronoi_std_over_time.png", figure_folder)
 
 
-def plot_cv(df_voronoi):
+def plot_cv(df_voronoi, figure_folder):
     # Example: Plot CV over time for each run
     for run_id in df_voronoi["run"].unique():
         run_df = df_voronoi[df_voronoi["run"] == run_id]
@@ -280,11 +281,11 @@ def plot_cv(df_voronoi):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    save_figure("CV_over_time.png")
+    save_figure("CV_over_time.png", figure_folder)
 
 
 
-def plot_voronoi_global_variance(df_voronoi):
+def plot_voronoi_global_variance(df_voronoi, figure_folder):
     grouped = df_voronoi.groupby("time")
     global_mean = grouped["var_area"].mean()
     global_std = grouped["var_area"].std()
@@ -301,11 +302,11 @@ def plot_voronoi_global_variance(df_voronoi):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    save_figure("voronoi_global_var_over_time.png")
+    save_figure("voronoi_global_var_over_time.png", figure_folder)
 
 
 
-def plot_coverage_ratio(df_voronoi):
+def plot_coverage_ratio(df_voronoi, figure_folder):
     grouped = df_voronoi.groupby("time")
     global_mean = grouped["coverage_ratio"].mean()
     global_std = grouped["coverage_ratio"].std()
@@ -325,11 +326,11 @@ def plot_coverage_ratio(df_voronoi):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    save_figure("coverage_ratio.png")
+    save_figure("coverage_ratio.png", figure_folder)
 
 
 
-def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point,
+def plot_voronoi_diagram(df, figure_folder, arena_polygon, arena_bounds, time_point,
                          run_id=0, communication_radius=133.0,
                          figsize=(10, 10)):
     """
@@ -407,14 +408,14 @@ def plot_voronoi_diagram(df, arena_polygon, arena_bounds, time_point,
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
-    save_figure("voronoi_diagram.png")
+    save_figure("voronoi_diagram.png", figure_folder)
 
 
     return fig, ax
 
 
 
-def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=0, communication_radius=133.0, figsize=(16, 12)):
+def plot_voronoi_evolution(df, figure_folder, arena_polygon, arena_bounds, time_points, run_id=0, communication_radius=133.0, figsize=(16, 12)):
     """
     Plot Voronoi diagrams at multiple time points to show evolution
     """
@@ -509,10 +510,272 @@ def plot_voronoi_evolution(df, arena_polygon, arena_bounds, time_points, run_id=
     
     plt.suptitle(f'Voronoi Diagram Evolution (Run {run_id})\nCommunication radius: {communication_radius} mm')
     plt.tight_layout()
-    save_figure("voronoi_diagram_evolution.png")
+    save_figure("voronoi_diagram_evolution.png", figure_folder)
 
     
     return fig, axes
+
+def compute_fano_over_time_corrected(df, figure_folder, communication_radius=133.0, run_id=0, plot=True):
+    from scipy.spatial import KDTree
+
+    if "run" not in df.columns:
+        df["run"] = 0
+    run_data = df[df["run"] == run_id]
+
+    fano_list = []
+
+    for t in sorted(run_data["time"].unique()):
+        subset = run_data[run_data["time"] == t][["x", "y"]]
+        points = subset.to_numpy()
+
+        if len(points) < 2:
+            continue
+
+        tree = KDTree(points)
+        neighbors = tree.query_ball_point(points, r=communication_radius)
+        degrees = np.array([len(nlist) - 1 for nlist in neighbors])
+
+        mu = np.mean(degrees)
+        var = np.var(degrees)
+        fano = var / mu if mu > 0 else np.nan
+
+        fano_list.append((t, mu, var, fano))
+
+    fano_df = pd.DataFrame(fano_list, columns=["time", "mean_degree", "variance", "fano_factor"])
+
+    if plot:
+        plt.figure(figsize=(10, 6))
+        plt.plot(fano_df["time"], fano_df["fano_factor"], label="Fano Factor", color="darkorange")
+        plt.xlabel("Time")
+        plt.ylabel("Fano Factor (σ² / μ)")
+        plt.title("Fano Factor of Degree Distribution Over Time")
+        plt.grid(True)
+        plt.tight_layout()
+        save_figure("fano_factor_over_time_corrected.png", figure_folder)
+        plt.show()
+
+    return fano_df
+
+def compute_overall_neighbor_degree_histogram(df, figure_folder, communication_radius=133.0, run_id=0, plot=True):
+    from scipy.spatial import KDTree
+
+    if "run" not in df.columns:
+        df["run"] = 0
+    run_data = df[df["run"] == run_id]
+
+    all_degrees = []
+
+    for t in sorted(run_data["time"].unique()):
+        positions = run_data[run_data["time"] == t][["x", "y"]].to_numpy()
+        if len(positions) < 2:
+            continue
+
+        tree = KDTree(positions)
+        neighbors = tree.query_ball_point(positions, r=communication_radius)
+        degrees = np.array([len(nlist) - 1 for nlist in neighbors])  # Exclude self
+        all_degrees.extend(degrees)
+
+    if not all_degrees:
+        print("No neighbor degrees found.")
+        return None
+
+    all_degrees = np.array(all_degrees)
+    mean_deg = np.mean(all_degrees)
+    var_deg = np.var(all_degrees)
+    fano = var_deg / mean_deg if mean_deg > 0 else np.nan
+
+    print(f"\n[Overall Degree Stats]")
+    print(f"Mean degree: {mean_deg:.2f}")
+    print(f"Variance: {var_deg:.2f}")
+    print(f"Fano factor: {fano:.2f}")
+    print(f"Total samples: {len(all_degrees)}")
+
+    if plot:
+        plt.figure(figsize=(8, 5))
+        sns.histplot(all_degrees, bins=range(all_degrees.min(), all_degrees.max() + 2),
+                     kde=False, color='cornflowerblue', edgecolor='black')
+        plt.xlabel("Number of neighbors (degree)")
+        plt.ylabel("Total agent-time samples")
+        plt.title("Overall Neighbor Degree Distribution (All Time Points)")
+        plt.grid(True)
+        plt.tight_layout()
+        save_figure("overall_neighbor_degree_histogram.png", figure_folder)
+        plt.show()
+
+    return {
+        "degrees": all_degrees,
+        "mean": mean_deg,
+        "variance": var_deg,
+        "fano_factor": fano
+    }
+
+def compute_degree_histogram_first_last(df, figure_folder, communication_radius=133.0, plot=True):
+    if "run" not in df.columns:
+        df["run"] = 0
+
+    first_degrees = []
+    last_degrees = []
+
+    for run_id, run_data in df.groupby("run"):
+        times = sorted(run_data["time"].unique())
+        if len(times) < 2:
+            continue  # skip if there's only one time step
+
+        t_first, t_last = times[0], times[-1]
+
+        for t, container in [(t_first, first_degrees), (t_last, last_degrees)]:
+            subset = run_data[run_data["time"] == t][["x", "y"]]
+            points = subset.to_numpy()
+
+            if len(points) < 2:
+                continue
+
+            tree = KDTree(points)
+            neighbors = tree.query_ball_point(points, r=communication_radius)
+            degrees = np.array([len(nlist) - 1 for nlist in neighbors])
+            container.extend(degrees)
+
+    # Convert to numpy arrays
+    first_degrees = np.array(first_degrees)
+    last_degrees = np.array(last_degrees)
+
+    # Stats
+    stats = {
+        "first": {
+            "mean": first_degrees.mean(),
+            "var": first_degrees.var(),
+            "fano": first_degrees.var() / first_degrees.mean() if first_degrees.mean() > 0 else np.nan,
+            "samples": len(first_degrees)
+        },
+        "last": {
+            "mean": last_degrees.mean(),
+            "var": last_degrees.var(),
+            "fano": last_degrees.var() / last_degrees.mean() if last_degrees.mean() > 0 else np.nan,
+            "samples": len(last_degrees)
+        }
+    }
+
+    if plot:
+        sns.set(style="whitegrid", font_scale=1.2)
+        plt.figure(figsize=(12, 5))
+
+        for i, (label, degrees) in enumerate([("First time step", first_degrees),
+                                              ("Last time step", last_degrees)]):
+            plt.subplot(1, 2, i + 1)
+            if len(degrees) > 0:
+                bins = range(degrees.min(), degrees.max() + 2)
+                sns.histplot(degrees, bins=bins, kde=False, edgecolor='black', color='steelblue')
+                plt.xlabel("Number of neighbors (degree)")
+                plt.ylabel("Count (across all agents & runs)")
+                plt.title(label)
+            else:
+                plt.text(0.5, 0.5, "No data", transform=plt.gca().transAxes,
+                         ha='center', va='center', fontsize=12)
+
+        plt.tight_layout()
+        plt.savefig("figures/degree_histogram_first_last.png", dpi=300)
+        plt.show()
+
+    return stats
+
+def compute_fano_over_time_all_runs(df, figure_folder, communication_radius=133.0, plot=True):
+    from scipy.spatial import KDTree
+
+    if "run" not in df.columns:
+        df["run"] = 0
+
+    fano_list = []
+
+    for t in sorted(df["time"].unique()):
+        degrees_all_runs = []
+
+        for run_id in df["run"].unique():
+            run_data = df[(df["run"] == run_id) & (df["time"] == t)]
+            points = run_data[["x", "y"]].to_numpy()
+
+            if len(points) < 2:
+                continue
+
+            tree = KDTree(points)
+            neighbors = tree.query_ball_point(points, r=communication_radius)
+            degrees = np.array([len(nlist) - 1 for nlist in neighbors])
+            degrees_all_runs.extend(degrees)
+
+        if not degrees_all_runs:
+            continue
+
+        degrees_all_runs = np.array(degrees_all_runs)
+        mu = np.mean(degrees_all_runs)
+        var = np.var(degrees_all_runs)
+        fano = var / mu if mu > 0 else np.nan
+        fano_list.append((t, mu, var, fano))
+
+    fano_df = pd.DataFrame(fano_list, columns=["time", "mean_degree", "variance", "fano_factor"])
+
+    if plot:
+        plt.figure(figsize=(10, 6))
+        plt.plot(fano_df["time"], fano_df["fano_factor"], label="Fano Factor", color="darkorange")
+        plt.xlabel("Time")
+        plt.ylabel("Fano Factor (σ² / μ)")
+        plt.title("Fano Factor of Degree Distribution Over Time (All Runs)")
+        plt.grid(True)
+        plt.tight_layout()
+        save_figure("fano_factor_over_time_all_runs.png", figure_folder)
+        plt.show()
+
+    return fano_df
+
+def compute_overall_neighbor_degree_histogram_all_runs(df, figure_folder, communication_radius=133.0, plot=True):
+    from scipy.spatial import KDTree
+
+    if "run" not in df.columns:
+        df["run"] = 0
+
+    all_degrees = []
+
+    for (run_id, t), group in df.groupby(["run", "time"]):
+        points = group[["x", "y"]].to_numpy()
+        if len(points) < 2:
+            continue
+
+        tree = KDTree(points)
+        neighbors = tree.query_ball_point(points, r=communication_radius)
+        degrees = np.array([len(nlist) - 1 for nlist in neighbors])
+        all_degrees.extend(degrees)
+
+    if not all_degrees:
+        print("No neighbor degrees found.")
+        return None
+
+    all_degrees = np.array(all_degrees)
+    mu = np.mean(all_degrees)
+    var = np.var(all_degrees)
+    fano = var / mu if mu > 0 else np.nan
+
+    print(f"\n[Overall Degree Stats - All Runs]")
+    print(f"Mean degree: {mu:.2f}")
+    print(f"Variance: {var:.2f}")
+    print(f"Fano factor: {fano:.2f}")
+    print(f"Total agent-time samples: {len(all_degrees)}")
+
+    if plot:
+        plt.figure(figsize=(8, 5))
+        sns.histplot(all_degrees, bins=range(all_degrees.min(), all_degrees.max() + 2),
+                     kde=False, color='cornflowerblue', edgecolor='black')
+        plt.xlabel("Number of neighbors (degree)")
+        plt.ylabel("Total agent-time samples")
+        plt.title("Neighbor Degree Distribution (All Runs, All Time Points)")
+        plt.grid(True)
+        plt.tight_layout()
+        save_figure("overall_neighbor_degree_histogram_all_runs.png", figure_folder)
+        plt.show()
+
+    return {
+        "degrees": all_degrees,
+        "mean": mu,
+        "variance": var,
+        "fano_factor": fano
+    }
 
 
 # -------------------------------
@@ -525,18 +788,17 @@ feather_path = "results/result.feather"
 df = pd.read_feather(feather_path)
 
 
-
 # k-NN plot
-interindividual_distance_knn_over_time_plot(feather_path, k=3, communication_radius=133.0, time_step=100)
+interindividual_distance_knn_over_time_plot(feather_path, figure_folder, k=3, communication_radius=133.0, time_step=100)
 
 # Voronoi metrics with real arena
 df_voronoi = compute_voronoi_metrics(df, arena_polygon, arena_bounds, arena_surface, communication_radius=133.0)
 
-plot_voronoi_variance(df_voronoi)
-plot_voronoi_std(df_voronoi)
-plot_cv(df_voronoi)
-plot_voronoi_global_variance(df_voronoi)
-plot_coverage_ratio(df_voronoi)
+plot_voronoi_variance(df_voronoi, figure_folder)
+plot_voronoi_std(df_voronoi, figure_folder)
+plot_cv(df_voronoi, figure_folder)
+plot_voronoi_global_variance(df_voronoi, figure_folder)
+plot_coverage_ratio(df_voronoi, figure_folder)
 
 # NEW: Plot Voronoi diagrams
 print("\nPlotting Voronoi diagrams...")
@@ -544,8 +806,21 @@ print("\nPlotting Voronoi diagrams...")
 # Plot single Voronoi diagram at a specific time
 available_times = sorted(df["time"].unique())
 mid_time = available_times[len(available_times)//2]  # Middle time point
-plot_voronoi_diagram(df, arena_polygon, arena_bounds, mid_time, run_id=0, communication_radius=133.0)
+plot_voronoi_diagram(df, figure_folder, arena_polygon, arena_bounds, mid_time, run_id=0, communication_radius=133.0)
 
 # Plot evolution of Voronoi diagrams at multiple time points
 sample_times = [available_times[i] for i in [0, len(available_times)//4, len(available_times)//2, 3*len(available_times)//4, -1]]
-plot_voronoi_evolution(df, arena_polygon, arena_bounds, sample_times, run_id=0, communication_radius=133.0) 
+plot_voronoi_evolution(df, figure_folder, arena_polygon, arena_bounds, sample_times, run_id=0, communication_radius=133.0) 
+
+
+
+# Compute Fano factor over time
+print("\nComputing Fano factor over time...")
+fano_df = compute_fano_over_time_corrected(df, figure_folder, communication_radius=133.0, run_id=0)
+
+compute_overall_neighbor_degree_histogram(df, figure_folder, communication_radius=133.0, run_id=0)
+
+compute_overall_neighbor_degree_histogram_all_runs(df, figure_folder, communication_radius=133.0)
+
+stats = compute_degree_histogram_first_last(df, figure_folder, communication_radius=133.0)
+

@@ -16,7 +16,7 @@ os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
 
 # Configuration
 SIMULATOR_BINARY = "./examples/run_and_tumble/run_and_tumble"
-BASE_CONFIG_PATH = "conf/simple.yaml"
+BASE_CONFIG_PATH = "conf/simpleb.yaml"
 TEMP_DIR = "tmp_cma"
 N_RUNS_PER_INDIVIDUAL = 2
 PARAMETER_KEYS = [
@@ -27,8 +27,11 @@ PARAMETER_KEYS = [
 ]
 INITIAL_VALUES = [10, 50, 10, 50]  # x0, dx0, x1, dx1
 SIGMA = 800
-MAX_ITER = 10
+MAX_ITER = 2
 OUTPUT_CSV = "cmaes_results.csv"
+
+best_score = float("inf")
+best_params = None
 
 def create_temp_config(base_config_path, output_dir, parameters):
     with open(base_config_path, 'r') as f:
@@ -88,6 +91,9 @@ def run_one_simulation(p):
     return None
 
 def objective_function(params):
+
+    global best_score, best_params
+    
     # Reparameterize: ensure p[0] < p[1] and p[2] < p[3]
     x0, dx0, x1, dx1 = params
     p = [
@@ -107,6 +113,11 @@ def objective_function(params):
                 print(f"Mean CV: {result:.4f} for parameters: {p}")
                 with open(OUTPUT_CSV, 'a') as f:
                     f.write(",".join(map(str, p)) + f",{result:.6f}\n")
+
+                # track best score
+                if result < best_score:
+                    best_score = result 
+                    best_params = p 
             else:
                 print(f"Simulation failed for: {p}")
 
@@ -128,6 +139,7 @@ def main():
     es.optimize(objective_function)
 
     print("Optimal parameters found:", es.result.xbest)
+    print(f"Best evaluated parameters: {best_params} with mean CV = {best_score:.6f}")
     shutil.rmtree(TEMP_DIR, ignore_errors=True)
 
 if __name__ == "__main__":

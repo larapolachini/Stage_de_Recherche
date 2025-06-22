@@ -68,11 +68,6 @@ arena_polygon = affinity.scale(arena_polygon, xfact=scale_factor, yfact=scale_fa
 
 
 arena_bounds = get_bounds_from_polygon(arena_polygon)
-# annulus: origin=(8,30)
-# square, annulusBarred: origin=(0,0)
-# disk, triangle: origin = (10,10)
-# star: origin=(-500, -550)
-#arrow2: origin = (300, -50)
 
 print(f"Arena file: {arena_file}")
 print(f"Arena surface (from YAML): {arena_surface} mm²")
