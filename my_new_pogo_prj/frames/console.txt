@@ -1,0 +1,40 @@
+[2025-06-22 21:28:40.824] [info] Initializing SDL version 2.30.0
+[2025-06-22 21:28:40.930] [info] Arena walls created from CSV file: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/arenas/square.csv
+[2025-06-22 21:28:40.957] [info] Initializing all robots...
+[2025-06-22 21:28:40.957] [info] Global initialization...
+[2025-06-22 21:28:40.957] [info] [ROBOT #0] [PRINTF] Test global values: (42,23,11,18)
+[2025-06-22 21:28:40.958] [info] Deleting old data files in directory: frames
+[2025-06-22 21:28:40.958] [info] Launching the main simulation loop.
+[2025-06-22 21:28:41.046] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 8ms, Elapsed: 0ms
+[2025-06-22 21:28:40.861] [info] Initializing SDL version 2.30.0
+[2025-06-22 21:28:41.016] [info] Arena walls created from CSV file: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/arenas/square.csv
+[2025-06-22 21:28:41.050] [info] Initializing all robots...
+[2025-06-22 21:28:41.051] [info] Global initialization...
+[2025-06-22 21:28:41.051] [info] [ROBOT #0] [PRINTF] Test global values: (42,23,11,18)
+[2025-06-22 21:28:41.055] [info] Deleting old data files in directory: frames
+[2025-06-22 21:28:41.057] [info] Launching the main simulation loop.
+[2025-06-22 21:28:41.169] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 150ms, Elapsed: 0ms
+[2025-06-22 21:28:40.824] [info] Initializing SDL version 2.30.0
+[2025-06-22 21:28:40.938] [info] Arena walls created from CSV file: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/arenas/square.csv
+[2025-06-22 21:28:40.965] [info] Initializing all robots...
+[2025-06-22 21:28:40.965] [info] Global initialization...
+[2025-06-22 21:28:40.965] [info] [ROBOT #0] [PRINTF] Test global values: (42,23,11,18)
+[2025-06-22 21:28:40.968] [info] Deleting old data files in directory: frames
+[2025-06-22 21:28:40.968] [info] Launching the main simulation loop.
+[2025-06-22 21:28:41.060] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 73ms, Elapsed: 0ms
+[2025-06-22 21:28:40.796] [info] Initializing SDL version 2.30.0
+[2025-06-22 21:28:40.905] [info] Arena walls created from CSV file: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/arenas/square.csv
+[2025-06-22 21:28:40.934] [info] Initializing all robots...
+[2025-06-22 21:28:40.934] [info] Global initialization...
+[2025-06-22 21:28:40.934] [info] [ROBOT #0] [PRINTF] Test global values: (42,23,11,18)
+[2025-06-22 21:28:40.935] [info] Deleting old data files in directory: frames
+[2025-06-22 21:28:40.937] [info] Launching the main simulation loop.
+[2025-06-22 21:28:40.994] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 44ms, Elapsed: 0ms
+[2025-06-22 21:28:40.796] [info] Initializing SDL version 2.30.0
+[2025-06-22 21:28:40.905] [info] Arena walls created from CSV file: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/arenas/square.csv
+[2025-06-22 21:28:40.935] [info] Initializing all robots...
+[2025-06-22 21:28:40.936] [info] Global initialization...
+[2025-06-22 21:28:40.936] [info] [ROBOT #0] [PRINTF] Test global values: (42,23,11,18)
+[2025-06-22 21:28:40.938] [info] Deleting old data files in directory: frames
+[2025-06-22 21:28:40.938] [info] Launching the main simulation loop.
+[2025-06-22 21:28:40.994] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 99ms, Elapsed: 0ms

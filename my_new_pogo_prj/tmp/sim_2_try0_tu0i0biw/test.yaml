@@ -1,0 +1,69 @@
+GUI: true
+GUI_speed_up: 10.0
+arena_file: arenas/disk.csv
+arena_surface: 1.0e6
+console_filename: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/tmp/sim_2_try0_tu0i0biw/frames/console.txt
+data_filename: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/tmp/sim_2_try0_tu0i0biw/frames/data.feather
+delete_old_files: true
+enable_console_logging: true
+enable_data_logging: true
+frames_name: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/tmp/sim_2_try0_tu0i0biw/frames/f{:010.4f}.png
+initial_formation: random
+objects:
+  global_light:
+    geometry: global
+    photo_start_at: 1.0
+    photo_start_duration: 1.0
+    photo_start_value: 32767
+    type: static_light
+    value: 200
+  robots:
+    angular_noise_stddev: 2.0
+    body_angular_damping: 0.3
+    body_density: 10.0
+    body_friction: 0.3
+    body_linear_damping: 0.3
+    body_restitution: 0.5
+    communication_radius: 80.0
+    geometry: disk
+    linear_noise_stddev: 0.5
+    max_angular_speed: 1.0
+    max_linear_speed: 100.0
+    msg_success_rate:
+      alpha: 4.0e-06
+      beta: 2.8096
+      delta: 1.2457
+      gamma: 2.3807
+      type: dynamic
+    nb:
+      default_option: 100
+    radius: 26.5
+    type: pogobot
+  target_light:
+    geometry: disk
+    radius: 200
+    type: static_light
+    value: 10000
+    x: 500
+    y: 500
+parameters:
+  run_duration_max: 2000
+  run_duration_min: 100
+  test_vect:
+  - 42.0
+  - 23.0
+  - 11.0
+  - 18.0
+  tumble_duration_max: 1100
+  tumble_duration_min: 100
+result_filename_format: result_{arena_file}.feather
+save_data_period: 1.0
+save_video_period: 1.0
+seed: 2
+show_communication_channels: false
+show_lateral_LEDs: false
+show_light_levels: false
+simulation_time: 20.0
+time_step: 0.01
+window_height: 600
+window_width: 600

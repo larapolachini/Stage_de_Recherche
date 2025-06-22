@@ -149,7 +149,7 @@ if __name__ == "__main__":
         combined_df = pd.concat(all_data, ignore_index=True)
 
         plt.figure(figsize=(10, 6))
-        sns.violinplot(data=combined_df, x="arena", y="cv_area", inner="box", scale="width", cut=0)
+        sns.violinplot(data=combined_df, x="arena", y="cv_area", inner="box", density_norm="width", cut=0)
         plt.title("Distribution of CV Area by Arena")
         plt.ylabel("Coefficient of Variation (CV) of Voronoi Area")
         plt.xlabel("Arena")
