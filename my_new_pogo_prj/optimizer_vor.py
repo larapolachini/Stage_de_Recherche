@@ -18,7 +18,7 @@ os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
 SIMULATOR_BINARY = "./examples/run_and_tumble/run_and_tumble"
 BASE_CONFIG_PATH = "conf/simpleb.yaml"
 TEMP_DIR = "tmp_cma"
-N_RUNS_PER_INDIVIDUAL = 2
+N_RUNS_PER_INDIVIDUAL = 5
 PARAMETER_KEYS = [
     "run_duration_min",
     "run_duration_max",
@@ -26,8 +26,8 @@ PARAMETER_KEYS = [
     "tumble_duration_max"
 ]
 INITIAL_VALUES = [10, 50, 10, 50]  # x0, dx0, x1, dx1
-SIGMA = 800
-MAX_ITER = 2
+SIGMA = 50
+MAX_ITER = 15
 OUTPUT_CSV = "cmaes_results.csv"
 
 best_score = float("inf")
@@ -121,7 +121,11 @@ def objective_function(params):
             else:
                 print(f"Simulation failed for: {p}")
 
-    return -np.mean(cv_values) if cv_values else 1e6
+    # ---- compute generation score, log it, and return it ----
+    gen_score = np.mean(cv_values) if cv_values else 1e6
+    print(f"[GEN] mean CV = {gen_score:.4f}")
+    return -gen_score                    # CMA-ES will minimise –CV
+
 
 def main():
     os.makedirs(TEMP_DIR, exist_ok=True)

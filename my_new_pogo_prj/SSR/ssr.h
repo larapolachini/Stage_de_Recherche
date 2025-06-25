@@ -2,6 +2,12 @@
 #ifndef SSR_H_
 #define SSR_H_
 
+/* --- navigation FSMs -------------------------------------------------- */
+typedef enum { PHASE_RUN, PHASE_TUMBLE }          PhaseState;
+typedef enum { RT_PHASE_RUN, RT_PHASE_TUMBLE }    RTPhaseState;
+/* ---------------------------------------------------------------------- */
+
+
 ////////////////// BASE MACROS ////////////////// {{{1
 
 //#define DISABLE_MOTION
@@ -16,8 +22,9 @@
 //#define ENABLE_INIT_REMOVE_SUM_S
 #define ENABLE_PRE_DIFFUSION
 //#define ENABLE_HANDSHAKES
-#define ENABLE_TAU_INCREASE
+//#define ENABLE_TAU_INCREASE
 #define ENABLE_SYNC_TIME
+#define ENABLE_ALWAYS_MOVING
 #define ENABLE_STOP_DIFFUSION_AFTER_THRESHOLD
 
 #define ENABLE_PHOTO_START
@@ -177,8 +184,8 @@ extern fp_t initial_s_max_val;
 // Behaviors
 typedef enum {
     INIT_BEHAVIOR,
-    INIT_RANDOM_WALK,
-    RANDOM_WALK,
+    INIT_RUN_TUMBLE,
+    RUN_TUMBLE,
 #ifdef ENABLE_HANDSHAKES
     HANDSHAKE,
 #endif
@@ -330,6 +337,23 @@ typedef struct {
     float d_max;
     float frustration;
 
+    /* --- locomotion & run-and-tumble state ------------------------ */
+    time_reference_t timer_it;     /* stopwatch used in setup()           */
+    PhaseState       phase;        /* high-level nav phase                */
+    uint32_t         phase_start_time;
+    uint32_t         phase_duration;
+    uint8_t          tumble_direction;
+
+    uint8_t          motor_dir_left;   /* factory-calibrated directions    */
+    uint8_t          motor_dir_right;
+
+    RTPhaseState     rt_phase;         /* sub-FSM for run-and-tumble       */
+    uint32_t         rt_phase_start;
+    uint32_t         rt_phase_duration;
+    uint8_t          rt_tumble_dir;
+
+    uint8_t          data_foo[8];      /* demo array still used in code    */
+
     // Photo start values;
 #ifdef ENABLE_PHOTO_START
     int16_t last_data_b;
@@ -347,7 +371,7 @@ fp_t compute_MSE(uint8_t i);
 void compute_lambda_v_leastsquaresMSE(void);
 
 void set_behavior(behavior_t behavior);
-void behav_random_walk(void);
+void behav_run_tumble(void);
 void init_diffusion(diffusion_session_t* diff, fp_t* s, diffusion_type_t type);
 void setup_diff(diffusion_session_t* diff);
 void behav_diffusion(void);

@@ -23,7 +23,7 @@ N_RUNS_PER_INDIVIDUAL = 5
 PARAMETER_KEYS = ["run_duration_min", "run_duration_max", "tumble_duration_min", "tumble_duration_max"]
 INITIAL_VALUES = [10, 50, 10, 50]  # Reparameterized
 SIGMA = 500
-MAX_ITER = 30
+MAX_ITER = 10
 OUTPUT_CSV = "cmaes_results.csv"
 FIGURE_FOLDER = "figures"
 os.makedirs(FIGURE_FOLDER, exist_ok=True)
@@ -101,9 +101,11 @@ def run_one_simulation(p):
 def objective_function(params):
     global best_score, best_params
 
-    # Reparameterization
-    x0, dx0, x1, dx1 = params
-    p = [int(x0), int(x0 + abs(dx0)), int(x1), int(x1 + abs(dx1))]
+    p = list(map(int, params))
+
+    # Validate logical constraints
+    if not (p[0] < p[1] and p[2] < p[3]):
+        return 1e6  # heavy penalty
 
     cv_values = []
     with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -122,7 +124,7 @@ def objective_function(params):
                 print(f"[FAIL] Simulation failed for: {p}")
 
     generation_mean = np.mean(cv_values) if cv_values else 1e6
-    fitness_over_time.append(-generation_mean)
+    fitness_over_time.append(generation_mean)
     return -generation_mean
 
 def main():

@@ -65,6 +65,38 @@ def load_arena_polygon_and_bounds(arena_file, arena_surface):
 
     return polygon, polygon.bounds
 
+    
+def plot_cv_mean_across_arenas(all_df_voronoi, output_path="figures/mean_cv_by_arena.png"):
+
+
+    if all_df_voronoi.empty:
+        print("No data to plot CV mean across arenas.")
+        return
+
+    plt.figure(figsize=(10, 6))
+
+    # Plot per arena
+    for arena in all_df_voronoi["arena"].unique():
+        arena_df = all_df_voronoi[all_df_voronoi["arena"] == arena]
+        grouped = arena_df.groupby("time")["cv_area"].mean()
+        plt.plot(grouped.index, grouped.values, label=arena, alpha=0.6)
+
+    # Global mean CV across all arenas
+    global_cv = all_df_voronoi.groupby("time")["cv_area"].mean()
+    plt.plot(global_cv.index, global_cv.values, label="Mean across arenas", color="black", linewidth=2.5)
+
+    plt.xlabel("Time")
+    plt.ylabel("Mean CV of Voronoi Cell Area")
+    plt.title("Mean CV Area Over Time by Arena")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    plt.savefig("figures/mean_cv_across_arenas.png", dpi=300)
+    
+
+
+
 def run_analysis_for_arena(arena_file, arena_surface):
     arena_name = os.path.splitext(os.path.basename(arena_file))[0]
     feather_path = f"results/result_{arena_name}.feather"
@@ -101,6 +133,8 @@ def run_analysis_for_arena(arena_file, arena_surface):
     compute_overall_neighbor_degree_histogram(df, figure_folder, communication_radius=133.0, run_id=0)
     compute_overall_neighbor_degree_histogram_all_runs(df, figure_folder, communication_radius=133.0)
     compute_degree_histogram_first_last(df, figure_folder, communication_radius=133.0)
+    
+
 
     print(f" Finished: {arena_name}")
 
@@ -147,6 +181,7 @@ if __name__ == "__main__":
 
     if all_data:
         combined_df = pd.concat(all_data, ignore_index=True)
+        plot_cv_mean_across_arenas(combined_df, output_path="figures/mean_cv_area_over_time_by_arena.png")
 
         plt.figure(figsize=(10, 6))
         sns.violinplot(data=combined_df, x="arena", y="cv_area", inner="box", density_norm="width", cut=0)
@@ -158,6 +193,6 @@ if __name__ == "__main__":
 
         os.makedirs("figures", exist_ok=True)
         plt.savefig("figures/violin_cv_area_by_arena.png", dpi=300)
-        plt.show()
     else:
         print(" No data available for violin plot.")
+

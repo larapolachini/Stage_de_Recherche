@@ -21,16 +21,16 @@ void set_motion(motion_t new_motion) {
             pogobot_motor_set(motorR, motorStop);
             break;
         case FORWARD:
-            pogobot_motor_set(motorL, motorFull);
-            pogobot_motor_set(motorR, motorFull);
+            pogobot_motor_set(motorL, motorQuarter);
+            pogobot_motor_set(motorR, motorQuarter);
             break;
         case LEFT:
-            pogobot_motor_set(motorL, motorFull);
+            pogobot_motor_set(motorL, motorQuarter);
             pogobot_motor_set(motorR, motorStop);
             break;
         case RIGHT:
             pogobot_motor_set(motorL, motorStop);
-            pogobot_motor_set(motorR, motorFull);
+            pogobot_motor_set(motorR, motorQuarter);
             break;
     }
 #endif

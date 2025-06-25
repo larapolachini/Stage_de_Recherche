@@ -6,13 +6,25 @@
 #include "util.h"
 #include "colors.h"
 #include "ssr.h"
+#include <stdlib.h>
+
+static void transition_run_tumble(uint32_t);
+
+/* ---------- run-and-tumble global parameters ---------- */
+uint32_t run_duration_min = 200; 
+uint32_t run_duration_max = 1200;
+uint32_t tumble_duration_min = 100;
+uint32_t tumble_duration_max = 1100;
+uint8_t enable_backward_dir = 0;
+float    test_vect[4]        = {1.f, 2.f, 3.f, 4.f};
+/* ------------------------------------------------------ */
+
 
 // Don't forget to call this macro in the main .c file of your project (only once!)
 REGISTER_USERDATA(USERDATA);
 // Now, members of the USERDATA struct can be accessed through mydata->MEMBER. E.g. mydata->age
 //  On real robots, the compiler will automatically optimize the code to access member variables as if they were true globals.
 
-///////////////////// GLOBAL PARAMETERS SET BY CONFIG FILE ///////////////////// {{{1
 
 uint8_t wait_for_min_nb_neighbors = 1;
 
@@ -21,6 +33,7 @@ fp_t initial_s_max_val = FROM_FLOAT(1.f);
 fp_t diffusion_convergence_threshold = FROM_FLOAT(0.1f);
 uint16_t diffusion_min_nb_points = 3;
 fp_t diffusion_min_abs_s = FROM_FLOAT(0.e-05f);
+
 
 #ifdef ENABLE_TAU_INCREASE
 fp_t tau = FROM_FLOAT((0.01f)); // 1.f/30.f
@@ -36,9 +49,9 @@ fp_t min_s_val_to_update_led = FROM_FLOAT(0.01f);
 //#define MAX_AGE (0.50e3)
 #define MAX_AGE (1.20e3)
 uint32_t max_age = MAX_AGE;
-uint32_t ms_initial_random_walk               = MAX_AGE * 0;
-uint32_t ms_random_walk_choice                = MAX_AGE * 30;
-uint32_t ms_randow_walk                       = MAX_AGE * 0;
+uint32_t ms_initial_run_tumble               = MAX_AGE * 0;
+uint32_t ms_run_tumble_choice                = MAX_AGE * 10;
+uint32_t ms_run_tumble                       = MAX_AGE * 0;
 uint32_t ms_handshake                         = MAX_AGE * 10;
 uint32_t ms_diffusion                         = MAX_AGE * 100;
 uint32_t ms_diffusion_it                      = MAX_AGE * 1;
@@ -56,9 +69,9 @@ fp_t min_s_val_to_update_led = FROM_FLOAT(0.03f);
 
 #define MAX_AGE (1.20e3)
 uint32_t max_age = MAX_AGE;
-uint32_t ms_initial_random_walk               = MAX_AGE * 0;
-uint32_t ms_random_walk_choice                = MAX_AGE * 2;
-uint32_t ms_randow_walk                       = MAX_AGE * 0;
+uint32_t ms_initial_run_tumble                = MAX_AGE * 0;
+uint32_t ms_run_tumble_choice                 = MAX_AGE * 10;
+uint32_t ms_run_tumble                        = MAX_AGE * 0;
 uint32_t ms_handshake                         = MAX_AGE * 5;
 uint32_t ms_diffusion                         = MAX_AGE * 100;
 uint32_t ms_diffusion_it                      = MAX_AGE;
@@ -74,6 +87,72 @@ uint32_t ms_iteration = 0; // Set in ``setup()``
 
 ///////////////////// MAIN CODE ///////////////////// {{{1
 
+/**
+ * @brief Generates a random duration for the run phase.
+ *
+ * The run phase duration is randomly chosen
+ *
+ * @return uint32_t Random run duration in milliseconds.
+ */
+static uint32_t get_run_duration(void) {
+    return run_duration_min + (rand() % (run_duration_max - run_duration_min + 1));
+}
+
+/**
+ * @brief Generates a random duration for the tumble phase.
+ *
+ * The tumble phase duration is randomly chosen
+ *
+ * @return uint32_t Random tumble duration in milliseconds.
+ */
+static uint32_t get_tumble_duration(void) {
+    return tumble_duration_min + (rand() % (tumble_duration_max - tumble_duration_min + 1));
+}
+
+/**
+ * @brief Set the direction of the robot to go forward or backward
+ *
+ * @param dir false for forward, true for backward
+ */
+static void set_robot_direction(bool dir) {
+    if (!enable_backward_dir)
+        return;
+    if (dir) {
+        pogobot_motor_dir_set(motorL, (mydata->motor_dir_left  == 0 ? 1 : 0));
+        pogobot_motor_dir_set(motorR, (mydata->motor_dir_right == 0 ? 1 : 0));
+    } else {
+        pogobot_motor_dir_set(motorL, mydata->motor_dir_left);
+        pogobot_motor_dir_set(motorR, mydata->motor_dir_right);
+    }
+}
+
+
+/**
+ * @brief Initialization function for the robot.
+ *
+ * This function is executed once at startup (cf 'pogobot_start' call in main()).
+ * It seeds the random number generator, initializes timers and system parameters,
+ * sets up the main loop frequency, and configures the initial state for the
+ * run-and-tumble behavior.
+ */
+
+
+    
+
+/**
+ * @brief Main control loop for executing behavior.
+ *
+ * This function is called continuously at the frequency defined in user_init().
+ * It checks if the current phase duration has elapsed and, if so, transitions to
+ * the next phase. Depending on the current phase, it sets the robot's motors to
+ * either move straight (run phase) or rotate (tumble phase). It also provides periodic
+ * debugging output.
+ */
+
+    
+
+
+
 inline static bool is_number_valid(fp_t nb) {
     return IS_NUMBER_VALID(nb);
 }
@@ -88,11 +167,11 @@ void set_behavior(behavior_t behavior) {
             pogobot_led_setColors(1, 0, 0, 2);
             break;
 
-        case INIT_RANDOM_WALK:
+        case INIT_RUN_TUMBLE:
             pogobot_led_setColors(1, 0, 0, 2);
             break;
 
-        case RANDOM_WALK:
+        case RUN_TUMBLE:
             pogobot_led_setColors(10, 0, 0, 2);
             break;
 
@@ -203,7 +282,7 @@ void setup(void) {
     init_rand();
 
     // Init ms_iteration
-    ms_iteration = ms_randow_walk + ms_diffusion + ms_collective_avg_lambda + ms_start_it_waiting_time
+    ms_iteration = ms_run_tumble + ms_diffusion + ms_collective_avg_lambda + ms_start_it_waiting_time
 #ifdef ENABLE_FINAL_LAMBDA
         + ms_collective_final_lambda
 #endif
@@ -265,20 +344,44 @@ void setup(void) {
 }
 
 
-void behav_random_walk(void) {
-    uint32_t const current_time = current_time_milliseconds();
-    if(current_time - mydata->behavior_start_ms > ms_random_walk_choice) {
-        mydata->behavior_start_ms = current_time;
-        //int r = rand() % 30;
-        int r = rand() % 3;
-        if(r==0) {
-            set_motion(FORWARD);
-        } else if(r==1) {
-            set_motion(LEFT);
-        } else if(r==2) {
-            set_motion(RIGHT);
+void behav_run_tumble(void)
+{
+    uint32_t now = current_time_milliseconds();
+
+    if (now - mydata->rt_phase_start >= mydata->rt_phase_duration) {
+        if (mydata->rt_phase == RT_PHASE_RUN) {
+            mydata->rt_phase          = RT_PHASE_TUMBLE;
+            mydata->rt_phase_duration = get_tumble_duration();
+            mydata->rt_tumble_dir     = rand() % 2;
+            set_robot_direction(false);
         } else {
-            set_motion(STOP);
+            mydata->rt_phase          = RT_PHASE_RUN;
+            mydata->rt_phase_duration = get_run_duration();
+            set_robot_direction((rand() % 2) == 0);
+        }
+        mydata->rt_phase_start = now;
+    }
+
+    if (mydata->rt_phase == RT_PHASE_RUN) {
+        // Run phase: the robot moves forward.
+        // Set LED color to green to indicate running.
+        pogobot_led_setColor(0, 255, 0);
+        // Set both motors to full speed for straight-line motion.
+        pogobot_motor_set(motorL, motorFull);
+        pogobot_motor_set(motorR, motorFull);          /* green */
+    } else {
+        // Tumble phase: the robot rotates in place.
+        // Set LED color to red to indicate tumbling.
+        pogobot_led_setColor(255, 0, 0);
+        // Rotate the robot by driving one motor while stopping the other.
+        if (mydata->rt_tumble_dir == 0) {
+            // Tumble left: stop the left motor.
+            pogobot_motor_set(motorL, motorStop);
+            pogobot_motor_set(motorR, motorFull);
+        } else {
+            // Tumble right: stop the right motor.
+            pogobot_motor_set(motorL, motorFull);
+            pogobot_motor_set(motorR, motorStop);
         }
     }
 }
@@ -877,14 +980,14 @@ void end_iteration(void) {
     printf0("END ITERATION: avg_lambda:%Q16.16\n", TO_Q16_16(mydata->curr_diff->avg_lambda));
     uint32_t const current_time = current_time_milliseconds();
     mydata->time_last_it = current_time;
-    mydata->ms_start_it = current_time - ms_initial_random_walk;
+    mydata->ms_start_it = current_time - ms_initial_run_tumble;
 }
 
 
 
 // Transition function prototypes:
 static void transition_waiting_time(uint32_t ct);
-static void transition_random_walk(uint32_t ct);
+static void transition_run_tumble(uint32_t ct);
 #ifdef ENABLE_HANDSHAKES
 static void transition_handshake(uint32_t ct);
 #endif
@@ -929,9 +1032,10 @@ void init_transitions(void) {
     // Reset the count
     num_transitions = 0;
 
+
     // Add transitions one by one
     transitions[num_transitions++] = (transition_t){ ms_start_it_waiting_time, WAITING_TIME, transition_waiting_time };
-    transitions[num_transitions++] = (transition_t){ ms_randow_walk, RANDOM_WALK, transition_random_walk };
+    transitions[num_transitions++] = (transition_t){ ms_run_tumble, RUN_TUMBLE, transition_run_tumble };
 #ifdef ENABLE_HANDSHAKES
     transitions[num_transitions++] = (transition_t){ ms_handshake, HANDSHAKE, transition_handshake };
 #endif
@@ -958,12 +1062,13 @@ static void transition_waiting_time(uint32_t ct) {
     }
 }
 
-static void transition_random_walk(uint32_t ct) {
-    if (mydata->current_behavior != RANDOM_WALK) {
+static void transition_run_tumble(uint32_t ct)
+{
+    if (mydata->current_behavior != RUN_TUMBLE) {
         mydata->behavior_start_ms = ct;
         mydata->enable_message_sending = false;
-        printf0("  it=%d RANDOM_WALK\n", mydata->current_it);
-        set_behavior(RANDOM_WALK);
+        printf0("  it=%d RUN_TUMBLE\n", mydata->current_it);
+        set_behavior(RUN_TUMBLE);
     }
 }
 
@@ -982,6 +1087,9 @@ static void transition_handshake(uint32_t ct) {
 #ifdef ENABLE_PRE_DIFFUSION
 static void transition_pre_diffusion(uint32_t ct) {
     if (mydata->current_behavior != PRE_DIFFUSION) {
+//#ifndef ENABLE_ALWAYS_MOVING
+    set_motion(STOP);
+//#endif
         fp_t s[NUMBER_DIFF];
         for (uint8_t i = 0; i < NUMBER_DIFF; i++) {
             s[i] = ((uint32_t)(rand() + pogobot_helper_getid()) % 2 == 0)
@@ -996,6 +1104,9 @@ static void transition_pre_diffusion(uint32_t ct) {
 
 static void transition_diffusion(uint32_t ct) {
     if (mydata->current_behavior != DIFFUSION) {
+//#ifndef ENABLE_ALWAYS_MOVING
+    set_motion(STOP);
+//#endif
         fp_t s[NUMBER_DIFF];
         for (uint8_t i = 0; i < NUMBER_DIFF; i++) {
             s[i] = (pogobot_helper_getid() % 2 == 0)
@@ -1018,6 +1129,9 @@ static void transition_avg_lambda(uint32_t ct) {
 #else
     if (mydata->current_behavior != CONSENSUS_LAMBDA) {
 #endif
+//#ifndef ENABLE_ALWAYS_MOVING
+    set_motion(STOP);
+//#endif
         end_diffusion();
         printf0("  it=%d CONSENSUS_LAMBDA\n", mydata->current_it);
         init_coll_avg_lambda();
@@ -1032,6 +1146,9 @@ static void transition_final_lambda(uint32_t ct) {
 #else
     if (mydata->current_behavior != FINAL_LAMBDA) {
 #endif
+//#ifndef ENABLE_ALWAYS_MOVING
+    set_motion(STOP);
+//#endif
         end_coll_avg_lambda();
         printf0("  it=%d FINAL_LAMBDA\n", mydata->current_it);
         init_coll_final_lambda();
@@ -1042,12 +1159,26 @@ static void transition_final_lambda(uint32_t ct) {
 
 // --- Main iteration function ---
 void iteration(void) {
+
 //    time_reference_t timer_debug2;
 //    pogobot_stopwatch_reset(&timer_debug2);
     uint32_t current_time = current_time_milliseconds();
-    uint32_t ticks_after_init_phase = current_time - ms_initial_random_walk;
+
+    // Example use of the USERDATA data array.
+    //mydata->data_foo[0] = 42;
+    uint32_t ticks_after_init_phase = current_time - ms_initial_run_tumble;
     uint32_t ms_elapsed_since_start_it = ticks_after_init_phase - mydata->ms_start_it;
     behavior_t current_behavior = mydata->current_behavior;
+
+    // Debug: Print phase information periodically for robot with ID 0.
+    if (pogobot_ticks % 1000 == 0 && pogobot_helper_getid() == 0) {
+        uint32_t now = current_time_milliseconds();
+        printf("Phase: %s, Phase Duration: %lums, Elapsed: %lums\n",
+               (mydata->rt_phase == RT_PHASE_RUN) ? "RUN" : "TUMBLE",
+               mydata->rt_phase_duration,
+               now - mydata->rt_phase_start);
+    }
+
 
 #if defined(ENABLE_PHOTO_START)
     if (current_behavior == INIT_BEHAVIOR) {
@@ -1076,14 +1207,14 @@ void iteration(void) {
     set_color_from_lambda(mydata->curr_diff->avg_lambda, 1);
 #endif
 
-    // Special-case: initial random walk phase
-    if (current_time < ms_initial_random_walk) {
-        if (current_behavior != INIT_RANDOM_WALK) {
+    // Special-case: initial random walk/ run tumble phase
+    if (current_time < ms_initial_run_tumble) {
+        if (current_behavior != INIT_RUN_TUMBLE) {
             mydata->behavior_start_ms = current_time;
             mydata->enable_message_sending = false;
-            printf0("Initial random walk\n");
+            printf0("Initial run tumble\n");
             pogobot_led_setColors(0, 0, 0, 0);
-            set_behavior(INIT_RANDOM_WALK);
+            set_behavior(INIT_RUN_TUMBLE);
         }
         mydata->time_last_it = current_time;
     } else {
@@ -1102,6 +1233,9 @@ void iteration(void) {
             end_iteration();
         }
     }
+//#ifdef ENABLE_ALWAYS_MOVING
+//    behav_run_tumble();
+//#endif
 
 //    printf0("iteration1: elapsed:%uųs   ",
 //             pogobot_stopwatch_get_elapsed_microseconds(&timer_debug2));
@@ -1109,9 +1243,11 @@ void iteration(void) {
 
     // Dispatch behavior function based on current behavior.
     switch (mydata->current_behavior) {
-        case INIT_RANDOM_WALK:
-        case RANDOM_WALK:
-            behav_random_walk();
+        case INIT_RUN_TUMBLE:
+        case RUN_TUMBLE:
+//#ifndef ENABLE_ALWAYS_MOVING
+            behav_run_tumble();
+//#endif
             break;
 #ifdef ENABLE_HANDSHAKES
         case HANDSHAKE:
@@ -1383,7 +1519,7 @@ void loop(void) {
 }
 
 
-#ifdef SIMULATOR
+
 void init_fp_from_configuration(fp_t* var, char const* name, fp_t const default_value) {
     float tmp;
     init_float_from_configuration(&tmp, name, TO_FLOAT(default_value));
@@ -1398,6 +1534,13 @@ void global_setup() {
     init_from_configuration(diffusion_min_nb_points);
     init_from_configuration(diffusion_min_abs_s);
 
+    init_from_configuration(run_duration_min);
+    init_from_configuration(run_duration_max);
+    init_from_configuration(tumble_duration_min);
+    init_from_configuration(tumble_duration_max);
+    init_from_configuration(enable_backward_dir);
+    init_array_from_configuration(test_vect);
+
     init_from_configuration(tau);
 #ifdef ENABLE_TAU_INCREASE
     init_from_configuration(tau_inc);
@@ -1409,9 +1552,9 @@ void global_setup() {
     init_array_from_configuration(class_centroids);
 
     // Set temporal informations
-    uint32_t age_initial_random_walk               = 0;
-    uint32_t age_random_walk_choice                = 0;
-    uint32_t age_randow_walk                       = 0;
+    uint32_t age_initial_run_tumble               = 0;
+    uint32_t age_run_tumble_choice                = 0;
+    uint32_t age_run_tumble                       = 0;
     uint32_t age_handshake                         = 0;
     uint32_t age_diffusion                         = 0;
     uint32_t age_diffusion_it                      = 0;
@@ -1423,9 +1566,9 @@ void global_setup() {
     uint32_t age_start_it_waiting_time             = 0;
 
     init_from_configuration(max_age);
-    init_from_configuration(age_initial_random_walk);
-    init_from_configuration(age_random_walk_choice);
-    init_from_configuration(age_randow_walk);
+    init_from_configuration(age_initial_run_tumble);
+    init_from_configuration(age_run_tumble_choice);
+    init_from_configuration(age_run_tumble);
     init_from_configuration(age_handshake);
     init_from_configuration(age_diffusion);
     init_from_configuration(age_diffusion_it);
@@ -1438,9 +1581,9 @@ void global_setup() {
 
 #define _init_if_not_zero(x, y) do { if (x > 0) { y = x * max_age; } } while(0)
 
-    _init_if_not_zero(age_initial_random_walk, ms_initial_random_walk);
-    _init_if_not_zero(age_random_walk_choice, ms_random_walk_choice);
-    _init_if_not_zero(age_randow_walk, ms_randow_walk);
+    _init_if_not_zero(age_initial_run_tumble, ms_initial_run_tumble);
+    _init_if_not_zero(age_run_tumble_choice, ms_run_tumble_choice);
+    _init_if_not_zero(age_run_tumble, ms_run_tumble);
     _init_if_not_zero(age_handshake, ms_handshake);
     _init_if_not_zero(age_diffusion, ms_diffusion);
     _init_if_not_zero(age_diffusion_it, ms_diffusion_it);
@@ -1460,7 +1603,7 @@ void create_data_schema() {
     data_add_column_int8("nb_neighbors");
     data_add_column_int32("current_it");
 
-    data_add_column_double("s");
+    data_add_column_double("s"); // Here too
     data_add_column_double("lambda");
     data_add_column_double("avg_lambda");
 }
@@ -1473,11 +1616,10 @@ void export_data() {
     data_set_value_int8("nb_neighbors", mydata->nb_neighbors);
     data_set_value_int32("current_it", mydata->current_it);
 
-    data_set_value_double("s", TO_FLOAT(mydata->curr_diff->s[0]));
+    data_set_value_double("s", TO_FLOAT(mydata->curr_diff->s[0]));    //Modify for s0,1,2 
     data_set_value_double("lambda", TO_FLOAT(mydata->diff1.lambda));
     data_set_value_double("avg_lambda", TO_FLOAT(mydata->diff1.avg_lambda));
 }
-#endif
 
 
 int main(void) {
@@ -1495,3 +1637,4 @@ int main(void) {
 // MODELINE "{{{1
 // vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
 // vim:foldmethod=marker
+
