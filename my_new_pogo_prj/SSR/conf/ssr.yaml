@@ -95,7 +95,7 @@ objects:
     # An object category containing the Pogobot robots
     robots:
         type: pogobot       # Category type pertaining to Pogobots
-        nb: 15              # Number of objects (Pogobots) in this category
+        nb: 25              # Number of objects (Pogobots) in this category
         geometry: disk                  # Pogobots are always disk-shaped
         radius: 26.5                    # In mm
 
@@ -179,14 +179,12 @@ parameters:
     age_collective_final_lambda_it: 1
     age_start_it_waiting_time: 1
 
-     # --- Run-and-tumble parameters -----------------
-    run_duration_min: 60     # ms  (default from demo)
-    run_duration_max: 113
-    tumble_duration_min: 2675
-    tumble_duration_max: 6459
+    # --- Run-and-tumble parameters -----------------
+    run_duration_min: 2000     # ms  (default from demo)
+    run_duration_max: 6000
+    tumble_duration_min: 500
+    tumble_duration_max: 800
     enable_backward_dir: false   # true lets a RUN phase sometimes go backwards
-
-
 
 # MODELINE "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8

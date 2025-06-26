@@ -6,7 +6,6 @@
 #include "util.h"
 #include "colors.h"
 #include "ssr.h"
-#include <stdlib.h>
 
 static void transition_run_tumble(uint32_t);
 
@@ -19,12 +18,12 @@ uint8_t enable_backward_dir = 0;
 float    test_vect[4]        = {1.f, 2.f, 3.f, 4.f};
 /* ------------------------------------------------------ */
 
-
 // Don't forget to call this macro in the main .c file of your project (only once!)
 REGISTER_USERDATA(USERDATA);
 // Now, members of the USERDATA struct can be accessed through mydata->MEMBER. E.g. mydata->age
 //  On real robots, the compiler will automatically optimize the code to access member variables as if they were true globals.
 
+///////////////////// GLOBAL PARAMETERS SET BY CONFIG FILE ///////////////////// {{{1
 
 uint8_t wait_for_min_nb_neighbors = 1;
 
@@ -33,7 +32,6 @@ fp_t initial_s_max_val = FROM_FLOAT(1.f);
 fp_t diffusion_convergence_threshold = FROM_FLOAT(0.1f);
 uint16_t diffusion_min_nb_points = 3;
 fp_t diffusion_min_abs_s = FROM_FLOAT(0.e-05f);
-
 
 #ifdef ENABLE_TAU_INCREASE
 fp_t tau = FROM_FLOAT((0.01f)); // 1.f/30.f
@@ -50,7 +48,7 @@ fp_t min_s_val_to_update_led = FROM_FLOAT(0.01f);
 #define MAX_AGE (1.20e3)
 uint32_t max_age = MAX_AGE;
 uint32_t ms_initial_run_tumble               = MAX_AGE * 0;
-uint32_t ms_run_tumble_choice                = MAX_AGE * 10;
+uint32_t ms_run_tumble_choice                = MAX_AGE * 30;
 uint32_t ms_run_tumble                       = MAX_AGE * 0;
 uint32_t ms_handshake                         = MAX_AGE * 10;
 uint32_t ms_diffusion                         = MAX_AGE * 100;
@@ -70,7 +68,7 @@ fp_t min_s_val_to_update_led = FROM_FLOAT(0.03f);
 #define MAX_AGE (1.20e3)
 uint32_t max_age = MAX_AGE;
 uint32_t ms_initial_run_tumble                = MAX_AGE * 0;
-uint32_t ms_run_tumble_choice                 = MAX_AGE * 10;
+uint32_t ms_run_tumble_choice                 = MAX_AGE * 2;
 uint32_t ms_run_tumble                        = MAX_AGE * 0;
 uint32_t ms_handshake                         = MAX_AGE * 5;
 uint32_t ms_diffusion                         = MAX_AGE * 100;
@@ -125,33 +123,6 @@ static void set_robot_direction(bool dir) {
         pogobot_motor_dir_set(motorR, mydata->motor_dir_right);
     }
 }
-
-
-/**
- * @brief Initialization function for the robot.
- *
- * This function is executed once at startup (cf 'pogobot_start' call in main()).
- * It seeds the random number generator, initializes timers and system parameters,
- * sets up the main loop frequency, and configures the initial state for the
- * run-and-tumble behavior.
- */
-
-
-    
-
-/**
- * @brief Main control loop for executing behavior.
- *
- * This function is called continuously at the frequency defined in user_init().
- * It checks if the current phase duration has elapsed and, if so, transitions to
- * the next phase. Depending on the current phase, it sets the robot's motors to
- * either move straight (run phase) or rotate (tumble phase). It also provides periodic
- * debugging output.
- */
-
-    
-
-
 
 inline static bool is_number_valid(fp_t nb) {
     return IS_NUMBER_VALID(nb);
@@ -344,7 +315,7 @@ void setup(void) {
 }
 
 
-void behav_run_tumble(void)
+void behav_run_tumble(void) 
 {
     uint32_t now = current_time_milliseconds();
 
@@ -385,6 +356,7 @@ void behav_run_tumble(void)
         }
     }
 }
+
 
 
 void init_diffusion(diffusion_session_t* diff, fp_t* s, diffusion_type_t type) {
@@ -1010,7 +982,7 @@ typedef struct {
 //// Transition table
 //static const transition_t transitions[] = {
 //    { ms_start_it_waiting_time, WAITING_TIME, transition_waiting_time },
-//    { ms_randow_walk,           RANDOM_WALK,  transition_random_walk },
+//    { ms_run_tumble,           RUN_TUMBLE,  transition_run_tumble },
 //#ifdef ENABLE_HANDSHAKES
 //    { ms_handshake,             HANDSHAKE,    transition_handshake },
 //#endif
@@ -1031,7 +1003,6 @@ static int num_transitions = 0;
 void init_transitions(void) {
     // Reset the count
     num_transitions = 0;
-
 
     // Add transitions one by one
     transitions[num_transitions++] = (transition_t){ ms_start_it_waiting_time, WAITING_TIME, transition_waiting_time };
@@ -1062,8 +1033,7 @@ static void transition_waiting_time(uint32_t ct) {
     }
 }
 
-static void transition_run_tumble(uint32_t ct)
-{
+static void transition_run_tumble(uint32_t ct) {
     if (mydata->current_behavior != RUN_TUMBLE) {
         mydata->behavior_start_ms = ct;
         mydata->enable_message_sending = false;
@@ -1087,9 +1057,6 @@ static void transition_handshake(uint32_t ct) {
 #ifdef ENABLE_PRE_DIFFUSION
 static void transition_pre_diffusion(uint32_t ct) {
     if (mydata->current_behavior != PRE_DIFFUSION) {
-//#ifndef ENABLE_ALWAYS_MOVING
-    set_motion(STOP);
-//#endif
         fp_t s[NUMBER_DIFF];
         for (uint8_t i = 0; i < NUMBER_DIFF; i++) {
             s[i] = ((uint32_t)(rand() + pogobot_helper_getid()) % 2 == 0)
@@ -1104,9 +1071,6 @@ static void transition_pre_diffusion(uint32_t ct) {
 
 static void transition_diffusion(uint32_t ct) {
     if (mydata->current_behavior != DIFFUSION) {
-//#ifndef ENABLE_ALWAYS_MOVING
-    set_motion(STOP);
-//#endif
         fp_t s[NUMBER_DIFF];
         for (uint8_t i = 0; i < NUMBER_DIFF; i++) {
             s[i] = (pogobot_helper_getid() % 2 == 0)
@@ -1129,9 +1093,6 @@ static void transition_avg_lambda(uint32_t ct) {
 #else
     if (mydata->current_behavior != CONSENSUS_LAMBDA) {
 #endif
-//#ifndef ENABLE_ALWAYS_MOVING
-    set_motion(STOP);
-//#endif
         end_diffusion();
         printf0("  it=%d CONSENSUS_LAMBDA\n", mydata->current_it);
         init_coll_avg_lambda();
@@ -1146,9 +1107,6 @@ static void transition_final_lambda(uint32_t ct) {
 #else
     if (mydata->current_behavior != FINAL_LAMBDA) {
 #endif
-//#ifndef ENABLE_ALWAYS_MOVING
-    set_motion(STOP);
-//#endif
         end_coll_avg_lambda();
         printf0("  it=%d FINAL_LAMBDA\n", mydata->current_it);
         init_coll_final_lambda();
@@ -1159,18 +1117,14 @@ static void transition_final_lambda(uint32_t ct) {
 
 // --- Main iteration function ---
 void iteration(void) {
-
 //    time_reference_t timer_debug2;
 //    pogobot_stopwatch_reset(&timer_debug2);
     uint32_t current_time = current_time_milliseconds();
-
-    // Example use of the USERDATA data array.
-    //mydata->data_foo[0] = 42;
     uint32_t ticks_after_init_phase = current_time - ms_initial_run_tumble;
     uint32_t ms_elapsed_since_start_it = ticks_after_init_phase - mydata->ms_start_it;
     behavior_t current_behavior = mydata->current_behavior;
 
-    // Debug: Print phase information periodically for robot with ID 0.
+     // Debug: Print phase information periodically for robot with ID 0.
     if (pogobot_ticks % 1000 == 0 && pogobot_helper_getid() == 0) {
         uint32_t now = current_time_milliseconds();
         printf("Phase: %s, Phase Duration: %lums, Elapsed: %lums\n",
@@ -1178,7 +1132,6 @@ void iteration(void) {
                mydata->rt_phase_duration,
                now - mydata->rt_phase_start);
     }
-
 
 #if defined(ENABLE_PHOTO_START)
     if (current_behavior == INIT_BEHAVIOR) {
@@ -1207,7 +1160,7 @@ void iteration(void) {
     set_color_from_lambda(mydata->curr_diff->avg_lambda, 1);
 #endif
 
-    // Special-case: initial random walk/ run tumble phase
+    // Special-case: initial run tumble phase
     if (current_time < ms_initial_run_tumble) {
         if (current_behavior != INIT_RUN_TUMBLE) {
             mydata->behavior_start_ms = current_time;
@@ -1233,9 +1186,6 @@ void iteration(void) {
             end_iteration();
         }
     }
-//#ifdef ENABLE_ALWAYS_MOVING
-//    behav_run_tumble();
-//#endif
 
 //    printf0("iteration1: elapsed:%uųs   ",
 //             pogobot_stopwatch_get_elapsed_microseconds(&timer_debug2));
@@ -1245,9 +1195,7 @@ void iteration(void) {
     switch (mydata->current_behavior) {
         case INIT_RUN_TUMBLE:
         case RUN_TUMBLE:
-//#ifndef ENABLE_ALWAYS_MOVING
             behav_run_tumble();
-//#endif
             break;
 #ifdef ENABLE_HANDSHAKES
         case HANDSHAKE:
@@ -1519,7 +1467,7 @@ void loop(void) {
 }
 
 
-
+#ifdef SIMULATOR
 void init_fp_from_configuration(fp_t* var, char const* name, fp_t const default_value) {
     float tmp;
     init_float_from_configuration(&tmp, name, TO_FLOAT(default_value));
@@ -1603,7 +1551,7 @@ void create_data_schema() {
     data_add_column_int8("nb_neighbors");
     data_add_column_int32("current_it");
 
-    data_add_column_double("s"); // Here too
+    data_add_column_double("s");
     data_add_column_double("lambda");
     data_add_column_double("avg_lambda");
 }
@@ -1616,10 +1564,11 @@ void export_data() {
     data_set_value_int8("nb_neighbors", mydata->nb_neighbors);
     data_set_value_int32("current_it", mydata->current_it);
 
-    data_set_value_double("s", TO_FLOAT(mydata->curr_diff->s[0]));    //Modify for s0,1,2 
+    data_set_value_double("s", TO_FLOAT(mydata->curr_diff->s[0]));
     data_set_value_double("lambda", TO_FLOAT(mydata->diff1.lambda));
     data_set_value_double("avg_lambda", TO_FLOAT(mydata->diff1.avg_lambda));
 }
+#endif
 
 
 int main(void) {
@@ -1637,4 +1586,3 @@ int main(void) {
 // MODELINE "{{{1
 // vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
 // vim:foldmethod=marker
-

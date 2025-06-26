@@ -122,9 +122,9 @@ parameters:
     diffusion_min_abs_s: 0.e-05
     min_s_val_to_update_led: 0.0
 
-    age_initial_random_walk: 0
-    age_random_walk_choice: 30
-    age_randow_walk: 0
+    age_initial_run_tumble: 0
+    age_run_tumble_choice: 30
+    age_run_tumble: 0
     age_handshake: 5
     age_diffusion: 600
     age_diffusion_it: 1
@@ -134,6 +134,13 @@ parameters:
     age_collective_final_lambda: 150
     age_collective_final_lambda_it: 1
     age_start_it_waiting_time: 1
+
+    # --- Run-and-tumble parameters -----------------
+    run_duration_min: 60     # ms  (default from demo)
+    run_duration_max: 113
+    tumble_duration_min: 2675
+    tumble_duration_max: 6459
+    enable_backward_dir: false   # true lets a RUN phase sometimes go backwards
 
 # MODELINE "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8

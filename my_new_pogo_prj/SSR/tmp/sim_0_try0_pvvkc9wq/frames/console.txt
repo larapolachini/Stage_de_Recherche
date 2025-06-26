@@ -1,0 +1,616 @@
+[2025-06-26 12:54:01.917] [info] Initializing SDL version 2.30.0
+[2025-06-26 12:54:02.083] [info] Arena walls created from CSV file: /usr/local/share/pogosim/arenas/star.csv
+[2025-06-26 12:54:02.133] [info] Initializing all robots...
+[2025-06-26 12:54:02.133] [info] Global initialization...
+[2025-06-26 12:54:02.133] [info] [ROBOT #0] [PRINTF] 
+[2025-06-26 12:54:02.133] [info] [ROBOT #0] [PRINTF] init ok
+[2025-06-26 12:54:02.134] [info] Deleting old data files in directory: /home/larapolachini/Stage/Stage_de_Recherche/my_new_pogo_prj/SSR/tmp/sim_0_try0_pvvkc9wq/frames
+[2025-06-26 12:54:02.134] [info] Launching the main simulation loop.
+[2025-06-26 12:54:02.134] [info] Welcome to the Pogosim's GUI. This is an help message...
+[2025-06-26 12:54:02.134] [info] Here is a list of shortcuts that can be used to control the GUI:
+[2025-06-26 12:54:02.134] [info]  - F1: Help message
+[2025-06-26 12:54:02.134] [info]  - F3: Slow down the simulation
+[2025-06-26 12:54:02.134] [info]  - F4: Speed up the simulation
+[2025-06-26 12:54:02.134] [info]  - F5: Show/Hide the communication channels, below/above the other objects
+[2025-06-26 12:54:02.134] [info]  - F6: Show/Hide the lateral LEDs
+[2025-06-26 12:54:02.134] [info]  - F7: Show/Hide the light level
+[2025-06-26 12:54:02.134] [info]  - ESC: quit the simulation
+[2025-06-26 12:54:02.134] [info]  - SPACE: pause the simulation
+[2025-06-26 12:54:02.134] [info]  - DOWN, UP, LEFT, RIGHT: move the visualisation coordinates
+[2025-06-26 12:54:02.134] [info]  - Right-Click + Mouse move: move the visualisation coordinates
+[2025-06-26 12:54:02.134] [info]  - PLUS, MINUS or Mouse Wheel: Zoom up or down
+[2025-06-26 12:54:02.134] [info]  - 0: Reset the zoom and visualization coordinates
+[2025-06-26 12:54:02.159] [info] [ROBOT #0] [PRINTF] Phase: TUMBLE, Phase Duration: 0ms, Elapsed: 4294941441ms
+[2025-06-26 12:54:02.305] [info] [ROBOT #0] [PRINTF] Detected light is above threshold. Starting experiment!
+[2025-06-26 12:54:02.307] [info] [ROBOT #0] [PRINTF] Initial run tumble
+[2025-06-26 12:54:07.783] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4255ms, Elapsed: 297ms
+[2025-06-26 12:54:11.624] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5595ms, Elapsed: 5280ms
+[2025-06-26 12:54:14.978] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 3536ms, Elapsed: 1848ms
+[2025-06-26 12:54:18.521] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5077ms, Elapsed: 1485ms
+[2025-06-26 12:54:20.462] [info] [ROBOT #0] [PRINTF] BEGIN ITERATION it=0
+[2025-06-26 12:54:20.462] [info] [ROBOT #0] [PRINTF]   it=0 WAITING_TIME
+[2025-06-26 12:54:20.632] [info] [ROBOT #0] [PRINTF]   it=0 RUN_TUMBLE
+[2025-06-26 12:54:21.969] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5651ms, Elapsed: 5313ms
+[2025-06-26 12:54:25.391] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4392ms, Elapsed: 2937ms
+[2025-06-26 12:54:28.755] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5364ms, Elapsed: 5181ms
+[2025-06-26 12:54:33.006] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4246ms, Elapsed: 2838ms
+[2025-06-26 12:54:37.142] [info] [ROBOT #0] [PRINTF]   it=0 PRE_DIFFUSION
+[2025-06-26 12:54:37.262] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-10.000000, 6.000000, 10.000000)
+[2025-06-26 12:54:37.347] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5830ms, Elapsed: 10395ms
+[2025-06-26 12:54:37.410] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-8.752151, 5.351288, 8.392776)
+[2025-06-26 12:54:37.524] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-7.410645, 4.714417, 6.725601)
+[2025-06-26 12:54:37.665] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-6.221024, 3.968903, 5.377045)
+[2025-06-26 12:54:37.745] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-5.059250, 3.319931, 4.082031)
+[2025-06-26 12:54:37.853] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-2.845291, 2.821793, 2.030365)
+[2025-06-26 12:54:37.946] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-3.371628, 2.203110, 2.238861)
+[2025-06-26 12:54:38.077] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-2.595642, 1.763229, 1.454468)
+[2025-06-26 12:54:38.190] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-1.944214, 1.380966, 0.898575)
+[2025-06-26 12:54:38.336] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-1.434006, 1.069489, 0.481934)
+[2025-06-26 12:54:38.430] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-1.050690, 0.817001, 0.241653)
+[2025-06-26 12:54:38.568] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.761337, 0.616104, 0.093033)
+[2025-06-26 12:54:38.678] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.541550, 0.512100, -0.015747)
+[2025-06-26 12:54:38.814] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.440338, 0.358994, 0.000671)
+[2025-06-26 12:54:38.900] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.320862, 0.287033, -0.003494)
+[2025-06-26 12:54:39.085] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.240372, 0.252289, -0.008926)
+[2025-06-26 12:54:39.208] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.213638, 0.197113, 0.009460)
+[2025-06-26 12:54:39.368] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.206543, 0.143585, 0.030685)
+[2025-06-26 12:54:39.462] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.184784, 0.130264, 0.041962)
+[2025-06-26 12:54:39.645] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.167374, 0.114609, 0.044281)
+[2025-06-26 12:54:39.769] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.148132, 0.101257, 0.044601)
+[2025-06-26 12:54:39.916] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.123840, 0.100357, 0.046799)
+[2025-06-26 12:54:40.010] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.130203, 0.077408, 0.050827)
+[2025-06-26 12:54:40.165] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5830ms, Elapsed: 44286ms
+[2025-06-26 12:54:40.172] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.108078, 0.079956, 0.050690)
+[2025-06-26 12:54:40.287] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.107895, 0.065811, 0.047653)
+[2025-06-26 12:54:40.456] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.094910, 0.059525, 0.041519)
+[2025-06-26 12:54:40.562] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.095642, 0.054840, 0.044098)
+[2025-06-26 12:54:40.714] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.087158, 0.050995, 0.040283)
+[2025-06-26 12:54:40.819] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.092133, 0.044678, 0.040070)
+[2025-06-26 12:54:40.975] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.081238, 0.041641, 0.039185)
+[2025-06-26 12:54:41.082] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.071243, 0.039841, 0.038116)
+[2025-06-26 12:54:41.201] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.064865, 0.032639, 0.034119)
+[2025-06-26 12:54:41.315] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.072525, 0.034851, 0.035233)
+[2025-06-26 12:54:41.456] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.061356, 0.032776, 0.030914)
+[2025-06-26 12:54:41.546] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.057449, 0.027725, 0.029266)
+[2025-06-26 12:54:41.683] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.055435, 0.026047, 0.028320)
+[2025-06-26 12:54:41.773] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.050995, 0.026169, 0.026581)
+[2025-06-26 12:54:41.891] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.040390, 0.021759, 0.020859)
+[2025-06-26 12:54:41.964] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(0.017670, -0.007706, -0.007233)
+[2025-06-26 12:54:42.081] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.088577, 0.041077, 0.043472)
+[2025-06-26 12:54:42.184] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.041092, 0.020706, 0.021927)
+[2025-06-26 12:54:42.294] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.037460, 0.015335, 0.019333)
+[2025-06-26 12:54:42.370] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.036423, 0.017517, 0.020691)
+[2025-06-26 12:54:42.503] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.030746, 0.015350, 0.016449)
+[2025-06-26 12:54:42.638] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.019165, 0.012024, 0.012054)
+[2025-06-26 12:54:42.809] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.030273, 0.013672, 0.017578)
+[2025-06-26 12:54:42.825] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5830ms, Elapsed: 78177ms
+[2025-06-26 12:54:42.915] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.024780, 0.012421, 0.012344)
+[2025-06-26 12:54:43.067] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.021469, 0.011215, 0.014160)
+[2025-06-26 12:54:43.193] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.015320, 0.009094, 0.008911)
+[2025-06-26 12:54:43.284] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.019287, 0.010010, 0.011002)
+[2025-06-26 12:54:43.380] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.019562, 0.007782, 0.010620)
+[2025-06-26 12:54:43.532] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.016205, 0.007858, 0.009460)
+[2025-06-26 12:54:43.620] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.019211, 0.009644, 0.012344)
+[2025-06-26 12:54:43.750] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.010605, 0.006271, 0.005844)
+[2025-06-26 12:54:43.865] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.012741, 0.004730, 0.007736)
+[2025-06-26 12:54:44.067] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.010147, 0.006866, 0.008224)
+[2025-06-26 12:54:44.272] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.009689, 0.003510, 0.005188)
+[2025-06-26 12:54:44.397] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.008804, 0.004181, 0.005798)
+[2025-06-26 12:54:44.528] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.008011, 0.005997, 0.003723)
+[2025-06-26 12:54:44.619] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.008163, 0.003677, 0.005112)
+[2025-06-26 12:54:44.818] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.008133, 0.004150, 0.005814)
+[2025-06-26 12:54:44.947] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.005203, 0.005035, 0.002747)
+[2025-06-26 12:54:45.088] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.005798, 0.002899, 0.004333)
+[2025-06-26 12:54:45.181] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.004700, 0.002350, 0.000107)
+[2025-06-26 12:54:45.381] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.002960, 0.001480, 0.003891)
+[2025-06-26 12:54:45.480] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-0.009033, 0.003937, 0.004776)
+[2025-06-26 12:54:45.629] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000702, -0.000137, 0.002289)
+[2025-06-26 12:54:45.730] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.005020, 0.004913, -0.000458)
+[2025-06-26 12:54:45.787] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5830ms, Elapsed: 112068ms
+[2025-06-26 12:54:45.862] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.004852, -0.000977, 0.004974)
+[2025-06-26 12:54:45.959] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.002930, 0.005081, 0.000961)
+[2025-06-26 12:54:46.105] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.004303, -0.000046, 0.003708)
+[2025-06-26 12:54:46.217] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000122, 0.002945, 0.001205)
+[2025-06-26 12:54:46.390] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.004852, -0.001572, 0.000732)
+[2025-06-26 12:54:46.490] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000000, 0.003250, 0.002777)
+[2025-06-26 12:54:46.632] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.005859, -0.000641, -0.000549)
+[2025-06-26 12:54:46.717] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000778, 0.000137, 0.002060)
+[2025-06-26 12:54:46.828] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.001801, -0.001007, -0.001389)
+[2025-06-26 12:54:46.948] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.001587, 0.000198, 0.000275)
+[2025-06-26 12:54:47.104] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-0.003418, 0.001236, 0.001221)
+[2025-06-26 12:54:47.197] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000519, -0.000549, -0.000549)
+[2025-06-26 12:54:47.342] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.001083, 0.002060, 0.000107)
+[2025-06-26 12:54:47.492] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.002716, 0.001541, 0.001938)
+[2025-06-26 12:54:47.627] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000427, 0.000671, 0.000595)
+[2025-06-26 12:54:47.736] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.001862, 0.001816, 0.001831)
+[2025-06-26 12:54:47.912] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000366, -0.000366, -0.000366)
+[2025-06-26 12:54:48.006] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.002029, 0.000076, 0.002029)
+[2025-06-26 12:54:48.158] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000412, -0.000015, -0.000412)
+[2025-06-26 12:54:48.256] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000076, 0.000000, -0.001877)
+[2025-06-26 12:54:48.420] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000015, 0.000000, 0.000381)
+[2025-06-26 12:54:48.514] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000977, 0.000000, -0.000076)
+[2025-06-26 12:54:48.640] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5830ms, Elapsed: 145959ms
+[2025-06-26 12:54:48.648] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.001755, 0.000000, 0.000015)
+[2025-06-26 12:54:48.744] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000626, 0.000000, 0.000000)
+[2025-06-26 12:54:48.882] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000122, 0.000000, 0.000000)
+[2025-06-26 12:54:49.002] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.001007, 0.000000, 0.000000)
+[2025-06-26 12:54:49.159] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000198, 0.000977, 0.000977)
+[2025-06-26 12:54:49.251] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-0.000626, 0.001968, 0.001770)
+[2025-06-26 12:54:49.433] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(0.000046, -0.000153, -0.000137)
+[2025-06-26 12:54:49.551] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000641, 0.000549, -0.000198)
+[2025-06-26 12:54:49.657] [info] [ROBOT #0] [PRINTF]   it=0 DIFFUSION
+[2025-06-26 12:54:49.814] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-9.999878, 6.001083, 9.999954)
+[2025-06-26 12:54:49.815] [info] [ROBOT #0] [PRINTF]     step 1 t=0.011993 s_0=1.076859 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:49.919] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-6.895874, 5.352478, 6.632660)
+[2025-06-26 12:54:49.924] [info] [ROBOT #0] [PRINTF]     step 2 t=0.026001 s_0=0.980316 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:50.074] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-7.694809, 4.633179, 7.098938)
+[2025-06-26 12:54:50.077] [info] [ROBOT #0] [PRINTF]     step 3 t=0.042007 s_0=0.857208 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:50.173] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-6.430435, 3.953384, 5.607635)
+[2025-06-26 12:54:50.177] [info] [ROBOT #0] [PRINTF]     step 4 t=0.059998 s_0=0.741455 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:50.338] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-5.383072, 3.302078, 3.346741)
+[2025-06-26 12:54:50.339] [info] [ROBOT #0] [PRINTF]     step 5 t=0.080002 s_0=0.633789 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:50.439] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-4.126038, 2.717102, 3.258011)
+[2025-06-26 12:54:50.440] [info] [ROBOT #0] [PRINTF]     step 6 t=0.102005 s_0=0.543030 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:50.623] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-3.770996, 2.314240, 2.496689)
+[2025-06-26 12:54:50.630] [info] [ROBOT #0] [PRINTF]     step 7 t=0.126007 s_0=0.452515 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:50.794] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-2.315231, 1.699661, 1.458649)
+[2025-06-26 12:54:50.797] [info] [ROBOT #0] [PRINTF]     step 8 t=0.151993 s_0=0.392319 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:50.980] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-1.741592, 1.334900, 0.900681)
+[2025-06-26 12:54:50.984] [info] [ROBOT #0] [PRINTF]     step 9 t=0.179993 s_0=0.343552 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:51.104] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-1.293976, 1.039261, 0.508850)
+[2025-06-26 12:54:51.105] [info] [ROBOT #0] [PRINTF]     step 10 t=0.210007 s_0=0.304733 ls_nb_points_0=1  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:51.298] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.957550, 0.798767, 0.259506)
+[2025-06-26 12:54:51.304] [info] [ROBOT #0] [PRINTF]     step 11 t=0.242004 s_0=0.274094 ls_nb_points_0=2  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:51.454] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.704834, 0.620316, 0.106155)
+[2025-06-26 12:54:51.459] [info] [ROBOT #0] [PRINTF]     step 12 t=0.276001 s_0=0.250137 ls_nb_points_0=3  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:51.613] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.532578, 0.482651, 0.020264)
+[2025-06-26 12:54:51.617] [info] [ROBOT #0] [PRINTF]     step 13 t=0.311996 s_0=0.230957 ls_nb_points_0=4  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:51.730] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.379913, 0.372375, -0.012421)
+[2025-06-26 12:54:51.734] [info] [ROBOT #0] [PRINTF]     step 14 t=0.350006 s_0=0.216522 ls_nb_points_0=5  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:51.825] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5830ms, Elapsed: 179850ms
+[2025-06-26 12:54:51.917] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.307816, 0.291412, -0.015518)
+[2025-06-26 12:54:51.918] [info] [ROBOT #0] [PRINTF]     step 15 t=0.389999 s_0=0.204208 ls_nb_points_0=6  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:52.045] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.255981, 0.233444, -0.010284)
+[2025-06-26 12:54:52.049] [info] [ROBOT #0] [PRINTF]     step 16 t=0.432007 s_0=0.193466 ls_nb_points_0=7  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:52.198] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.202179, 0.189102, 0.010635)
+[2025-06-26 12:54:52.202] [info] [ROBOT #0] [PRINTF]     step 17 t=0.475998 s_0=0.184570 ls_nb_points_0=8  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:52.333] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.186462, 0.157654, 0.018646)
+[2025-06-26 12:54:52.339] [info] [ROBOT #0] [PRINTF]     step 18 t=0.522003 s_0=0.175980 ls_nb_points_0=9  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:52.489] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-0.178604, 0.127991, 0.009842)
+[2025-06-26 12:54:52.492] [info] [ROBOT #0] [PRINTF]     step 19 t=0.570007 s_0=0.167419 ls_nb_points_0=10  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:52.609] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.149719, 0.117447, 0.045380)
+[2025-06-26 12:54:52.610] [info] [ROBOT #0] [PRINTF]     step 20 t=0.619995 s_0=0.159927 ls_nb_points_0=11  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:52.821] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.140289, 0.099747, 0.043198)
+[2025-06-26 12:54:52.825] [info] [ROBOT #0] [PRINTF]     step 21 t=0.671997 s_0=0.152634 ls_nb_points_0=12  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:52.933] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.131790, 0.087921, 0.048080)
+[2025-06-26 12:54:52.939] [info] [ROBOT #0] [PRINTF]     step 22 t=0.725998 s_0=0.145523 ls_nb_points_0=13  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:53.114] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.125076, 0.079498, 0.047501)
+[2025-06-26 12:54:53.117] [info] [ROBOT #0] [PRINTF]     step 23 t=0.781998 s_0=0.138504 ls_nb_points_0=14  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:53.247] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.117538, 0.070145, 0.047272)
+[2025-06-26 12:54:53.295] [info] [ROBOT #0] [PRINTF]     step 24 t=0.839996 s_0=0.131699 ls_nb_points_0=15  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:53.430] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.106979, 0.064621, 0.047195)
+[2025-06-26 12:54:53.431] [info] [ROBOT #0] [PRINTF]     step 25 t=0.899994 s_0=0.125275 ls_nb_points_0=16  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:53.567] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.095520, 0.057098, 0.050125)
+[2025-06-26 12:54:53.619] [info] [ROBOT #0] [PRINTF]     step 26 t=0.962006 s_0=0.119354 ls_nb_points_0=17  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:53.753] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.090012, 0.047089, 0.038574)
+[2025-06-26 12:54:53.757] [info] [ROBOT #0] [PRINTF]     step 27 t=1.026001 s_0=0.113586 ls_nb_points_0=18  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:53.881] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.091980, 0.050156, 0.039276)
+[2025-06-26 12:54:53.918] [info] [ROBOT #0] [PRINTF]     step 28 t=1.091995 s_0=0.107529 ls_nb_points_0=19  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:54.048] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.087906, 0.042450, 0.043625)
+[2025-06-26 12:54:54.055] [info] [ROBOT #0] [PRINTF]     step 29 t=1.160004 s_0=0.101547 ls_nb_points_0=20  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:54.158] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.074036, 0.040924, 0.033493)
+[2025-06-26 12:54:54.217] [info] [ROBOT #0] [PRINTF]     step 30 t=1.229996 s_0=0.096359 ls_nb_points_0=21  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:54.344] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-0.002991, 0.008408, 0.006897)
+[2025-06-26 12:54:54.345] [info] [ROBOT #0] [PRINTF]     step 31 t=1.302002 s_0=0.096146 ls_nb_points_0=22  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:54.466] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.109894, 0.047241, 0.048050)
+[2025-06-26 12:54:54.518] [info] [ROBOT #0] [PRINTF]     step 32 t=1.376007 s_0=0.088013 ls_nb_points_0=23  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:54.645] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.077408, 0.034744, 0.035934)
+[2025-06-26 12:54:54.649] [info] [ROBOT #0] [PRINTF]     step 33 t=1.451996 s_0=0.082138 ls_nb_points_0=24  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:54.762] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.067398, 0.031769, 0.034988)
+[2025-06-26 12:54:54.810] [info] [ROBOT #0] [PRINTF]     step 34 t=1.529999 s_0=0.076874 ls_nb_points_0=25  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:54.931] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.061707, 0.029449, 0.032104)
+[2025-06-26 12:54:54.932] [info] [ROBOT #0] [PRINTF]     step 35 t=1.610001 s_0=0.071930 ls_nb_points_0=26  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:55.056] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-0.007782, 0.007736, 0.006561)
+[2025-06-26 12:54:55.130] [info] [ROBOT #0] [PRINTF]     step 36 t=1.692001 s_0=0.071304 ls_nb_points_0=27  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:55.230] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5830ms, Elapsed: 213774ms
+[2025-06-26 12:54:55.242] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.087006, 0.035675, 0.042053)
+[2025-06-26 12:54:55.246] [info] [ROBOT #0] [PRINTF]     step 37 t=1.776001 s_0=0.063995 ls_nb_points_0=28  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:55.407] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.050049, 0.024261, 0.026260)
+[2025-06-26 12:54:55.411] [info] [ROBOT #0] [PRINTF]     step 38 t=1.862000 s_0=0.059692 ls_nb_points_0=29  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:55.509] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.045090, 0.020004, 0.023209)
+[2025-06-26 12:54:55.511] [info] [ROBOT #0] [PRINTF]     step 39 t=1.949997 s_0=0.055710 ls_nb_points_0=30  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:55.650] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.044479, 0.020950, 0.023300)
+[2025-06-26 12:54:55.653] [info] [ROBOT #0] [PRINTF]     step 40 t=2.039993 s_0=0.051712 ls_nb_points_0=31  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:55.777] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.038620, 0.018692, 0.019913)
+[2025-06-26 12:54:55.781] [info] [ROBOT #0] [PRINTF]     step 41 t=2.132004 s_0=0.048157 ls_nb_points_0=32  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:55.946] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.039230, 0.019073, 0.021118)
+[2025-06-26 12:54:55.951] [info] [ROBOT #0] [PRINTF]     step 42 t=2.225998 s_0=0.044479 ls_nb_points_0=33  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:56.068] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.030670, 0.014816, 0.015915)
+[2025-06-26 12:54:56.074] [info] [ROBOT #0] [PRINTF]     step 43 t=2.322006 s_0=0.041534 ls_nb_points_0=34  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:56.255] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-0.029037, 0.013809, 0.014633)
+[2025-06-26 12:54:56.257] [info] [ROBOT #0] [PRINTF]     step 44 t=2.419998 s_0=0.038681 ls_nb_points_0=35  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:56.373] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-0.045425, 0.023117, 0.026138)
+[2025-06-26 12:54:56.376] [info] [ROBOT #0] [PRINTF]     step 45 t=2.520004 s_0=0.034149 ls_nb_points_0=36  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:56.550] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.009384, 0.003983, 0.005081)
+[2025-06-26 12:54:56.557] [info] [ROBOT #0] [PRINTF]     step 46 t=2.621994 s_0=0.033188 ls_nb_points_0=37  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:56.684] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.025208, 0.010666, 0.013565)
+[2025-06-26 12:54:56.689] [info] [ROBOT #0] [PRINTF]     step 47 t=2.725998 s_0=0.030563 ls_nb_points_0=38  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:56.920] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.018524, 0.013245, 0.011169)
+[2025-06-26 12:54:56.924] [info] [ROBOT #0] [PRINTF]     step 48 t=2.832001 s_0=0.028595 ls_nb_points_0=39  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:54:57.072] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.019394, 0.007996, 0.011047)
+[2025-06-26 12:54:57.080] [info] [ROBOT #0] [PRINTF]     step 49 t=2.940002 s_0=0.026505 ls_nb_points_0=40  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:57.333] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(0.005600, -0.003403, -0.003922)
+[2025-06-26 12:54:57.334] [info] [ROBOT #0] [PRINTF]     step 50 t=3.050003 s_0=0.027115 ls_nb_points_0=41  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:57.441] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.046600, 0.023621, 0.025894)
+[2025-06-26 12:54:57.447] [info] [ROBOT #0] [PRINTF]     step 51 t=3.162003 s_0=0.021896 ls_nb_points_0=42  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:57.614] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.009064, 0.003021, 0.006653)
+[2025-06-26 12:54:57.619] [info] [ROBOT #0] [PRINTF]     step 52 t=3.276001 s_0=0.020874 ls_nb_points_0=43  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:57.735] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.017288, 0.008362, 0.008835)
+[2025-06-26 12:54:57.742] [info] [ROBOT #0] [PRINTF]     step 53 t=3.391998 s_0=0.018860 ls_nb_points_0=44  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:57.889] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.009933, 0.006470, 0.006393)
+[2025-06-26 12:54:57.891] [info] [ROBOT #0] [PRINTF]     step 54 t=3.509995 s_0=0.017685 ls_nb_points_0=45  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:58.028] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.015793, 0.006653, 0.006668)
+[2025-06-26 12:54:58.031] [info] [ROBOT #0] [PRINTF]     step 55 t=3.630005 s_0=0.015793 ls_nb_points_0=46  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:58.238] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.009537, 0.005508, 0.007462)
+[2025-06-26 12:54:58.245] [info] [ROBOT #0] [PRINTF]     step 56 t=3.750000 s_0=0.014648 ls_nb_points_0=47  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:58.377] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.011765, 0.004761, 0.004364)
+[2025-06-26 12:54:58.381] [info] [ROBOT #0] [PRINTF]     step 57 t=3.869995 s_0=0.013245 ls_nb_points_0=48  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:58.542] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.010345, 0.003937, 0.007919)
+[2025-06-26 12:54:58.544] [info] [ROBOT #0] [PRINTF]     step 58 t=3.990005 s_0=0.011993 ls_nb_points_0=49  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:58.697] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.009644, 0.006042, 0.003296)
+[2025-06-26 12:54:58.702] [info] [ROBOT #0] [PRINTF]     step 59 t=4.110001 s_0=0.010849 ls_nb_points_0=50  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:58.711] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5830ms, Elapsed: 247665ms
+[2025-06-26 12:54:58.933] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.006866, 0.003677, 0.005203)
+[2025-06-26 12:54:58.939] [info] [ROBOT #0] [PRINTF]     step 60 t=4.229996 s_0=0.010025 ls_nb_points_0=51  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:59.077] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.007416, 0.004150, 0.005798)
+[2025-06-26 12:54:59.079] [info] [ROBOT #0] [PRINTF]     step 61 t=4.349991 s_0=0.009125 ls_nb_points_0=52  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:59.253] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.006332, 0.003082, 0.001770)
+[2025-06-26 12:54:59.257] [info] [ROBOT #0] [PRINTF]     step 62 t=4.470001 s_0=0.008377 ls_nb_points_0=53  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:59.377] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.006546, 0.003296, 0.002579)
+[2025-06-26 12:54:59.378] [info] [ROBOT #0] [PRINTF]     step 63 t=4.589996 s_0=0.007584 ls_nb_points_0=54  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:59.557] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.004547, 0.003250, 0.005341)
+[2025-06-26 12:54:59.561] [info] [ROBOT #0] [PRINTF]     step 64 t=4.709991 s_0=0.007034 ls_nb_points_0=55  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:59.668] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.005920, 0.003250, 0.000885)
+[2025-06-26 12:54:59.674] [info] [ROBOT #0] [PRINTF]     step 65 t=4.830002 s_0=0.006332 ls_nb_points_0=56  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:59.814] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.004669, 0.001297, 0.004700)
+[2025-06-26 12:54:59.818] [info] [ROBOT #0] [PRINTF]     step 66 t=4.949997 s_0=0.005768 ls_nb_points_0=57  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:54:59.938] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.003952, 0.000717, 0.001007)
+[2025-06-26 12:54:59.939] [info] [ROBOT #0] [PRINTF]     step 67 t=5.069992 s_0=0.005295 ls_nb_points_0=58  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:00.100] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.004089, 0.005722, 0.004684)
+[2025-06-26 12:55:00.101] [info] [ROBOT #0] [PRINTF]     step 68 t=5.190002 s_0=0.004807 ls_nb_points_0=59  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:00.216] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.004059, -0.000168, 0.001022)
+[2025-06-26 12:55:00.222] [info] [ROBOT #0] [PRINTF]     step 69 t=5.309998 s_0=0.004318 ls_nb_points_0=60  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:00.431] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.004074, 0.003937, 0.005661)
+[2025-06-26 12:55:00.436] [info] [ROBOT #0] [PRINTF]     step 70 t=5.429993 s_0=0.003830 ls_nb_points_0=61  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:00.560] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=9 new_s=(-0.003174, 0.001053, 0.002197)
+[2025-06-26 12:55:00.563] [info] [ROBOT #0] [PRINTF]     step 71 t=5.550003 s_0=0.003448 ls_nb_points_0=62  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:00.756] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.002213, 0.000885, 0.001099)
+[2025-06-26 12:55:00.757] [info] [ROBOT #0] [PRINTF]     step 72 t=5.669998 s_0=0.003174 ls_nb_points_0=63  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:00.890] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000534, 0.001770, 0.001740)
+[2025-06-26 12:55:00.893] [info] [ROBOT #0] [PRINTF]     step 73 t=5.789993 s_0=0.003113 ls_nb_points_0=64  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:01.064] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.004776, 0.001602, 0.001602)
+[2025-06-26 12:55:01.068] [info] [ROBOT #0] [PRINTF]     step 74 t=5.910004 s_0=0.002548 ls_nb_points_0=65  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:01.192] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000015, -0.001297, -0.001297)
+[2025-06-26 12:55:01.196] [info] [ROBOT #0] [PRINTF]     step 75 t=6.029999 s_0=0.002533 ls_nb_points_0=66  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:01.335] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.001953, 0.003189, 0.002213)
+[2025-06-26 12:55:01.342] [info] [ROBOT #0] [PRINTF]     step 76 t=6.149994 s_0=0.002304 ls_nb_points_0=67  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:01.472] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.002533, 0.000336, 0.000534)
+[2025-06-26 12:55:01.474] [info] [ROBOT #0] [PRINTF]     step 77 t=6.269989 s_0=0.001999 ls_nb_points_0=68  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:01.631] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.002426, 0.000916, 0.001846)
+[2025-06-26 12:55:01.633] [info] [ROBOT #0] [PRINTF]     step 78 t=6.389999 s_0=0.001709 ls_nb_points_0=69  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:01.734] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000488, -0.000183, 0.001587)
+[2025-06-26 12:55:01.739] [info] [ROBOT #0] [PRINTF]     step 79 t=6.509995 s_0=0.001648 ls_nb_points_0=70  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:01.905] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.001862, 0.001007, 0.000656)
+[2025-06-26 12:55:01.908] [info] [ROBOT #0] [PRINTF]     step 80 t=6.629990 s_0=0.001434 ls_nb_points_0=71  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:02.036] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000610, -0.001175, -0.000137)
+[2025-06-26 12:55:02.037] [info] [ROBOT #0] [PRINTF]     step 81 t=6.750000 s_0=0.001358 ls_nb_points_0=72  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:02.114] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5830ms, Elapsed: 281523ms
+[2025-06-26 12:55:02.229] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.002808, 0.001205, 0.001007)
+[2025-06-26 12:55:02.231] [info] [ROBOT #0] [PRINTF]     step 82 t=6.869995 s_0=0.001022 ls_nb_points_0=73  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:02.374] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000412, -0.001221, -0.001175)
+[2025-06-26 12:55:02.379] [info] [ROBOT #0] [PRINTF]     step 83 t=6.989990 s_0=0.000961 ls_nb_points_0=74  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:02.597] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000900, 0.001221, 0.001205)
+[2025-06-26 12:55:02.601] [info] [ROBOT #0] [PRINTF]     step 84 t=7.110001 s_0=0.000854 ls_nb_points_0=75  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:02.711] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000793, -0.001221, -0.001221)
+[2025-06-26 12:55:02.714] [info] [ROBOT #0] [PRINTF]     step 85 t=7.229996 s_0=0.000763 ls_nb_points_0=76  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:02.842] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000153, 0.000244, 0.000244)
+[2025-06-26 12:55:02.844] [info] [ROBOT #0] [PRINTF]     step 86 t=7.349991 s_0=0.000778 ls_nb_points_0=77  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:02.932] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000946, -0.000046, -0.000046)
+[2025-06-26 12:55:02.936] [info] [ROBOT #0] [PRINTF]     step 87 t=7.470001 s_0=0.000900 ls_nb_points_0=78  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:03.062] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000183, 0.000015, 0.000015)
+[2025-06-26 12:55:03.064] [info] [ROBOT #0] [PRINTF]     step 88 t=7.589996 s_0=0.000870 ls_nb_points_0=79  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:03.166] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000946, -0.000977, -0.000977)
+[2025-06-26 12:55:03.170] [info] [ROBOT #0] [PRINTF]     step 89 t=7.709991 s_0=0.000763 ls_nb_points_0=80  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:03.315] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000183, 0.000198, 0.000198)
+[2025-06-26 12:55:03.317] [info] [ROBOT #0] [PRINTF]     step 90 t=7.830002 s_0=0.000778 ls_nb_points_0=81  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:03.433] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000031, -0.000046, -0.000046)
+[2025-06-26 12:55:03.439] [info] [ROBOT #0] [PRINTF]     step 91 t=7.949997 s_0=0.000778 ls_nb_points_0=82  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:03.567] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000000, 0.000015, 0.000015)
+[2025-06-26 12:55:03.569] [info] [ROBOT #0] [PRINTF]     step 92 t=8.069992 s_0=0.000778 ls_nb_points_0=83  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:03.660] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:03.663] [info] [ROBOT #0] [PRINTF]     step 93 t=8.190002 s_0=0.000778 ls_nb_points_0=84  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:03.792] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:03.795] [info] [ROBOT #0] [PRINTF]     step 94 t=8.309998 s_0=0.000778 ls_nb_points_0=85  stopped=0,0,0  lambda=0.764908
+[2025-06-26 12:55:03.890] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000977, 0.000000, 0.000000)
+[2025-06-26 12:55:03.892] [info] [ROBOT #0] [PRINTF]     step 95 t=8.429993 s_0=0.000900 ls_nb_points_0=86  stopped=0,1,1  lambda=0.764908
+[2025-06-26 12:55:04.057] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000198, 0.000000, 0.000000)
+[2025-06-26 12:55:04.061] [info] [ROBOT #0] [PRINTF]     step 96 t=8.549988 s_0=0.000870 ls_nb_points_0=87  stopped=0,1,1  lambda=0.764908
+[2025-06-26 12:55:04.158] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(0.000046, 0.000000, 0.000000)
+[2025-06-26 12:55:04.161] [info] [ROBOT #0] [PRINTF]     step 97 t=8.669998 s_0=0.000885 ls_nb_points_0=88  stopped=0,1,1  lambda=0.764908
+[2025-06-26 12:55:04.322] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=10 new_s=(-0.000015, 0.000000, 0.000000)
+[2025-06-26 12:55:04.325] [info] [ROBOT #0] [PRINTF]     step 98 t=8.789993 s_0=0.000885 ls_nb_points_0=89  stopped=0,1,1  lambda=0.764908
+[2025-06-26 12:55:04.415] [info] [ROBOT #0] [PRINTF] END DIFFUSION ! it=0 id=0 diffit=98 lambda=0.764908 s[0]=0.000885 ls_nb_points_0=89 diffusion_valid=1
+[2025-06-26 12:55:04.415] [info] [ROBOT #0] [PRINTF]   diffusion_convergence_threshold=0.100006  condition_convergence=0.000885
+[2025-06-26 12:55:04.415] [info] [ROBOT #0] [PRINTF]   it=0 CONSENSUS_LAMBDA
+[2025-06-26 12:55:04.574] [info] [ROBOT #0] [PRINTF]     avg_lambda: lambda=0.690002 diffusion_valid=1
+[2025-06-26 12:55:04.678] [info] [ROBOT #0] [PRINTF]     avg_lambda: lambda=0.708420 diffusion_valid=1
+[2025-06-26 12:55:04.877] [info] [ROBOT #0] [PRINTF]     avg_lambda: lambda=0.716660 diffusion_valid=1
+[2025-06-26 12:55:05.054] [info] [ROBOT #0] [PRINTF]     avg_lambda: lambda=0.721939 diffusion_valid=1
+[2025-06-26 12:55:05.200] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5830ms, Elapsed: 315447ms
+[2025-06-26 12:55:05.200] [info] [ROBOT #0] [PRINTF]     avg_lambda: lambda=0.724991 diffusion_valid=1
+[2025-06-26 12:55:05.303] [info] [ROBOT #0] [PRINTF]     avg_lambda: lambda=0.726868 diffusion_valid=1
+[2025-06-26 12:55:05.423] [info] [ROBOT #0] [PRINTF]     avg_lambda: lambda=0.728271 diffusion_valid=1
+[2025-06-26 12:55:05.549] [info] [ROBOT #0] [PRINTF]     avg_lambda: lambda=0.729477 diffusion_valid=1
+[2025-06-26 12:55:05.721] [info] [ROBOT #0] [PRINTF]     avg_lambda: lambda=0.730560 diffusion_valid=1
+[2025-06-26 12:55:05.814] [info] [ROBOT #0] [PRINTF]   it=0 FINAL_LAMBDA
+[2025-06-26 12:55:05.992] [info] [ROBOT #0] [PRINTF]     final_lambda: avg_lambda=0.731461
+[2025-06-26 12:55:06.114] [info] [ROBOT #0] [PRINTF]     final_lambda: avg_lambda=0.731979
+[2025-06-26 12:55:06.281] [info] [ROBOT #0] [PRINTF]     final_lambda: avg_lambda=0.732651
+[2025-06-26 12:55:06.407] [info] [ROBOT #0] [PRINTF]     final_lambda: avg_lambda=0.733246
+[2025-06-26 12:55:06.576] [info] [ROBOT #0] [PRINTF]     final_lambda: avg_lambda=0.733734
+[2025-06-26 12:55:06.694] [info] [ROBOT #0] [PRINTF]     final_lambda: avg_lambda=0.734055
+[2025-06-26 12:55:06.894] [info] [ROBOT #0] [PRINTF]     final_lambda: avg_lambda=0.734253
+[2025-06-26 12:55:07.001] [info] [ROBOT #0] [PRINTF]     final_lambda: avg_lambda=0.734634
+[2025-06-26 12:55:07.117] [info] [ROBOT #0] [PRINTF]     final_lambda: avg_lambda=0.734665
+[2025-06-26 12:55:07.215] [info] [ROBOT #0] [PRINTF] END ITERATION: avg_lambda:0.734665
+[2025-06-26 12:55:07.216] [info] [ROBOT #0] [PRINTF] BEGIN ITERATION it=1
+[2025-06-26 12:55:07.216] [info] [ROBOT #0] [PRINTF]   it=1 WAITING_TIME
+[2025-06-26 12:55:07.327] [info] [ROBOT #0] [PRINTF]   it=1 RUN_TUMBLE
+[2025-06-26 12:55:08.480] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5212ms, Elapsed: 2904ms
+[2025-06-26 12:55:12.319] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 3930ms, Elapsed: 3762ms
+[2025-06-26 12:55:16.607] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5081ms, Elapsed: 4092ms
+[2025-06-26 12:55:20.667] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 5416ms, Elapsed: 1386ms
+[2025-06-26 12:55:24.234] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4435ms, Elapsed: 924ms
+[2025-06-26 12:55:24.698] [info] [ROBOT #0] [PRINTF]   it=1 PRE_DIFFUSION
+[2025-06-26 12:55:24.851] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-6.000000, 6.000000, -10.000000)
+[2025-06-26 12:55:24.943] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-5.670807, 5.524323, -9.087738)
+[2025-06-26 12:55:25.071] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-5.344559, 5.064972, -8.068237)
+[2025-06-26 12:55:25.172] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-4.858276, 4.472305, -7.146042)
+[2025-06-26 12:55:25.326] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-4.473663, 4.004501, -6.124542)
+[2025-06-26 12:55:25.419] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-3.921570, 3.401871, -5.249527)
+[2025-06-26 12:55:25.528] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-3.414337, 2.882874, -4.385437)
+[2025-06-26 12:55:25.632] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-2.959869, 2.428818, -3.602783)
+[2025-06-26 12:55:25.793] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-2.515900, 2.013138, -2.900208)
+[2025-06-26 12:55:25.918] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-2.111649, 1.646881, -2.299530)
+[2025-06-26 12:55:26.080] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-1.743393, 1.337173, -1.791245)
+[2025-06-26 12:55:26.183] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-1.392914, 1.076706, -1.390976)
+[2025-06-26 12:55:26.324] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-1.119995, 0.864395, -1.050156)
+[2025-06-26 12:55:26.433] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.892441, 0.677826, -0.765991)
+[2025-06-26 12:55:26.580] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.707794, 0.522903, -0.551498)
+[2025-06-26 12:55:26.740] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.553558, 0.411652, -0.387314)
+[2025-06-26 12:55:26.862] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.424011, 0.315033, -0.258789)
+[2025-06-26 12:55:27.020] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.334427, 0.244370, -0.171265)
+[2025-06-26 12:55:27.113] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.251160, 0.178375, -0.101471)
+[2025-06-26 12:55:27.160] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4870ms, Elapsed: 33660ms
+[2025-06-26 12:55:27.223] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.199966, 0.140900, -0.057617)
+[2025-06-26 12:55:27.311] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.151474, 0.116974, -0.038422)
+[2025-06-26 12:55:27.452] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.111954, 0.074402, -0.004913)
+[2025-06-26 12:55:27.561] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.091125, 0.060928, 0.010620)
+[2025-06-26 12:55:27.683] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.074936, 0.048767, 0.022079)
+[2025-06-26 12:55:27.782] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.060135, 0.037750, 0.026794)
+[2025-06-26 12:55:27.935] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.050507, 0.027756, 0.028229)
+[2025-06-26 12:55:28.035] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.039322, 0.026459, 0.026718)
+[2025-06-26 12:55:28.170] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.027573, 0.017532, 0.031357)
+[2025-06-26 12:55:28.266] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.027527, 0.019196, 0.032486)
+[2025-06-26 12:55:28.399] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-0.028961, 0.021042, 0.026169)
+[2025-06-26 12:55:28.492] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.007065, 0.003662, 0.026657)
+[2025-06-26 12:55:28.610] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.009369, 0.009628, 0.026901)
+[2025-06-26 12:55:28.702] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.005493, 0.007568, 0.022736)
+[2025-06-26 12:55:28.837] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.004517, 0.011353, 0.023331)
+[2025-06-26 12:55:28.926] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.005966, 0.010040, 0.019379)
+[2025-06-26 12:55:29.037] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.003601, 0.011246, 0.019272)
+[2025-06-26 12:55:29.123] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.003479, 0.009674, 0.018951)
+[2025-06-26 12:55:29.271] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-0.006393, 0.010666, 0.014359)
+[2025-06-26 12:55:29.370] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000519, 0.010254, 0.017715)
+[2025-06-26 12:55:29.474] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001175, 0.008820, 0.013641)
+[2025-06-26 12:55:29.546] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.002380, 0.010101, 0.014816)
+[2025-06-26 12:55:29.614] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4870ms, Elapsed: 67551ms
+[2025-06-26 12:55:29.654] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.002808, 0.009460, 0.011139)
+[2025-06-26 12:55:29.733] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000961, 0.007141, 0.009674)
+[2025-06-26 12:55:29.872] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001297, 0.008194, 0.010010)
+[2025-06-26 12:55:29.967] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.002365, 0.007462, 0.008026)
+[2025-06-26 12:55:30.111] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-0.003403, 0.006805, 0.009323)
+[2025-06-26 12:55:30.201] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.002182, 0.006165, 0.006500)
+[2025-06-26 12:55:30.337] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000381, 0.006561, 0.007629)
+[2025-06-26 12:55:30.462] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001862, 0.004623, 0.006851)
+[2025-06-26 12:55:30.603] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.002411, 0.005035, 0.004608)
+[2025-06-26 12:55:30.719] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.002502, 0.005066, 0.004959)
+[2025-06-26 12:55:30.871] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001511, 0.005005, 0.004974)
+[2025-06-26 12:55:30.989] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000671, 0.002960, 0.002960)
+[2025-06-26 12:55:31.146] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-0.000031, 0.002853, 0.002853)
+[2025-06-26 12:55:31.241] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001801, 0.006012, 0.004059)
+[2025-06-26 12:55:31.395] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001266, 0.002914, 0.004562)
+[2025-06-26 12:55:31.511] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000778, 0.002426, 0.002686)
+[2025-06-26 12:55:31.644] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000854, 0.001358, 0.001404)
+[2025-06-26 12:55:31.749] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000137, 0.000214, 0.001205)
+[2025-06-26 12:55:31.966] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000992, 0.002960, 0.003128)
+[2025-06-26 12:55:32.094] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000153, 0.002426, 0.003433)
+[2025-06-26 12:55:32.238] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000031, 0.001358, 0.000549)
+[2025-06-26 12:55:32.338] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.001190, 0.001068)
+[2025-06-26 12:55:32.465] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4870ms, Elapsed: 101475ms
+[2025-06-26 12:55:32.465] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.001175, 0.002121)
+[2025-06-26 12:55:32.570] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.002136, 0.001312)
+[2025-06-26 12:55:32.694] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000336, 0.001190)
+[2025-06-26 12:55:32.795] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.001038, 0.001160)
+[2025-06-26 12:55:32.936] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000977, 0.001144, 0.000183)
+[2025-06-26 12:55:33.036] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001129, 0.001160, 0.000031)
+[2025-06-26 12:55:33.212] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001160, 0.000183, 0.000000)
+[2025-06-26 12:55:33.342] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000793, 0.000031, 0.000000)
+[2025-06-26 12:55:33.510] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000854, 0.000000, 0.000000)
+[2025-06-26 12:55:33.650] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000137, 0.000000, 0.000000)
+[2025-06-26 12:55:33.801] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-0.000153, 0.000137, 0.000137)
+[2025-06-26 12:55:33.902] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000107, -0.000122, -0.000122)
+[2025-06-26 12:55:34.048] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000015, -0.000015, -0.000015)
+[2025-06-26 12:55:34.164] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:34.279] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, -0.000977, 0.000000)
+[2025-06-26 12:55:34.410] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, -0.000153, -0.000977)
+[2025-06-26 12:55:34.585] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, -0.000031, -0.000153)
+[2025-06-26 12:55:34.724] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, -0.000031)
+[2025-06-26 12:55:34.876] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000977, 0.000000, 0.000000)
+[2025-06-26 12:55:34.965] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000153, 0.000000, 0.000000)
+[2025-06-26 12:55:35.140] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000031, 0.000000, 0.000000)
+[2025-06-26 12:55:35.267] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:35.361] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:35.409] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4870ms, Elapsed: 135333ms
+[2025-06-26 12:55:35.512] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:35.607] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:35.830] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:36.069] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:36.325] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:36.475] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:36.641] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:36.748] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:36.899] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:37.036] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:37.185] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:37.321] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000000, 0.000000)
+[2025-06-26 12:55:37.438] [info] [ROBOT #0] [PRINTF]   it=1 DIFFUSION
+[2025-06-26 12:55:37.604] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-6.000000, 6.000000, -10.000000)
+[2025-06-26 12:55:37.610] [info] [ROBOT #0] [PRINTF]     step 1 t=0.011993 s_0=1.051041 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:37.740] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-5.616119, 5.496002, -9.088715)
+[2025-06-26 12:55:37.744] [info] [ROBOT #0] [PRINTF]     step 2 t=0.026001 s_0=0.972427 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:37.888] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-5.239563, 4.983765, -8.123795)
+[2025-06-26 12:55:37.890] [info] [ROBOT #0] [PRINTF]     step 3 t=0.042007 s_0=0.888596 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:37.998] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-4.818756, 4.447067, -7.138733)
+[2025-06-26 12:55:37.999] [info] [ROBOT #0] [PRINTF]     step 4 t=0.059998 s_0=0.801849 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:38.170] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-4.210526, 2.620270, -4.885605)
+[2025-06-26 12:55:38.173] [info] [ROBOT #0] [PRINTF]     step 5 t=0.080002 s_0=0.717636 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:38.293] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-3.818542, 2.426926, -4.285660)
+[2025-06-26 12:55:38.295] [info] [ROBOT #0] [PRINTF]     step 6 t=0.102005 s_0=0.633636 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:38.441] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-3.460815, 3.238922, -4.694107)
+[2025-06-26 12:55:38.445] [info] [ROBOT #0] [PRINTF]     step 7 t=0.126007 s_0=0.550568 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:38.543] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-2.985840, 2.706497, -3.844955)
+[2025-06-26 12:55:38.544] [info] [ROBOT #0] [PRINTF]     step 8 t=0.151993 s_0=0.472946 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:38.663] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-2.565475, 2.232468, -3.077789)
+[2025-06-26 12:55:38.664] [info] [ROBOT #0] [PRINTF]     step 9 t=0.179993 s_0=0.401108 ls_nb_points_0=0  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:38.745] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4870ms, Elapsed: 169224ms
+[2025-06-26 12:55:38.754] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-2.133926, 1.795883, -2.433533)
+[2025-06-26 12:55:38.758] [info] [ROBOT #0] [PRINTF]     step 10 t=0.210007 s_0=0.337097 ls_nb_points_0=1  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:38.904] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-1.769791, 1.445114, -1.887329)
+[2025-06-26 12:55:38.910] [info] [ROBOT #0] [PRINTF]     step 11 t=0.242004 s_0=0.280457 ls_nb_points_0=2  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:39.015] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-1.423157, 1.144852, -1.444061)
+[2025-06-26 12:55:39.016] [info] [ROBOT #0] [PRINTF]     step 12 t=0.276001 s_0=0.232071 ls_nb_points_0=3  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:39.180] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-1.134247, 0.900696, -1.084747)
+[2025-06-26 12:55:39.182] [info] [ROBOT #0] [PRINTF]     step 13 t=0.311996 s_0=0.191238 ls_nb_points_0=4  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:39.302] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.896271, 0.704971, -0.797714)
+[2025-06-26 12:55:39.306] [info] [ROBOT #0] [PRINTF]     step 14 t=0.350006 s_0=0.157181 ls_nb_points_0=5  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:39.450] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.716461, 0.553574, -0.576736)
+[2025-06-26 12:55:39.454] [info] [ROBOT #0] [PRINTF]     step 15 t=0.389999 s_0=0.128525 ls_nb_points_0=6  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:39.561] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.551987, 0.425919, -0.406464)
+[2025-06-26 12:55:39.566] [info] [ROBOT #0] [PRINTF]     step 16 t=0.432007 s_0=0.105331 ls_nb_points_0=7  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:39.729] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.424850, 0.329025, -0.280121)
+[2025-06-26 12:55:39.731] [info] [ROBOT #0] [PRINTF]     step 17 t=0.475998 s_0=0.086639 ls_nb_points_0=8  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:39.842] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.330139, 0.253067, -0.186035)
+[2025-06-26 12:55:39.846] [info] [ROBOT #0] [PRINTF]     step 18 t=0.522003 s_0=0.071457 ls_nb_points_0=9  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:39.980] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.253128, 0.193069, -0.117340)
+[2025-06-26 12:55:39.984] [info] [ROBOT #0] [PRINTF]     step 19 t=0.570007 s_0=0.059311 ls_nb_points_0=10  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:40.098] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.198349, 0.149689, -0.070099)
+[2025-06-26 12:55:40.101] [info] [ROBOT #0] [PRINTF]     step 20 t=0.619995 s_0=0.049393 ls_nb_points_0=11  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:40.223] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.154312, 0.109985, -0.032867)
+[2025-06-26 12:55:40.225] [info] [ROBOT #0] [PRINTF]     step 21 t=0.671997 s_0=0.041367 ls_nb_points_0=12  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:40.301] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.123535, 0.087524, -0.010162)
+[2025-06-26 12:55:40.304] [info] [ROBOT #0] [PRINTF]     step 22 t=0.725998 s_0=0.034698 ls_nb_points_0=13  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:40.448] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.096375, 0.067139, 0.001495)
+[2025-06-26 12:55:40.449] [info] [ROBOT #0] [PRINTF]     step 23 t=0.781998 s_0=0.029297 ls_nb_points_0=14  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:40.550] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.073242, 0.048630, 0.014572)
+[2025-06-26 12:55:40.555] [info] [ROBOT #0] [PRINTF]     step 24 t=0.839996 s_0=0.025055 ls_nb_points_0=15  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:40.688] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.059128, 0.037674, 0.020386)
+[2025-06-26 12:55:40.692] [info] [ROBOT #0] [PRINTF]     step 25 t=0.899994 s_0=0.021500 ls_nb_points_0=16  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:40.796] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.047974, 0.029663, 0.024521)
+[2025-06-26 12:55:40.832] [info] [ROBOT #0] [PRINTF]     step 26 t=0.962006 s_0=0.018524 ls_nb_points_0=17  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:40.931] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.033005, 0.022644, 0.021683)
+[2025-06-26 12:55:40.936] [info] [ROBOT #0] [PRINTF]     step 27 t=1.026001 s_0=0.016418 ls_nb_points_0=18  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:41.018] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.030914, 0.019333, 0.026627)
+[2025-06-26 12:55:41.049] [info] [ROBOT #0] [PRINTF]     step 28 t=1.091995 s_0=0.014374 ls_nb_points_0=19  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:41.148] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-0.030579, 0.013794, 0.033340)
+[2025-06-26 12:55:41.151] [info] [ROBOT #0] [PRINTF]     step 29 t=1.160004 s_0=0.012299 ls_nb_points_0=20  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:41.278] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.017700, 0.014572, 0.024811)
+[2025-06-26 12:55:41.316] [info] [ROBOT #0] [PRINTF]     step 30 t=1.229996 s_0=0.011063 ls_nb_points_0=21  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:41.440] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.014893, 0.012314, 0.026337)
+[2025-06-26 12:55:41.442] [info] [ROBOT #0] [PRINTF]     step 31 t=1.302002 s_0=0.009979 ls_nb_points_0=22  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:41.540] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.013245, 0.010010, 0.024780)
+[2025-06-26 12:55:41.581] [info] [ROBOT #0] [PRINTF]     step 32 t=1.376007 s_0=0.009003 ls_nb_points_0=23  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:41.590] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4870ms, Elapsed: 203148ms
+[2025-06-26 12:55:41.669] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.010284, 0.009705, 0.023666)
+[2025-06-26 12:55:41.673] [info] [ROBOT #0] [PRINTF]     step 33 t=1.451996 s_0=0.008224 ls_nb_points_0=24  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:41.778] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.008728, 0.010406, 0.019867)
+[2025-06-26 12:55:41.835] [info] [ROBOT #0] [PRINTF]     step 34 t=1.529999 s_0=0.007538 ls_nb_points_0=25  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:41.947] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-0.024734, 0.011307, 0.019592)
+[2025-06-26 12:55:41.949] [info] [ROBOT #0] [PRINTF]     step 35 t=1.610001 s_0=0.005569 ls_nb_points_0=26  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:42.066] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.005005, 0.007187, 0.017578)
+[2025-06-26 12:55:42.070] [info] [ROBOT #0] [PRINTF]     step 36 t=1.692001 s_0=0.005966 ls_nb_points_0=27  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:42.176] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001770, 0.008926, 0.017258)
+[2025-06-26 12:55:42.180] [info] [ROBOT #0] [PRINTF]     step 37 t=1.776001 s_0=0.005829 ls_nb_points_0=28  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:42.312] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001709, 0.009537, 0.016876)
+[2025-06-26 12:55:42.314] [info] [ROBOT #0] [PRINTF]     step 38 t=1.862000 s_0=0.005676 ls_nb_points_0=29  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:42.416] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-0.004761, 0.009537, 0.021240)
+[2025-06-26 12:55:42.421] [info] [ROBOT #0] [PRINTF]     step 39 t=1.949997 s_0=0.005264 ls_nb_points_0=30  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:42.584] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-0.014938, 0.008408, 0.011978)
+[2025-06-26 12:55:42.586] [info] [ROBOT #0] [PRINTF]     step 40 t=2.039993 s_0=0.003906 ls_nb_points_0=31  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:42.701] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.004837, 0.009232, 0.011475)
+[2025-06-26 12:55:42.702] [info] [ROBOT #0] [PRINTF]     step 41 t=2.132004 s_0=0.004364 ls_nb_points_0=32  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:42.846] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.003159, 0.009140, 0.011902)
+[2025-06-26 12:55:42.849] [info] [ROBOT #0] [PRINTF]     step 42 t=2.225998 s_0=0.004059 ls_nb_points_0=33  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:42.967] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(0.003952, 0.005325, 0.005157)
+[2025-06-26 12:55:42.971] [info] [ROBOT #0] [PRINTF]     step 43 t=2.322006 s_0=0.004440 ls_nb_points_0=34  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:43.119] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(-0.007111, 0.007141, 0.011948)
+[2025-06-26 12:55:43.121] [info] [ROBOT #0] [PRINTF]     step 44 t=2.419998 s_0=0.003738 ls_nb_points_0=35  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:43.230] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000168, 0.008316, 0.011932)
+[2025-06-26 12:55:43.233] [info] [ROBOT #0] [PRINTF]     step 45 t=2.520004 s_0=0.003754 ls_nb_points_0=36  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:43.412] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.002884, 0.007385, 0.009445)
+[2025-06-26 12:55:43.416] [info] [ROBOT #0] [PRINTF]     step 46 t=2.621994 s_0=0.003464 ls_nb_points_0=37  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:43.538] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001801, 0.006989, 0.009537)
+[2025-06-26 12:55:43.542] [info] [ROBOT #0] [PRINTF]     step 47 t=2.725998 s_0=0.003281 ls_nb_points_0=38  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:43.672] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001465, 0.004837, 0.008453)
+[2025-06-26 12:55:43.677] [info] [ROBOT #0] [PRINTF]     step 48 t=2.832001 s_0=0.003128 ls_nb_points_0=39  stopped=0,0,0  lambda=0.000000
+[2025-06-26 12:55:43.789] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001358, 0.006134, 0.008041)
+[2025-06-26 12:55:43.790] [info] [ROBOT #0] [PRINTF]     step 49 t=2.940002 s_0=0.002975 ls_nb_points_0=40  stopped=0,0,0  lambda=1.295975
+[2025-06-26 12:55:43.985] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.002289, 0.004425, 0.005875)
+[2025-06-26 12:55:43.988] [info] [ROBOT #0] [PRINTF]     step 50 t=3.050003 s_0=0.002731 ls_nb_points_0=41  stopped=0,0,0  lambda=1.287064
+[2025-06-26 12:55:44.084] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001495, 0.004929, 0.005249)
+[2025-06-26 12:55:44.089] [info] [ROBOT #0] [PRINTF]     step 51 t=3.162003 s_0=0.002563 ls_nb_points_0=42  stopped=0,0,0  lambda=1.278732
+[2025-06-26 12:55:44.249] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001297, 0.004974, 0.006012)
+[2025-06-26 12:55:44.254] [info] [ROBOT #0] [PRINTF]     step 52 t=3.276001 s_0=0.002411 ls_nb_points_0=43  stopped=0,0,0  lambda=1.270950
+[2025-06-26 12:55:44.372] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000259, 0.003937, 0.005127)
+[2025-06-26 12:55:44.374] [info] [ROBOT #0] [PRINTF]     step 53 t=3.391998 s_0=0.002380 ls_nb_points_0=44  stopped=0,0,0  lambda=1.159943
+[2025-06-26 12:55:44.511] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001999, 0.003662, 0.003891)
+[2025-06-26 12:55:44.515] [info] [ROBOT #0] [PRINTF]     step 54 t=3.509995 s_0=0.002136 ls_nb_points_0=45  stopped=0,0,0  lambda=1.127457
+[2025-06-26 12:55:44.554] [info] [ROBOT #0] [PRINTF] Phase: RUN, Phase Duration: 4870ms, Elapsed: 237039ms
+[2025-06-26 12:55:44.633] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000351, 0.004547, 0.002625)
+[2025-06-26 12:55:44.637] [info] [ROBOT #0] [PRINTF]     step 55 t=3.630005 s_0=0.002106 ls_nb_points_0=46  stopped=0,0,0  lambda=1.096909
+[2025-06-26 12:55:44.768] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.002014, 0.003662, 0.005310)
+[2025-06-26 12:55:44.773] [info] [ROBOT #0] [PRINTF]     step 56 t=3.750000 s_0=0.001862 ls_nb_points_0=47  stopped=0,0,0  lambda=1.067520
+[2025-06-26 12:55:44.918] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001297, 0.001556, 0.001831)
+[2025-06-26 12:55:44.922] [info] [ROBOT #0] [PRINTF]     step 57 t=3.869995 s_0=0.001709 ls_nb_points_0=48  stopped=0,0,0  lambda=1.040024
+[2025-06-26 12:55:45.081] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001190, 0.003174, 0.002243)
+[2025-06-26 12:55:45.083] [info] [ROBOT #0] [PRINTF]     step 58 t=3.990005 s_0=0.001556 ls_nb_points_0=49  stopped=0,0,0  lambda=1.014420
+[2025-06-26 12:55:45.218] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000183, 0.002457, 0.002319)
+[2025-06-26 12:55:45.222] [info] [ROBOT #0] [PRINTF]     step 59 t=4.110001 s_0=0.001541 ls_nb_points_0=50  stopped=0,0,0  lambda=0.990494
+[2025-06-26 12:55:45.380] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001007, 0.001373, 0.003296)
+[2025-06-26 12:55:45.384] [info] [ROBOT #0] [PRINTF]     step 60 t=4.229996 s_0=0.001419 ls_nb_points_0=51  stopped=0,0,0  lambda=0.967896
+[2025-06-26 12:55:45.504] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000168, 0.002167, 0.001511)
+[2025-06-26 12:55:45.508] [info] [ROBOT #0] [PRINTF]     step 61 t=4.349991 s_0=0.001404 ls_nb_points_0=52  stopped=0,0,0  lambda=0.946930
+[2025-06-26 12:55:45.642] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.001007, 0.002304, 0.001221)
+[2025-06-26 12:55:45.643] [info] [ROBOT #0] [PRINTF]     step 62 t=4.470001 s_0=0.001282 ls_nb_points_0=53  stopped=0,0,0  lambda=0.927536
+[2025-06-26 12:55:45.749] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000168, 0.000366, 0.003128)
+[2025-06-26 12:55:45.751] [info] [ROBOT #0] [PRINTF]     step 63 t=4.589996 s_0=0.001266 ls_nb_points_0=54  stopped=0,0,0  lambda=0.922913
+[2025-06-26 12:55:45.943] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000031, 0.002014, 0.001480)
+[2025-06-26 12:55:45.947] [info] [ROBOT #0] [PRINTF]     step 64 t=4.709991 s_0=0.001251 ls_nb_points_0=55  stopped=0,0,0  lambda=0.918533
+[2025-06-26 12:55:46.056] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.000320, 0.001205)
+[2025-06-26 12:55:46.061] [info] [ROBOT #0] [PRINTF]     step 65 t=4.830002 s_0=0.001251 ls_nb_points_0=56  stopped=0,0,0  lambda=0.914246
+[2025-06-26 12:55:46.226] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(0.000000, 0.001999, 0.001175)
+[2025-06-26 12:55:46.229] [info] [ROBOT #0] [PRINTF]     step 66 t=4.949997 s_0=0.001251 ls_nb_points_0=57  stopped=0,0,0  lambda=0.910187
+[2025-06-26 12:55:46.344] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=6 new_s=(0.000275, 0.001114, 0.001419)
+[2025-06-26 12:55:46.348] [info] [ROBOT #0] [PRINTF]     step 67 t=5.069992 s_0=0.001282 ls_nb_points_0=58  stopped=0,0,0  lambda=0.906296
+[2025-06-26 12:55:46.522] [info] [ROBOT #0] [PRINTF]     next_s nb_neighbors=7 new_s=(-0.000229, 0.001343, -0.000031)
+[2025-06-26 12:55:46.525] [info] [ROBOT #0] [PRINTF]     step 68 t=5.19000

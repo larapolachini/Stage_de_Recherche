@@ -7,7 +7,6 @@ typedef enum { PHASE_RUN, PHASE_TUMBLE }          PhaseState;
 typedef enum { RT_PHASE_RUN, RT_PHASE_TUMBLE }    RTPhaseState;
 /* ---------------------------------------------------------------------- */
 
-
 ////////////////// BASE MACROS ////////////////// {{{1
 
 //#define DISABLE_MOTION
@@ -22,9 +21,8 @@ typedef enum { RT_PHASE_RUN, RT_PHASE_TUMBLE }    RTPhaseState;
 //#define ENABLE_INIT_REMOVE_SUM_S
 #define ENABLE_PRE_DIFFUSION
 //#define ENABLE_HANDSHAKES
-//#define ENABLE_TAU_INCREASE
+#define ENABLE_TAU_INCREASE
 #define ENABLE_SYNC_TIME
-#define ENABLE_ALWAYS_MOVING
 #define ENABLE_STOP_DIFFUSION_AFTER_THRESHOLD
 
 #define ENABLE_PHOTO_START
@@ -337,7 +335,7 @@ typedef struct {
     float d_max;
     float frustration;
 
-    /* --- locomotion & run-and-tumble state ------------------------ */
+     /* --- locomotion & run-and-tumble state ------------------------ */
     time_reference_t timer_it;     /* stopwatch used in setup()           */
     PhaseState       phase;        /* high-level nav phase                */
     uint32_t         phase_start_time;

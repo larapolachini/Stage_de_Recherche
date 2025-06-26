@@ -825,7 +825,7 @@ Examples:
 
     # Generate logs of abs(s)
     print("Generating log(abs(s)) lineplots...")
-    categorize_by_iteration(df)   ## THIS FUNCTION
+    categorize_by_iteration(df)
     shutil.rmtree(os.path.join(args.output_dir, "log_abs_s"), ignore_errors=True)
     export_random_log_abs_s(df, 5, out_dir=os.path.join(args.output_dir, "log_abs_s"), burn_in_seconds=15, use_savgol=False, show_title=False, ylim=[1e-4, 1])
     #shutil.rmtree(os.path.join(args.output_dir, "log_abs_s_sg"), ignore_errors=True)
