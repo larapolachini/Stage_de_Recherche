@@ -166,9 +166,9 @@ parameters:
     #min_s_val_to_update_led: 0.05
     min_s_val_to_update_led: 0.01
 
-    age_initial_run_tumble: 100
+    age_initial_run_tumble: 0
     age_run_tumble_choice: 30
-    age_run_tumble: 100
+    age_run_tumble: 0
     age_handshake: 10
     age_diffusion: 100
     age_diffusion_it: 1

@@ -1,0 +1,20 @@
+# Ambiente virtual Python
+.venv/
+env/
+venv/
+
+# Caches Python
+__pycache__/
+*.pyc
+
+# Dados de simulação, resultados e figuras grandes
+results/
+figures/
+tmp_cma/
+*.feather
+*.csv
+*.png
+
+# Binários de build
+*.o
+*.so
