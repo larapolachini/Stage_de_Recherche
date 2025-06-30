@@ -8,6 +8,7 @@ sys.path.insert(0, str(scripts_dir))
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import os
 
 import torch
 from torch import nn
@@ -19,9 +20,15 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
-import matplotlib.pyplot as plt                      
+import matplotlib.pyplot as plt         
+plt.rcParams["text.usetex"] = False              
 from plots import _to_long          
 from utils import load_data         
+
+# Folder to save figures
+figure_folder = "figures_MLP"
+os.makedirs(figure_folder, exist_ok=True)
+
 # -----------------------------------------------------------------------------#
 # 1. user parameters                                                            #
 # -----------------------------------------------------------------------------#
@@ -29,12 +36,12 @@ DATA_FILE   = "results/result.feather"   # Feather / CSV
 WINDOW_LEN  = 100                        # time steps per slice
 INPUT_DIM   = 3 * WINDOW_LEN
 SHIFT       = 50                        # slide window by this amount
-EARLY_ONLY = True
+EARLY_ONLY = False
 BURN_IN_ONLY = False
 BURN_IN_STEPS = 50
 BATCH_SIZE  = 128
 LR          = 1e-3
-EPOCHS      = 40
+EPOCHS      = 5
 HIDDEN      = (8, )                  # MLP hidden sizes
 TEST_SIZE   = 0.25                       # fraction of windows for validation
 DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
@@ -140,12 +147,12 @@ test_dl  = DataLoader(test_ds,  batch_size=BATCH_SIZE, shuffle=False)
 # 4. define the MLP                                                             #
 # -----------------------------------------------------------------------------#
 class MLP(nn.Module):
-    def __init__(self, d_in, hidden, d_out):
+    def __init__(self, d_in, hidden, d_out, p_drop: float = 0.30):
         super().__init__()
         layers = []
         prev = d_in
         for h in hidden:
-            layers += [nn.Linear(prev, h), nn.ReLU()]
+            layers += [nn.Linear(prev, h), nn.ReLU(), nn.Dropout(p_drop)]
             prev = h
         layers.append(nn.Linear(prev, d_out))
         self.net = nn.Sequential(*layers)
@@ -202,6 +209,12 @@ print(classification_report(
 # -----------------------------------------------------------------------------#
 # 7. plots                                                                      #
 # -----------------------------------------------------------------------------#
+
+def save_figure(filename, dpi=300):
+    path = os.path.join(figure_folder, filename)
+    plt.savefig(path, dpi=dpi)
+    plt.close()
+
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
 
 # learning curve
@@ -218,4 +231,6 @@ ax2.bar(x + w, f1,   width=w, label="F1")
 ax2.set_xticks(x); ax2.set_xticklabels([idx2label[i] for i in x], rotation=30)
 ax2.set_ylim(0, 1); ax2.legend()
 ax2.set_title("Metrics per class")
-plt.tight_layout(); plt.show()
+plt.tight_layout(); 
+save_figure("MLP.png")
+plt.show()
