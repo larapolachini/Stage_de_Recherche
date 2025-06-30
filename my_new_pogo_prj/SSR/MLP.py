@@ -13,12 +13,16 @@ import os
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
+
 
 from sklearn.metrics import (
     accuracy_score, precision_recall_fscore_support, classification_report
 )
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.model_selection import train_test_split, GroupShuffleSplit
+
 
 import matplotlib.pyplot as plt         
 plt.rcParams["text.usetex"] = False              
@@ -33,16 +37,16 @@ os.makedirs(figure_folder, exist_ok=True)
 # 1. user parameters                                                            #
 # -----------------------------------------------------------------------------#
 DATA_FILE   = "results/result.feather"   # Feather / CSV
-WINDOW_LEN  = 100                        # time steps per slice
+WINDOW_LEN  = 150                        # time steps per slice
 INPUT_DIM   = 3 * WINDOW_LEN
-SHIFT       = 50                        # slide window by this amount
+SHIFT       = 10                        # slide window by this amount
 EARLY_ONLY = False
 BURN_IN_ONLY = False
 BURN_IN_STEPS = 50
 BATCH_SIZE  = 128
 LR          = 1e-3
-EPOCHS      = 5
-HIDDEN      = (8, )                  # MLP hidden sizes
+EPOCHS      = 30
+HIDDEN      = (8, 1)                  # MLP hidden sizes
 TEST_SIZE   = 0.25                       # fraction of windows for validation
 DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
 RNG         = 42
@@ -54,6 +58,7 @@ RNG         = 42
 df_raw, _ = load_data(DATA_FILE)   
 df_long   = _to_long(df_raw) 
 features, labels = [], [] 
+groups = []
 
 def make_windows_three_sessions(sess_arrays):
     """
@@ -113,6 +118,7 @@ for (arena, run, it), g_iter in df_long.groupby(
     for full_vec in make_windows_three_sessions(sess_arrays):
         features.append(full_vec)
         labels.append(arena)
+        groups.append(run)
 
 
 X = np.vstack(features).astype(np.float32)      # (n_samples, 3·WINDOW_LEN)
@@ -121,12 +127,19 @@ print(f"dataset: {X.shape[0]} samples × {X.shape[1]} features")
 # -----------------------------------------------------------------------------#
 # 3. split + scale (scikit-learn)                                               #
 # -----------------------------------------------------------------------------#
-X_tr, X_te, y_tr, y_te = train_test_split(
-    X, y, test_size=TEST_SIZE, stratify=y, random_state=RNG)
+
+groups = np.array(groups)
+
+gss = GroupShuffleSplit(n_splits=1, test_size=TEST_SIZE, random_state=RNG)
+(train_idx, test_idx), = gss.split(X, y, groups=groups)
+X_tr, X_te, y_tr, y_te = X[train_idx], X[test_idx], y[train_idx], y[test_idx]
+
 
 scaler = StandardScaler()
 X_tr = scaler.fit_transform(X_tr).astype(np.float32)
 X_te = scaler.transform(X_te).astype(np.float32)
+
+
 
 class ArenaDataset(Dataset):
     def __init__(self, X, y, label2idx):
@@ -147,7 +160,7 @@ test_dl  = DataLoader(test_ds,  batch_size=BATCH_SIZE, shuffle=False)
 # 4. define the MLP                                                             #
 # -----------------------------------------------------------------------------#
 class MLP(nn.Module):
-    def __init__(self, d_in, hidden, d_out, p_drop: float = 0.30):
+    def __init__(self, d_in, hidden, d_out, p_drop: float = 0.15):
         super().__init__()
         layers = []
         prev = d_in
@@ -159,16 +172,24 @@ class MLP(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-model = MLP(INPUT_DIM, HIDDEN, len(label2idx)).to(DEVICE)
+model = MLP(INPUT_DIM, HIDDEN, len(label2idx), p_drop = 0.15).to(DEVICE)
 opt   = torch.optim.Adam(model.parameters(), lr=LR)
-criterion = nn.CrossEntropyLoss()
+
+sched = ReduceLROnPlateau(
+    opt,
+    mode="min",          # we want to minimise the loss
+    factor=0.5,          # new_lr = old_lr × 0.5
+    patience=5          # wait 5 epochs with no improvement      
+)
+
+criterion = nn.CrossEntropyLoss() 
 # -----------------------------------------------------------------------------#
 # 5. training loop                                                              #
 # -----------------------------------------------------------------------------#
 loss_curve = []
 for epoch in range(1, EPOCHS + 1):
     model.train()
-    running = 0.0
+    train_running = 0.0
     for xb, yb in train_dl:
         xb, yb = xb.to(DEVICE), yb.to(DEVICE)
         opt.zero_grad()
@@ -176,11 +197,29 @@ for epoch in range(1, EPOCHS + 1):
         loss = criterion(logits, yb)
         loss.backward()
         opt.step()
-        running += loss.item() * xb.size(0)
-    epoch_loss = running / len(train_ds)
-    loss_curve.append(epoch_loss)
+        train_running += loss.item() * xb.size(0)
+    train_loss = train_running / len(train_ds)
+
+    # ---- validation pass --------------------------------------------------
+    model.eval()
+    val_running = 0.0
+    with torch.no_grad():
+        for xb, yb in test_dl:          # reuse test_dl as “val” here
+            xb, yb = xb.to(DEVICE), yb.to(DEVICE)
+            logits = model(xb)
+            loss = criterion(logits, yb)
+            val_running += loss.item() * xb.size(0)
+    val_loss = val_running / len(test_ds)
+    
+     # ---- scheduler & logging ---------------------------------------------
+    sched.step(val_loss)               # <-- use *validation* loss
+    curr_lr = opt.param_groups[0]['lr']
+
     if epoch % 5 == 0 or epoch == 1:
-        print(f"Epoch {epoch:3d}/{EPOCHS}  |  loss {epoch_loss:.4f}")
+        print(f"Epoch {epoch:3d}/{EPOCHS}"
+              f" | train {train_loss:.4f}"
+              f" | val {val_loss:.4f}"
+              f" | lr {curr_lr:.2e}")
 
 # -----------------------------------------------------------------------------#
 # 6. evaluation                                                                 #

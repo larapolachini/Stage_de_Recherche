@@ -17,8 +17,8 @@ arena_file:
     #default_option: arenas/annulus.csv
     #default_option: arenas/star.csv
     #batch_options: ["arenas/disk.csv", "arenas/annulus.csv", "arenas/star.csv", "arenas/triangle.csv"]
-    batch_options: ["arenas/disk.csv", "arenas/annulus.csv", "arenas/star.csv"]
-    #batch_options: ["arenas/disk.csv", "arenas/annulus.csv"]
+    #batch_options: ["arenas/disk.csv", "arenas/annulus.csv", "arenas/star.csv"]
+    batch_options: ["arenas/disk.csv", "arenas/annulus.csv"]
 arena_surface: 1.5e5    # In mm²
 
 delete_old_files: true
