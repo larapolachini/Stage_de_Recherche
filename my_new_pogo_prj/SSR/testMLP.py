@@ -84,6 +84,43 @@ X, y, runs = X[sel_idx], y[sel_idx], runs[sel_idx]
 print("down-sampled to", n_min, "windows per class")
 
 # ─────────────────────── 4. group-aware train/test split ─────────────────────
+# ───────────────────── 4-bis. Leave-One-Run-Out CV diagnostic ──────────────
+from sklearn.model_selection import LeaveOneGroupOut
+
+def fresh_model():
+    return MLP(INPUT_DIM, HIDDEN, len(lbl2idx)).to(DEVICE)
+
+def quick_train(model, X_tr, y_tr, epochs=35):
+    ds = ArenaDS(X_tr, y_tr)
+    dl = DataLoader(ds, batch_size=BATCH_SIZE, shuffle=True)
+    opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+    crit = nn.CrossEntropyLoss()
+    model.train()
+    for _ in range(epochs):
+        for xb, yb in dl:
+            xb, yb = xb.to(DEVICE), yb.to(DEVICE)
+            opt.zero_grad()
+            crit(model(xb), yb).backward()
+            opt.step()
+
+logo = LeaveOneGroupOut()
+loo_scores = []
+for k, (tr, te) in enumerate(logo.split(X, y, groups=runs), 1):
+    m = fresh_model()
+    quick_train(m, X[tr], y[tr])
+    m.eval()
+    with torch.no_grad():
+        preds = m(torch.from_numpy(X[te]).to(DEVICE)).argmax(1).cpu().numpy()
+    acc = (preds == y[te]).mean()
+    loo_scores.append(acc)
+    print(f"run {k:2d}/{len(runs)}  LOO-acc = {acc:.3f}")
+
+print("LOO mean ± std =", np.mean(loo_scores).round(3),
+      "±", np.std(loo_scores).round(3))
+print("-"*60)
+# ─────────── end diagnostic – normal train/test split comes next ────────────
+
+
 gss = GroupShuffleSplit(test_size=TEST_SIZE, random_state=RNG, n_splits=1)
 (train_idx, test_idx), = gss.split(X, y, groups=runs)
 X_tr, X_te = X[train_idx], X[test_idx]
@@ -127,11 +164,12 @@ class MLP(nn.Module):
 model = MLP(INPUT_DIM, HIDDEN, len(lbl2idx)).to(DEVICE)
 
 # ───────────────────────── 7. loss (+weights) & optim ────────────────────────
-cls, cnt = np.unique(y_tr, return_counts=True)
-weights = torch.tensor([1/np.sum(y_tr == 'annulus'),
-                        1/np.sum(y_tr == 'disk')],
-                       dtype=torch.float32, device=DEVICE)
+# ───────── 7. loss & optim  (replace the two lines) ─────────
+weights = torch.zeros(len(lbl2idx), dtype=torch.float32, device=DEVICE)
+for lbl, idx in lbl2idx.items():
+    weights[idx] = 1 / np.sum(y_tr == lbl)
 criterion = nn.CrossEntropyLoss(weight=weights)
+
 opt = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-4)
 sched = OneCycleLR(opt, max_lr=1e-3, total_steps=EPOCHS*len(train_dl))
 
@@ -193,7 +231,7 @@ from sklearn.metrics import confusion_matrix
 
 # 1) turn logits into P(disk)   (index 1 because lbl2idx maps annulus→0, disk→1)
 disk_idx = lbl2idx['disk']
-probs_disk = torch.softmax(logits_all, dim=1)[:, 1].numpy()
+probs_disk = torch.softmax(logits_all, dim=1)[:, disk_idx].numpy()
 
 # 2) scan thresholds → choose the one with best accuracy
 grid  = np.linspace(0.25, 0.75, 101)        # finer than 0.3…0.7 sweep
