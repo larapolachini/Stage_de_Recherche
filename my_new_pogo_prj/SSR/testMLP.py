@@ -8,41 +8,27 @@ sys.path.insert(0, str(scripts_dir))
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import os
 
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-
-
 
 from sklearn.metrics import (
     accuracy_score, precision_recall_fscore_support, classification_report
 )
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, GroupShuffleSplit
 
-
-import matplotlib.pyplot as plt         
-plt.rcParams["text.usetex"] = False              
-from plots import _to_long          
-from utils import load_data         
-
-# Folder to save figures
-figure_folder = "figures_MLP"
-os.makedirs(figure_folder, exist_ok=True)
-
+import matplotlib.pyplot as plt
+from utils import load_data                       # ← your existing loader
+from scripts.plots import _to_long                # ← helper already in plots.py
 # -----------------------------------------------------------------------------#
 # 1. user parameters                                                            #
 # -----------------------------------------------------------------------------#
 DATA_FILE   = "results/result.feather"   # Feather / CSV
-WINDOW_LEN  = 100                        # time steps per slice
-INPUT_DIM   = 3 * WINDOW_LEN
-SHIFT       = 10                        # slide window by this amount
-EARLY_ONLY = False
-BURN_IN_ONLY = False
-BURN_IN_STEPS = 50
+WINDOW_LEN  = 50                        # time steps per slice
+INPUT_DIM = 3 * WINDOW_LEN
+SHIFT       = 20                        # slide window by this amount
 BATCH_SIZE  = 128
 LR          = 1e-3
 EPOCHS      = 50
@@ -52,44 +38,20 @@ DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
 RNG         = 42
 
 # -----------------------------------------------------------------------------#
-# 2. build one big (n_samples × 3×WINDOW_LEN) feature matrix                    #
+# 2. build one big  (n_samples × 3·WINDOW_LEN)  feature matrix                 #
 # -----------------------------------------------------------------------------#
+def make_windows(series: np.ndarray, wlen=WINDOW_LEN, shift=SHIFT):
+    """Return list of sliding windows cut from a 1-D array."""
+    if len(series) < wlen:
+        return []
+    idx0 = range(0, len(series) - wlen + 1, shift)
+    return [series[i : i + wlen] for i in idx0]
 
-df_raw, _ = load_data(DATA_FILE)   
-df_long   = _to_long(df_raw) 
-features, labels = [], [] 
+df_raw, _ = load_data(DATA_FILE)
+df_long   = _to_long(df_raw)              # adds 'session' and 's'
+
+features, labels = [], []
 groups = []
-
-def make_windows_three_sessions(sess_arrays):
-    """
-    sess_arrays = [s0_array, s1_array, s2_array]  (already time-sorted)
-    Returns list of [s0|s1|s2] windows according to the chosen scheme.
-    """
-    # -- 1. ensure the 3 arrays are equally long (use the shortest) ----------
-    min_len = min(map(len, sess_arrays))
-    if EARLY_ONLY:
-        if min_len < WINDOW_LEN:
-            return []                       # drop if even the beginning is too short
-        idx_starts = [0]                    # exactly one window: first WINDOW_LEN
-    elif BURN_IN_ONLY:
-        start0 = BURN_IN_STEPS
-
-        # drop the iteration if it doesn't reach far enough past burn-in
-        if min_len < start0 + WINDOW_LEN:
-            return []
-
-        # many windows, all starting AFTER the burn-in zone
-        idx_starts = range(start0, min_len - WINDOW_LEN + 1, SHIFT)
-    else:                                    # <── you lost this branch
-        # FULL sliding-window behaviour
-        idx_starts = range(0, min_len - WINDOW_LEN + 1, SHIFT)
-
-    # -- 2. build the windows ------------------------------------------------
-    windows = []
-    for i0 in idx_starts:
-        win = np.hstack([sa[i0 : i0 + WINDOW_LEN] for sa in sess_arrays])
-        windows.append(win)
-    return windows
 
 
 # --- NEW: group by arena/run/iteration ONLY -----------------------------------
@@ -114,32 +76,36 @@ for (arena, run, it), g_iter in df_long.groupby(
     if min_len < WINDOW_LEN:
         continue
 
-    
-    for full_vec in make_windows_three_sessions(sess_arrays):
+    # Use any one array to compute cut points
+    for i0 in range(0, min_len - WINDOW_LEN + 1, SHIFT):
+        full_vec = np.hstack([sa[i0 : i0 + WINDOW_LEN] for sa in sess_arrays])
         features.append(full_vec)
         labels.append(arena)
         groups.append(run)
 
-
 X = np.vstack(features).astype(np.float32)      # (n_samples, 3·WINDOW_LEN)
 y = np.array(labels)
 print(f"dataset: {X.shape[0]} samples × {X.shape[1]} features")
+
 # -----------------------------------------------------------------------------#
 # 3. split + scale (scikit-learn)                                               #
 # -----------------------------------------------------------------------------#
-
+# 3-a.  Build a vector with one group-id per *window* you created
+#       (⟂ same order as `features`, `labels`)
 groups = np.array(groups)
 
-gss = GroupShuffleSplit(n_splits=1, test_size=TEST_SIZE, random_state=RNG)
+# 3-b.  Group-aware split: all windows coming from the *same run* go to
+#       either the train set or the test set, never both.
+gss = GroupShuffleSplit(test_size=TEST_SIZE, random_state=RNG, n_splits=1)
 (train_idx, test_idx), = gss.split(X, y, groups=groups)
-X_tr, X_te, y_tr, y_te = X[train_idx], X[test_idx], y[train_idx], y[test_idx]
 
+X_tr, X_te = X[train_idx], X[test_idx]
+y_tr, y_te = y[train_idx], y[test_idx]
 
+# 3-c.  Standardise features (as before)
 scaler = StandardScaler()
 X_tr = scaler.fit_transform(X_tr).astype(np.float32)
 X_te = scaler.transform(X_te).astype(np.float32)
-
-
 
 class ArenaDataset(Dataset):
     def __init__(self, X, y, label2idx):
@@ -173,16 +139,8 @@ class MLP(nn.Module):
         return self.net(x)
 
 model = MLP(INPUT_DIM, HIDDEN, len(label2idx), p_drop = 0.20).to(DEVICE)
-opt   = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-4)
-
-sched = ReduceLROnPlateau(
-    opt,
-    mode="min",          # we want to minimise the loss
-    factor=0.5,          # new_lr = old_lr × 0.5
-    patience=5          # wait 5 epochs with no improvement      
-)
-
-criterion = nn.CrossEntropyLoss() 
+opt   = torch.optim.Adam(model.parameters(), lr=LR)
+criterion = nn.CrossEntropyLoss()
 # -----------------------------------------------------------------------------#
 # 5. training loop                                                              #
 # -----------------------------------------------------------------------------#
@@ -200,27 +158,8 @@ for epoch in range(1, EPOCHS + 1):
         running += loss.item() * xb.size(0)
     epoch_loss = running / len(train_ds)
     loss_curve.append(epoch_loss)
-
-    # ---- validation pass --------------------------------------------------
-    model.eval()
-    val_running = 0.0
-    with torch.no_grad():
-        for xb, yb in test_dl:          # reuse test_dl as “val” here
-            xb, yb = xb.to(DEVICE), yb.to(DEVICE)
-            logits = model(xb)
-            loss = criterion(logits, yb)
-            val_running += loss.item() * xb.size(0)
-    val_loss = val_running / len(test_ds)
-    
-     # ---- scheduler & logging ---------------------------------------------
-    sched.step(val_loss)               # <-- use *validation* loss
-    curr_lr = opt.param_groups[0]['lr']
-
     if epoch % 5 == 0 or epoch == 1:
-        print(f"Epoch {epoch:3d}/{EPOCHS}"
-              f" | train {epoch_loss:.4f}"
-              f" | val {val_loss:.4f}"
-              f" | lr {curr_lr:.2e}")
+        print(f"Epoch {epoch:3d}/{EPOCHS}  |  loss {epoch_loss:.4f}")
 
 # -----------------------------------------------------------------------------#
 # 6. evaluation                                                                 #
@@ -249,12 +188,6 @@ print(classification_report(
 # -----------------------------------------------------------------------------#
 # 7. plots                                                                      #
 # -----------------------------------------------------------------------------#
-
-def save_figure(filename, dpi=300):
-    path = os.path.join(figure_folder, filename)
-    plt.savefig(path, dpi=dpi)
-    plt.close()
-
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
 
 # learning curve
@@ -271,6 +204,4 @@ ax2.bar(x + w, f1,   width=w, label="F1")
 ax2.set_xticks(x); ax2.set_xticklabels([idx2label[i] for i in x], rotation=30)
 ax2.set_ylim(0, 1); ax2.legend()
 ax2.set_title("Metrics per class")
-plt.tight_layout(); 
-save_figure("MLP.png")
-plt.show()
+plt.tight_layout(); plt.show()
