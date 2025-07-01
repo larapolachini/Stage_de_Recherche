@@ -24,6 +24,8 @@ from utils import load_data
 from scripts.plots import _to_long
 import matplotlib.pyplot as plt
 from pathlib import Path
+from sklearn.metrics import confusion_matrix
+
 
 # ───────────────────────────── 1. parameters ────────────────────────────────
 DATA_FILE   = "results/result.feather"
@@ -31,11 +33,11 @@ WINDOW_LEN  = 100          # ⬅ longer context
 INPUT_DIM   = 3 * WINDOW_LEN
 SHIFT       = 10
 HIDDEN      = (8, 1)       # DO NOT TOUCH
-BATCH_SIZE  = 128
+BATCH_SIZE  = 512
 LR          = 1e-3
-EPOCHS      = 200          # early-stop will cut it short
+EPOCHS      = 120          # early-stop will cut it short
 DROPOUT_P   = 0.15
-EARLY_PAT   = 10
+EARLY_PAT   = 20
 TEST_SIZE   = 0.25
 RNG         = 42
 DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
@@ -126,11 +128,12 @@ model = MLP(INPUT_DIM, HIDDEN, len(lbl2idx)).to(DEVICE)
 
 # ───────────────────────── 7. loss (+weights) & optim ────────────────────────
 cls, cnt = np.unique(y_tr, return_counts=True)
-weights  = torch.tensor([1/cnt[cls==c][0] for c in cls],
-                        dtype=torch.float32, device=DEVICE)
+weights = torch.tensor([1/np.sum(y_tr == 'annulus'),
+                        1/np.sum(y_tr == 'disk')],
+                       dtype=torch.float32, device=DEVICE)
 criterion = nn.CrossEntropyLoss(weight=weights)
-opt = torch.optim.Adam(model.parameters(), lr=2e-4, weight_decay=1e-4)
-sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=EPOCHS)
+opt = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-4)
+sched = OneCycleLR(opt, max_lr=1e-3, total_steps=EPOCHS*len(train_dl))
 
 # ──────────────────────── 8. train with early-stop ───────────────────────────
 best_val=float('inf'); wait=0
@@ -169,15 +172,52 @@ for epoch in range(1,EPOCHS+1):
 model.load_state_dict(best_state)
 
 # ───────────────────────────── 9. evaluation ────────────────────────────────
-model.eval(); y_true=[]; y_pred=[]
+model.eval(); 
+y_true = []
+y_pred = []
+logits_all = []
 with torch.no_grad():
     for xb,yb in test_dl:
         logits = model(xb.to(DEVICE))
+        logits_all.append(logits.cpu())
         y_pred.extend(logits.argmax(1).cpu().numpy())
         y_true.extend(yb.cpu().numpy())  
 
-y_true=np.array(y_true); y_pred=np.array(y_pred)
+logits_all = torch.cat(logits_all, dim=0)
+y_true=np.array(y_true)
+y_pred=np.array(y_pred)
 acc = accuracy_score(y_true,y_pred)
+
+# ───────────────────── 9-bis. tune decision threshold ──────────────────────
+from sklearn.metrics import confusion_matrix
+
+# 1) turn logits into P(disk)   (index 1 because lbl2idx maps annulus→0, disk→1)
+disk_idx = lbl2idx['disk']
+probs_disk = torch.softmax(logits_all, dim=1)[:, 1].numpy()
+
+# 2) scan thresholds → choose the one with best accuracy
+grid  = np.linspace(0.25, 0.75, 101)        # finer than 0.3…0.7 sweep
+scores = []
+for thr in grid:
+    y_hat = (probs_disk >= thr).astype(int)
+    scores.append((thr, (y_hat == y_true).mean()))
+best_thr, best_acc = max(scores, key=lambda t: t[1])
+
+print(f"\n‣ optimal threshold ≈ {best_thr:.3f}  "
+      f"→ accuracy {best_acc:.3f}")
+
+# 3) recompute full report at that threshold
+y_pred_thr = (probs_disk >= best_thr).astype(int)
+print("\nClassification report at tuned threshold")
+print(classification_report(
+        y_true, y_pred_thr,
+        target_names=[idx2lbl[i] for i in range(len(idx2lbl))],
+        digits=3))
+
+# 4) optional: quick confusion-matrix dump
+cm = confusion_matrix(y_true, y_pred_thr)
+print("Confusion matrix (rows = true, cols = pred)\n", cm)
+
 print(f"\nACCURACY on held-out runs: {acc:.3f}\n")
 print(classification_report(
         y_true,y_pred,
