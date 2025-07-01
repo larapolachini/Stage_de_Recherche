@@ -12,6 +12,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+plt.rcParams["text.usetex"] = False  
 import matplotlib.colors as mcolors
 from sklearn.metrics import confusion_matrix
 from scipy.signal import savgol_filter
@@ -48,7 +49,7 @@ def _to_long(df: pd.DataFrame) -> pd.DataFrame:
 
 
 sns.set(font_scale=1.3)
-plt.rc('text', usetex=True)
+plt.rc('text', usetex=False)
 plt.rc('text.latex', preamble=r''.join([
         r'\usepackage{amsmath}',
         r"\usepackage[T1]{fontenc}",

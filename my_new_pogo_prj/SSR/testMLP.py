@@ -17,7 +17,7 @@ from sklearn.metrics import (
     accuracy_score, precision_recall_fscore_support, classification_report
 )
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, GroupShuffleSplit
+from sklearn.model_selection import train_test_split, GroupShuffleSplit, GroupKFold
 
 import matplotlib.pyplot as plt
 from utils import load_data                       # ← your existing loader
@@ -25,14 +25,15 @@ from scripts.plots import _to_long                # ← helper already in plots.
 # -----------------------------------------------------------------------------#
 # 1. user parameters                                                            #
 # -----------------------------------------------------------------------------#
+
 DATA_FILE   = "results/result.feather"   # Feather / CSV
 WINDOW_LEN  = 50                        # time steps per slice
 INPUT_DIM = 3 * WINDOW_LEN
-SHIFT       = 20                        # slide window by this amount
+SHIFT       = 50                        # slide window by this amount
 BATCH_SIZE  = 128
 LR          = 1e-3
 EPOCHS      = 50
-HIDDEN      = (8, 1)                  # MLP hidden sizes
+HIDDEN      = (8, )                  # MLP hidden sizes
 TEST_SIZE   = 0.25                       # fraction of windows for validation
 DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
 RNG         = 42
@@ -87,6 +88,46 @@ X = np.vstack(features).astype(np.float32)      # (n_samples, 3·WINDOW_LEN)
 y = np.array(labels)
 print(f"dataset: {X.shape[0]} samples × {X.shape[1]} features")
 
+
+# X before scaling: n_windows × 150  (or 300/450)    
+col_means = X.mean(axis=0)          # length 150
+col_stds  = X.std(axis=0)
+
+print('mean range ', col_means.min(), col_means.max())
+print('std  range ', col_stds.min(),  col_stds.max())
+
+
+# ------------------------------------------------------------------+
+# 2-bis. DOWN-SAMPLE: keep the same #windows for every arena class  |
+# ------------------------------------------------------------------+
+rng = np.random.default_rng(RNG)       # reproducible shuffles
+
+X       = np.vstack(features).astype(np.float32)   # (n_samples, 3·WINDOW_LEN)
+y       = np.array(labels)                         # class labels (strings)
+groups  = np.array(groups)                         # run-ids (ints or strs)
+
+# gather the indices belonging to each class
+class_to_idx = {c: np.where(y == c)[0] for c in np.unique(y)}
+
+# smallest class size  →  target size for *all* classes
+n_target = min(len(idx) for idx in class_to_idx.values())
+print(f"Down-sampling every arena to {n_target} windows")
+
+# randomly pick n_target indices from every class
+sel_idx = np.concatenate([
+    rng.choice(idx, size=n_target, replace=False)  # no replacement!
+    for idx in class_to_idx.values()
+])
+
+# keep only the selected windows (order unimportant, so shuffle once)
+rng.shuffle(sel_idx)               # optional but nice
+X      = X[sel_idx]
+y      = y[sel_idx]
+groups = groups[sel_idx]
+# ------------------------------------------------------------------+
+
+
+
 # -----------------------------------------------------------------------------#
 # 3. split + scale (scikit-learn)                                               #
 # -----------------------------------------------------------------------------#
@@ -131,7 +172,7 @@ class MLP(nn.Module):
         layers = []
         prev = d_in
         for h in hidden:
-            layers += [nn.Linear(prev, h), nn.ReLU(), nn.Dropout(p_drop)]
+            layers += [nn.Linear(prev, h), nn.BatchNorm1d(h), nn.ReLU(), nn.Dropout(p_drop)]
             prev = h
         layers.append(nn.Linear(prev, d_out))
         self.net = nn.Sequential(*layers)
