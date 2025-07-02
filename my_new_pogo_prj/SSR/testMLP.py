@@ -24,20 +24,16 @@ from utils import load_data
 from scripts.plots import _to_long
 import matplotlib.pyplot as plt
 from pathlib import Path
-from sklearn.metrics import confusion_matrix
-
 
 # ───────────────────────────── 1. parameters ────────────────────────────────
 DATA_FILE   = "results/result.feather"
-WINDOW_LEN  = 100          # ⬅ longer context
+WINDOW_LEN  = 100          
 INPUT_DIM   = 3 * WINDOW_LEN
 SHIFT       = 10
-HIDDEN      = (8, 1)       # DO NOT TOUCH
-BATCH_SIZE  = 512
+HIDDEN      = (8, 1)       
+BATCH_SIZE  = 256
 LR          = 1e-3
-EPOCHS      = 120          # early-stop will cut it short
-DROPOUT_P   = 0.15
-EARLY_PAT   = 20
+EPOCHS      = 200          # 1000 # early-stop will cut it short
 TEST_SIZE   = 0.25
 RNG         = 42
 DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
@@ -46,7 +42,7 @@ rng = np.random.default_rng(RNG)
 
 # ───────────────────────── 2. load + per-run std-ise ─────────────────────────
 df_raw, _ = load_data(DATA_FILE)
-df_long   = _to_long(df_raw)            # adds 'session', 's'
+df_long   = _to_long(df_raw)            
 
 features, labels, runs = [], [], []
 
@@ -54,9 +50,19 @@ for (arena, run, it), g_iter in df_long.groupby(["arena_file","run","current_it"
     # ── 2.1  three sessions as arrays ───────────────────────────────────────
     sess = []
     for s in (0,1,2):
-        arr = g_iter[g_iter["session"]==s].sort_values("time")["s"].to_numpy()
-        if arr.size == 0: break
+        arr = (
+        g_iter[g_iter["session"] == s]
+        .sort_values("time")["s"]
+        .to_numpy()
+        )
+        if arr.size == 0: 
+            break
+
+            # --- NEW: log-magnitude transform ---------------------------------
+        arr = np.sign(arr) * np.log1p(np.abs(arr))   # preserves polarity
+
         sess.append(arr)
+
     if len(sess) != 3: continue
 
     # ── 2.2  per-run μ/σ  → zero-mean, unit-var — improves generalisation ───
@@ -84,43 +90,6 @@ X, y, runs = X[sel_idx], y[sel_idx], runs[sel_idx]
 print("down-sampled to", n_min, "windows per class")
 
 # ─────────────────────── 4. group-aware train/test split ─────────────────────
-# ───────────────────── 4-bis. Leave-One-Run-Out CV diagnostic ──────────────
-from sklearn.model_selection import LeaveOneGroupOut
-
-def fresh_model():
-    return MLP(INPUT_DIM, HIDDEN, len(lbl2idx)).to(DEVICE)
-
-def quick_train(model, X_tr, y_tr, epochs=35):
-    ds = ArenaDS(X_tr, y_tr)
-    dl = DataLoader(ds, batch_size=BATCH_SIZE, shuffle=True)
-    opt = torch.optim.Adam(model.parameters(), lr=1e-3)
-    crit = nn.CrossEntropyLoss()
-    model.train()
-    for _ in range(epochs):
-        for xb, yb in dl:
-            xb, yb = xb.to(DEVICE), yb.to(DEVICE)
-            opt.zero_grad()
-            crit(model(xb), yb).backward()
-            opt.step()
-
-logo = LeaveOneGroupOut()
-loo_scores = []
-for k, (tr, te) in enumerate(logo.split(X, y, groups=runs), 1):
-    m = fresh_model()
-    quick_train(m, X[tr], y[tr])
-    m.eval()
-    with torch.no_grad():
-        preds = m(torch.from_numpy(X[te]).to(DEVICE)).argmax(1).cpu().numpy()
-    acc = (preds == y[te]).mean()
-    loo_scores.append(acc)
-    print(f"run {k:2d}/{len(runs)}  LOO-acc = {acc:.3f}")
-
-print("LOO mean ± std =", np.mean(loo_scores).round(3),
-      "±", np.std(loo_scores).round(3))
-print("-"*60)
-# ─────────── end diagnostic – normal train/test split comes next ────────────
-
-
 gss = GroupShuffleSplit(test_size=TEST_SIZE, random_state=RNG, n_splits=1)
 (train_idx, test_idx), = gss.split(X, y, groups=runs)
 X_tr, X_te = X[train_idx], X[test_idx]
@@ -149,14 +118,12 @@ class MLP(nn.Module):
         super().__init__()
         layers = []
         prev = d_in
-        for h in hidden:                                 # (8, 1)
+        for h in hidden:                                 
             layers += [nn.Linear(prev, h),
                        nn.BatchNorm1d(h),
-                       nn.ReLU()]  
-            if h > 1:
-                layers.append(nn.Dropout(DROPOUT_P))                      # ← no Dropout
+                       nn.ReLU()]                       
             prev = h
-        layers.append(nn.Linear(prev, d_out))
+        layers += [nn.Linear(prev, d_out), nn.LogSoftmax(dim=1)]
         self.net = nn.Sequential(*layers)
     def forward(self, x):
         return self.net(x)
@@ -164,31 +131,36 @@ class MLP(nn.Module):
 model = MLP(INPUT_DIM, HIDDEN, len(lbl2idx)).to(DEVICE)
 
 # ───────────────────────── 7. loss (+weights) & optim ────────────────────────
-# ───────── 7. loss & optim  (replace the two lines) ─────────
-weights = torch.zeros(len(lbl2idx), dtype=torch.float32, device=DEVICE)
+cls, cnt = np.unique(y_tr, return_counts=True)
+weights = torch.zeros(len(lbl2idx), device=DEVICE)
 for lbl, idx in lbl2idx.items():
-    weights[idx] = 1 / np.sum(y_tr == lbl)
-criterion = nn.CrossEntropyLoss(weight=weights)
+    weights[idx] = 1.0 / np.sum(y_tr == lbl)
+criterion = nn.NLLLoss(weight=weights)
 
-opt = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-4)
-sched = OneCycleLR(opt, max_lr=1e-3, total_steps=EPOCHS*len(train_dl))
+opt = torch.optim.Adam(model.parameters(), lr=2e-4, weight_decay=1e-4)
+sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=EPOCHS)
 
 # ──────────────────────── 8. train with early-stop ───────────────────────────
-best_val=float('inf'); wait=0
+best_val=float('inf')
 loss_curve=[]
 for epoch in range(1,EPOCHS+1):
     # training step
-    model.train(); run=0.
+    model.train()
+    run = 0.0
     for xb,yb in train_dl:
         xb,yb = xb.to(DEVICE), yb.to(DEVICE)
         opt.zero_grad()
         loss = criterion(model(xb), yb)
-        loss.backward(); opt.step(); sched.step()
+        loss.backward()
+        opt.step()
         run += loss.item()*xb.size(0)
-    train_loss = run/len(train_dl.dataset); loss_curve.append(train_loss)
+    sched.step()
+    train_loss = run/len(train_dl.dataset)
+    loss_curve.append(train_loss)
 
     # validation
-    model.eval(); run=0.
+    model.eval()
+    run = 0.0
     with torch.no_grad():
         for xb,yb in test_dl:
             xb,yb = xb.to(DEVICE), yb.to(DEVICE)
@@ -196,13 +168,8 @@ for epoch in range(1,EPOCHS+1):
     val_loss = run/len(test_dl.dataset)
 
     if val_loss < best_val-1e-4:
-        best_val, wait = val_loss, 0
+        best_val = val_loss
         best_state = model.state_dict()
-    else:
-        wait += 1
-        if wait == EARLY_PAT:
-            print(f"Early stop @ epoch {epoch}")
-            break
 
     if epoch%10==0 or epoch==1:
         print(f"epoch {epoch:3d} | train {train_loss:.4f} | val {val_loss:.4f}")
@@ -210,52 +177,15 @@ for epoch in range(1,EPOCHS+1):
 model.load_state_dict(best_state)
 
 # ───────────────────────────── 9. evaluation ────────────────────────────────
-model.eval(); 
-y_true = []
-y_pred = []
-logits_all = []
+model.eval(); y_true=[]; y_pred=[]
 with torch.no_grad():
     for xb,yb in test_dl:
         logits = model(xb.to(DEVICE))
-        logits_all.append(logits.cpu())
         y_pred.extend(logits.argmax(1).cpu().numpy())
         y_true.extend(yb.cpu().numpy())  
 
-logits_all = torch.cat(logits_all, dim=0)
-y_true=np.array(y_true)
-y_pred=np.array(y_pred)
+y_true=np.array(y_true); y_pred=np.array(y_pred)
 acc = accuracy_score(y_true,y_pred)
-
-# ───────────────────── 9-bis. tune decision threshold ──────────────────────
-from sklearn.metrics import confusion_matrix
-
-# 1) turn logits into P(disk)   (index 1 because lbl2idx maps annulus→0, disk→1)
-disk_idx = lbl2idx['disk']
-probs_disk = torch.softmax(logits_all, dim=1)[:, disk_idx].numpy()
-
-# 2) scan thresholds → choose the one with best accuracy
-grid  = np.linspace(0.25, 0.75, 101)        # finer than 0.3…0.7 sweep
-scores = []
-for thr in grid:
-    y_hat = (probs_disk >= thr).astype(int)
-    scores.append((thr, (y_hat == y_true).mean()))
-best_thr, best_acc = max(scores, key=lambda t: t[1])
-
-print(f"\n‣ optimal threshold ≈ {best_thr:.3f}  "
-      f"→ accuracy {best_acc:.3f}")
-
-# 3) recompute full report at that threshold
-y_pred_thr = (probs_disk >= best_thr).astype(int)
-print("\nClassification report at tuned threshold")
-print(classification_report(
-        y_true, y_pred_thr,
-        target_names=[idx2lbl[i] for i in range(len(idx2lbl))],
-        digits=3))
-
-# 4) optional: quick confusion-matrix dump
-cm = confusion_matrix(y_true, y_pred_thr)
-print("Confusion matrix (rows = true, cols = pred)\n", cm)
-
 print(f"\nACCURACY on held-out runs: {acc:.3f}\n")
 print(classification_report(
         y_true,y_pred,
@@ -295,4 +225,4 @@ plt.show()
 
 plt.figure(figsize=(6,4))
 plt.plot(loss_curve); plt.xlabel("epoch"); plt.ylabel("train loss")
-plt.title("Tiny-MLP learning curve"); plt.tight_layout(); plt.show()
+plt.title("Tiny-MLP learning curve"); plt.tight_layout(); plt.show() 
