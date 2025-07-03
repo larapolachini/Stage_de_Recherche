@@ -1,4 +1,4 @@
-# Ambiente virtual Python
+# virtual env Python
 .venv/
 env/
 venv/
@@ -7,7 +7,7 @@ venv/
 __pycache__/
 *.pyc
 
-# Dados de simulação, resultados e figuras grandes
+# Data
 results/
 figures/
 tmp_cma/
@@ -15,7 +15,8 @@ plots/
 *.feather
 *.csv
 *.png
+pogosim.simg/
 
-# Binários de build
+# build
 *.o
 *.so
