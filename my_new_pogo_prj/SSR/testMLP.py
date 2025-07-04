@@ -31,7 +31,7 @@ WINDOW_LEN  = 100
 INPUT_DIM   = 3 * WINDOW_LEN
 SHIFT       = 10
 HIDDEN      = (8, 1)       
-BATCH_SIZE  = 256 #512
+BATCH_SIZE  = 512 #512
 LR          = 1e-3 
 EPOCHS      = 200          # 1000 # early-stop will cut it short
 TEST_SIZE   = 0.25
@@ -50,11 +50,9 @@ for (arena, run, it), g_iter in df_long.groupby(["arena_file","run","current_it"
     # ── 2.1  three sessions as arrays ───────────────────────────────────────
     sess = []
     for s in (0,1,2):
-        arr = (
-        g_iter[g_iter["session"] == s]
-        .sort_values("time")["s"]
-        .to_numpy()
-        )
+        arr = (g_iter[g_iter["session"] == s]
+        .sort_values("time")["s"].to_numpy())
+
         if arr.size == 0: 
             break
 
@@ -80,24 +78,16 @@ X = np.vstack(features).astype(np.float32)
 y = np.array(labels);          runs = np.array(runs)
 print(f"dataset: {X.shape[0]} windows  ×  {X.shape[1]} features")
 
-# ───────────────────── 3. down-sample to smallest class ──────────────────────
-class_to_idx = {c: np.where(y==c)[0] for c in np.unique(y)}
-n_min        = min(len(v) for v in class_to_idx.values())
-sel_idx = np.concatenate([rng.choice(v, n_min, replace=False)
-                          for v in class_to_idx.values()])
-rng.shuffle(sel_idx)
-X, y, runs = X[sel_idx], y[sel_idx], runs[sel_idx]
-print("down-sampled to", n_min, "windows per class")
 
-# ─────────────────────── 4. group-aware train/test split ─────────────────────
+# ─────────────────────── 3. group-aware train/test split ─────────────────────
 gss = GroupShuffleSplit(test_size=TEST_SIZE, random_state=RNG, n_splits=1)
 (train_idx, test_idx), = gss.split(X, y, groups=runs)
 X_tr, X_te = X[train_idx], X[test_idx]
 y_tr, y_te = y[train_idx], y[test_idx]
 
-#scaler = StandardScaler()
-#X_tr = scaler.fit_transform(X_tr).astype(np.float32)
-#X_te = scaler.transform(X_te).astype(np.float32)
+scaler = StandardScaler()
+X_tr = scaler.fit_transform(X_tr).astype(np.float32)
+X_te = scaler.transform(X_te).astype(np.float32)
 
 # ───────────────────────────── 5. datasets ───────────────────────────────────
 lbl2idx = {c:i for i,c in enumerate(sorted(np.unique(y)))}
@@ -137,10 +127,10 @@ for lbl, idx in lbl2idx.items():
     weights[idx] = 1.0 / np.sum(y_tr == lbl)
 criterion = nn.NLLLoss(weight=weights)
 
-opt = torch.optim.Adam(model.parameters(), lr=2e-4, weight_decay=1e-4)
-sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=EPOCHS)
+opt = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=0)
+sched = OneCycleLR(opt, max_lr=1e-3, total_steps=EPOCHS*len(train_dl))
 
-# ──────────────────────── 8. train with early-stop ───────────────────────────
+# ──────────────────────── 8. train ───────────────────────────
 best_val=float('inf')
 loss_curve=[]
 for epoch in range(1,EPOCHS+1):
@@ -153,8 +143,8 @@ for epoch in range(1,EPOCHS+1):
         loss = criterion(model(xb), yb)
         loss.backward()
         opt.step()
+        sched.step()
         run += loss.item()*xb.size(0)
-    sched.step()
     train_loss = run/len(train_dl.dataset)
     loss_curve.append(train_loss)
 
