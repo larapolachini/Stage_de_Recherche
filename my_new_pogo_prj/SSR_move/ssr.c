@@ -50,7 +50,7 @@ fp_t min_s_val_to_update_led = FROM_FLOAT(0.01f);
 #define MAX_AGE (1.20e3)
 uint32_t max_age = MAX_AGE;
 uint32_t ms_initial_run_tumble                = MAX_AGE * 0;
-uint32_t ms_run_tumble_choice                 = MAX_AGE * 30;
+uint32_t ms_run_tumble_choice                 = MAX_AGE * 10;
 uint32_t ms_run_tumble                        = MAX_AGE * 0;
 uint32_t ms_handshake                         = MAX_AGE * 10;
 uint32_t ms_diffusion                         = MAX_AGE * 100;
@@ -70,7 +70,7 @@ fp_t min_s_val_to_update_led = FROM_FLOAT(0.03f);
 #define MAX_AGE (1.20e3)
 uint32_t max_age = MAX_AGE;
 uint32_t ms_initial_run_tumble                = MAX_AGE * 0;
-uint32_t ms_run_tumble_choice                 = MAX_AGE * 2;
+uint32_t ms_run_tumble_choice                 = MAX_AGE * 10;
 uint32_t ms_run_tumble                        = MAX_AGE * 0;
 uint32_t ms_handshake                         = MAX_AGE * 5;
 uint32_t ms_diffusion                         = MAX_AGE * 100;
@@ -389,7 +389,6 @@ void behav_run_tumble(void)
 
 void init_diffusion(diffusion_session_t* diff, fp_t* s, diffusion_type_t type) {
     mydata->data_to_send.data_type = DATA_NULL;
-    set_motion(STOP);
     clear_all_neighbors();
 
     // Set 'diff' as current diffusion session
@@ -646,7 +645,6 @@ void behav_diffusion(void) {
 //    pogobot_stopwatch_reset(&timer_debug1);
 
     diffusion_session_t *const diff = mydata->curr_diff;
-    set_motion(STOP);
     uint32_t const current_time = current_time_milliseconds();
 
     // Compute next s, if we are at the end of a diffusion step
@@ -788,7 +786,6 @@ void end_diffusion(void) {
 
 void init_coll_avg_lambda(void) {
     mydata->data_to_send.data_type = DATA_NULL;
-    set_motion(STOP);
     clear_all_neighbors();
     mydata->time_last_coll_avg_lambda_it = current_time_milliseconds();
 
@@ -804,7 +801,6 @@ void init_coll_avg_lambda(void) {
 }
 
 void behav_coll_avg_lambda(void) {
-    set_motion(STOP);
     uint32_t const current_time = current_time_milliseconds();
     if(current_time - mydata->time_last_coll_avg_lambda_it >= ms_collective_avg_lambda_it) {
         // Compute lambda through collective averaging
@@ -860,7 +856,6 @@ void end_coll_avg_lambda(void) {
 #ifdef ENABLE_FINAL_LAMBDA
 void init_coll_final_lambda(void) {
     mydata->data_to_send.data_type = DATA_NULL;
-    set_motion(STOP);
     clear_all_neighbors();
 
     diffusion_session_t *const diff = mydata->curr_diff;
@@ -886,7 +881,6 @@ void init_coll_final_lambda(void) {
 
 void behav_coll_final_lambda(void) {
     diffusion_session_t *const diff = mydata->curr_diff;
-    set_motion(STOP);
     uint32_t const current_time = current_time_milliseconds();
 
     if(current_time - mydata->time_last_coll_final_lambda_it >= ms_collective_final_lambda_it) {
@@ -929,7 +923,6 @@ void behav_coll_final_lambda(void) {
 #ifdef ENABLE_HANDSHAKES
 void behav_handshake(void) {
     mydata->enable_message_sending = true;
-    set_motion(STOP);
 
     // Set number of peers to include in the message
     uint8_t nb_peers = mydata->nb_neighbors;
@@ -1053,7 +1046,7 @@ void init_transitions(void) {
 static void transition_waiting_time(uint32_t ct) {
     if (mydata->current_behavior != WAITING_TIME) {
         mydata->behavior_start_ms = ct;
-        set_motion(STOP);
+        //set_motion(STOP);
         mydata->enable_message_sending = false;
         printf0("BEGIN ITERATION it=%d\n", mydata->current_it);
         printf0("  it=%d WAITING_TIME\n", mydata->current_it);
@@ -1075,7 +1068,7 @@ static void transition_run_tumble(uint32_t ct)
 #ifdef ENABLE_HANDSHAKES
 static void transition_handshake(uint32_t ct) {
     if (mydata->current_behavior != HANDSHAKE) {
-        set_motion(STOP);
+        //set_motion(STOP);
         printf0("Exchanging Handshakes\n");
         clear_all_neighbors();
         clear_known_neighbors();
@@ -1087,9 +1080,9 @@ static void transition_handshake(uint32_t ct) {
 #ifdef ENABLE_PRE_DIFFUSION
 static void transition_pre_diffusion(uint32_t ct) {
     if (mydata->current_behavior != PRE_DIFFUSION) {
-//#ifndef ENABLE_ALWAYS_MOVING
+#ifndef ENABLE_ALWAYS_MOVING
     //set_motion(STOP);
-//#endif
+#endif
         fp_t s[NUMBER_DIFF];
         for (uint8_t i = 0; i < NUMBER_DIFF; i++) {
             s[i] = ((uint32_t)(rand() + pogobot_helper_getid()) % 2 == 0)
@@ -1104,9 +1097,9 @@ static void transition_pre_diffusion(uint32_t ct) {
 
 static void transition_diffusion(uint32_t ct) {
     if (mydata->current_behavior != DIFFUSION) {
-//#ifndef ENABLE_ALWAYS_MOVING
+#ifndef ENABLE_ALWAYS_MOVING
     //set_motion(STOP);
-//#endif
+#endif
         fp_t s[NUMBER_DIFF];
         for (uint8_t i = 0; i < NUMBER_DIFF; i++) {
             s[i] = (pogobot_helper_getid() % 2 == 0)
@@ -1129,9 +1122,9 @@ static void transition_avg_lambda(uint32_t ct) {
 #else
     if (mydata->current_behavior != CONSENSUS_LAMBDA) {
 #endif
-//#ifndef ENABLE_ALWAYS_MOVING
+#ifndef ENABLE_ALWAYS_MOVING
     //set_motion(STOP);
-//#endif
+#endif
         end_diffusion();
         printf0("  it=%d CONSENSUS_LAMBDA\n", mydata->current_it);
         init_coll_avg_lambda();
@@ -1146,9 +1139,9 @@ static void transition_final_lambda(uint32_t ct) {
 #else
     if (mydata->current_behavior != FINAL_LAMBDA) {
 #endif
-//#ifndef ENABLE_ALWAYS_MOVING
+#ifndef ENABLE_ALWAYS_MOVING
     //set_motion(STOP);
-//#endif
+#endif
         end_coll_avg_lambda();
         printf0("  it=%d FINAL_LAMBDA\n", mydata->current_it);
         init_coll_final_lambda();
@@ -1233,9 +1226,9 @@ void iteration(void) {
             end_iteration();
         }
     }
-//#ifdef ENABLE_ALWAYS_MOVING
-//    behav_run_tumble();
-//#endif
+#ifdef ENABLE_ALWAYS_MOVING
+    behav_run_tumble();
+#endif
 
 //    printf0("iteration1: elapsed:%uųs   ",
 //             pogobot_stopwatch_get_elapsed_microseconds(&timer_debug2));
@@ -1245,9 +1238,9 @@ void iteration(void) {
     switch (mydata->current_behavior) {
         case INIT_RUN_TUMBLE:
         case RUN_TUMBLE:
-//#ifndef ENABLE_ALWAYS_MOVING
+#ifndef ENABLE_ALWAYS_MOVING
             behav_run_tumble();
-//#endif
+#endif
             break;
 #ifdef ENABLE_HANDSHAKES
         case HANDSHAKE:

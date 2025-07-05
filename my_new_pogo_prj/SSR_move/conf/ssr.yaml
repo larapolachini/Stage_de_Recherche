@@ -37,7 +37,7 @@ show_light_levels: false            # In the GUI, can enabled/disabled using F7
 GUI: true
 
 # Time
-simulation_time: 1200.0     # In s
+simulation_time: 600.0     # In s
 time_step: 0.01            # In s
 GUI_speed_up: 10.0         # How much the visualisation in the GUI should be sped up
 
@@ -100,12 +100,12 @@ objects:
         radius: 26.5                    # In mm
 
         # Physical properties
-        body_linear_damping: 0.3
+        body_linear_damping: 0.00
         body_angular_damping: 0.3
         body_density: 10.0
         body_friction: 0.3
         body_restitution: 0.5
-        temporal_noise_stddev: 2000   # In µs
+        temporal_noise_stddev: 3000   # In µs
 
         max_linear_speed: 100.0
         max_angular_speed: 2.0
@@ -167,7 +167,7 @@ parameters:
     min_s_val_to_update_led: 0.01
 
     age_initial_run_tumble: 0
-    age_run_tumble_choice: 30
+    age_run_tumble_choice: 10
     age_run_tumble: 0
     age_handshake: 10
     age_diffusion: 100
@@ -180,10 +180,10 @@ parameters:
     age_start_it_waiting_time: 1
 
      # --- Run-and-tumble parameters -----------------
-    run_duration_min: 60     # ms  (default from demo)
-    run_duration_max: 113
-    tumble_duration_min: 2675
-    tumble_duration_max: 6459
+    run_duration_min: 100     # ms  (default from demo)
+    run_duration_max: 500
+    tumble_duration_min: 500
+    tumble_duration_max: 1000
     enable_backward_dir: false   # true lets a RUN phase sometimes go backwards
 
 
