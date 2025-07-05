@@ -12,6 +12,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+plt.rcParams["text.usetex"] = False  
 import matplotlib.colors as mcolors
 from sklearn.metrics import confusion_matrix
 from scipy.signal import savgol_filter
@@ -22,8 +23,33 @@ import shutil
 
 from utils import *
 
+S_COLS = ["s0", "s1", "s2"] 
+
+def _to_long(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Return a DataFrame with a new column 'session' (int 0/1/2) and a
+    single column 's' that holds the corresponding value.
+    Works even if the file came from the old firmware (single 's').
+    """
+    if set(S_COLS).issubset(df.columns):
+        long = df.melt(
+            id_vars=[c for c in df.columns if c not in S_COLS],
+            value_vars=S_COLS,
+            var_name="session",
+            value_name="s",
+        )
+        long["session"] = long["session"].str.slice(1).astype(int)  # 's0'->0
+        return long
+    elif "s" in df.columns:           # legacy file
+        df = df.copy()
+        df["session"] = 0
+        return df.rename(columns={"s": "s"})
+    else:
+        raise ValueError("No s columns found in dataframe")
+
+
 sns.set(font_scale=1.3)
-plt.rc('text', usetex=True)
+plt.rc('text', usetex=False)
 plt.rc('text.latex', preamble=r''.join([
         r'\usepackage{amsmath}',
         r"\usepackage[T1]{fontenc}",
@@ -350,7 +376,7 @@ def confusion_mat_plot_df(df: pd.DataFrame,
 
 
 
-def categorize_by_iteration(df: pd.DataFrame, *, time_col: str = "t") -> pd.DataFrame:
+def categorize_by_iteration(df: pd.DataFrame, *, time_col: str = "time") -> pd.DataFrame:
     """
     1.  Create a traj_id for every (current_it, robot_id, run, arena_file)
         where current_behavior == 4.
@@ -425,7 +451,7 @@ def plot_log_abs_s(
     run: int,
     arena_file: str,
     *,
-    ylim = None,
+    ylim=None,
     use_savgol: bool = True,
     window: int = 51,
     poly: int = 3,
@@ -435,103 +461,75 @@ def plot_log_abs_s(
     show_title: bool = True,
     ax: plt.Axes | None = None,
 ):
-    """
-    Plot |s_i^n| (raw or Sav-Gol) versus diffusion step n for each robot_id
-    in the chosen (current_it, run, arena_file) slice.
+    """Three stacked sub-axes, one per session; each shows every robot."""
+    long = _to_long(df)
 
-    Parameters
-    ----------
-    ...
-    show_title   : bool, add/omit the title line
-    """
-
-#    # ------------------------------- 0. font prefs ---------------------------------
-#    rcParams.update({
-#        "font.family": "sans-serif",
-#        "font.sans-serif": ["Helvetica", "Arial", "Liberation Sans", "DejaVu Sans"],
-#        "axes.labelsize": 12,
-#        "axes.titlesize": 13,
-#        "legend.fontsize": 9,
-#    })
-
-    # ------------------------------- 1. slice data ---------------------------------
-    sl = df[
-        (df["current_it"] == current_it) &
-        (df["run"]        == run) &
-        (df["arena_file"] == arena_file) &
-        (df["traj_id"]    != -1)
+    sl = long[
+        (long["current_it"] == current_it)
+        & (long["run"] == run)
+        & (long["arena_file"] == arena_file)
+        & (long["traj_id"] != -1)
     ]
     if sl.empty:
         raise ValueError("No matching rows for the requested slice.")
 
-    t0          = sl["time"].min()
-    t_end_burn  = t0 + burn_in_seconds
-
-    # ------------------------------- 2. axes prep ----------------------------------
     if ax is None:
-        _, ax = plt.subplots(figsize=(8, 4.5))
+        _, axes = plt.subplots(3, 1, figsize=(8, 10), sharex=True)
+    else:                               # allow embedding in larger grid
+        axes = [ax] * 3
 
-    n_colors = sl["robot_id"].nunique()
-    cmap     = plt.get_cmap("tab20" if n_colors <= 20 else "rainbow")
-    max_n_b  = 0
+    style_map = {0: "-", 1: "--", 2: ":"}
 
-    # ------------------------------- 3. plot traces --------------------------------
-    for idx, (robot_id, g) in enumerate(sl.groupby("robot_id", sort=False)):
-        g = g.sort_values("t")
-        n = np.arange(len(g), dtype=int)                        # diffusion step
-        last_burn = n[g["time"].to_numpy() <= t_end_burn].max(initial=0)
-        max_n_b   = max(max_n_b, last_burn)
+    for sess, sub in sl.groupby("session"):
+        ax_ = axes[sess]
+        n_colors = sub["robot_id"].nunique()
+        cmap = plt.get_cmap("tab20" if n_colors <= 20 else "rainbow")
 
-        y = np.abs(g["s"].to_numpy(dtype=float))
-        if use_savgol and len(y) > poly + 2:
-            win = min(window, len(y) if len(y) % 2 else len(y) - 1)
-            win = max(win, poly + 2 | 1)
-            y  = savgol_filter(y, win, poly, mode="interp")
+        t0 = sub["time"].min()
+        t_end_burn = t0 + burn_in_seconds
+        max_n_b = 0
 
-        plot_fun = ax.semilogy if logscale else ax.plot
-        plot_fun(
-            n, y,
-            label=f"robot {robot_id}",
-            lw=1.2,
-            color=cmap(idx / max(1, n_colors - 1)),
-        )
+        for idx, (rid, g) in enumerate(sub.groupby("robot_id", sort=False)):
+            g = g.sort_values("time")
+            n = np.arange(len(g), dtype=int)
+            last_burn = n[g["time"].to_numpy() <= t_end_burn].max(initial=0)
+            max_n_b = max(max_n_b, last_burn)
 
-    # ------------------------------- 4. burn-in zone -------------------------------
-    ax.axvspan(0, max_n_b, facecolor="pink", alpha=0.25, zorder=0)
+            y = np.abs(g["s"].to_numpy(dtype=float))
+            if use_savgol and len(y) > poly + 2:
+                win = min(window, len(y) if len(y) % 2 else len(y) - 1)
+                win = max(win, poly + 2 | 1)
+                y = savgol_filter(y, win, poly, mode="interp")
 
-    # label at the *bottom* of the shaded area (axes coords y≈0)
-    ax.text(
-        0.010, 0.02,               # left, bottom in axes fraction
-        r"burn\\  in",
-        transform=ax.transAxes,
-        fontsize=14,
-        fontweight="bold",
-        ha="left",
-        va="bottom",
-    )
+            plot_fun = ax_.semilogy if logscale else ax_.plot
+            plot_fun(
+                n,
+                y,
+                lw=1.2,
+                linestyle=style_map[sess],
+                color=cmap(idx / max(1, n_colors - 1)),
+                label=f"r{rid}" if show_legend else None,
+            )
 
-    # ------------------------------- 5. cosmetics ----------------------------------
-    ax.set_xlim(left=0)
-    if ylim:
-        ax.set_ylim(ylim)
-    ax.set_xlabel(r"Diffusion step $n$")
-    ax.set_ylabel(r"$| s_{i}^n |$")
-    if logscale:
-        ax.set_yscale("log")
-    #ax.grid(True, lw=0.3, alpha=0.5, which="both")
+        # same burn-in shade & cosmetics per axis ---------------------
+        ax_.axvspan(0, max_n_b, facecolor="pink", alpha=0.25, zorder=0)
+        if ylim:
+            ax_.set_ylim(ylim)
+        if logscale:
+            ax_.set_yscale("log")
+        ax_.set_ylabel(rf"$|s_i^n|$  (s{sess})")
 
+    axes[-1].set_xlabel("Diffusion step n")
     if show_title:
-        title = (
-            r"$|s_i^n|$" + (" (log-scale)" if logscale else "") +
-            f" – current_it={current_it}, run={run}, arena='{arena_file}'" +
-            (" – Sav-Gol" if use_savgol else " – raw")
+        axes[0].set_title(
+            f"{arena_file}  –  it={current_it}  run={run}"
+            + ("  (Sav-Gol)" if use_savgol else "")
         )
-        ax.set_title(title)
-
     if show_legend:
-        ax.legend(ncol=2, frameon=False)
+        axes[0].legend(ncol=3, frameon=False)
 
-    return ax
+    return axes[0]          # for API compatibility
+
 
 
 def plot_mean_log_abs_s(
@@ -540,7 +538,7 @@ def plot_mean_log_abs_s(
     run: int,
     arena_file: str,
     *,
-    ylim=None,                     # NEW – match plot_log_abs_s
+    ylim=None,
     use_savgol: bool = True,
     window: int = 51,
     poly: int = 3,
@@ -549,103 +547,75 @@ def plot_mean_log_abs_s(
     show_title: bool = True,
     ax: plt.Axes | None = None,
 ):
-    """
-    One black curve per (current_it, run, arena_file):
-      • y = mean |s| across robots at each diffusion step n
-      • dotted inside burn-in, solid afterwards
-    """
+    """Stacked sub-axes showing mean |s| for s0, s1, s2."""
+    long = _to_long(df)
 
-    # 1️⃣  select valid rows
-    sl = df[
-        (df["current_it"] == current_it)
-        & (df["run"] == run)
-        & (df["arena_file"] == arena_file)
-        & (df["traj_id"] != -1)
+    sl = long[
+        (long["current_it"] == current_it)
+        & (long["run"] == run)
+        & (long["arena_file"] == arena_file)
+        & (long["traj_id"] != -1)
     ].copy()
     if sl.empty:
         raise ValueError("No matching rows for the requested slice.")
 
-    t0, t_end_burn = sl["time"].min(), sl["time"].min() + burn_in_seconds
-
-    # 2️⃣  diffusion index n (per robot)
-    sl = sl.sort_values(["robot_id", "t"])
-    sl["n"] = sl.groupby("robot_id").cumcount()
-
-    # 3️⃣  mean |s| for every n
-    mean_abs_s = (
-        sl.assign(abs_s=sl["s"].abs())
-          .groupby("n")["abs_s"]
-          .mean()
-          .sort_index()
-    )
-    n_vals, y_vals = mean_abs_s.index.to_numpy(), mean_abs_s.to_numpy()
-
-    # optional Sav-Gol
-    if use_savgol and len(y_vals) > poly + 2:
-        win = min(window, len(y_vals) if len(y_vals) % 2 else len(y_vals) - 1)
-        win = max(win, poly + 2 | 1)
-        y_vals = savgol_filter(y_vals, win, poly, mode="interp")
-
-    # 4️⃣  locate last burn-in step
-    burn_mask_full = sl["time"] <= t_end_burn
-    last_burn_n = sl.loc[burn_mask_full, "n"].max() if burn_mask_full.any() else -1
-
-    # 5️⃣  plotting
     if ax is None:
-        _, ax = plt.subplots(figsize=(8, 4.5))
+        _, axes = plt.subplots(3, 1, figsize=(8, 10), sharex=True)
+    else:
+        axes = [ax] * 3
 
-    # background shade
-    if last_burn_n >= 0:
-        ax.axvspan(0, last_burn_n, facecolor="pink", alpha=0.25, zorder=0)
+    for sess, sub in sl.groupby("session"):
+        sub = sub.sort_values(["robot_id", "time"])
+        sub["n"] = sub.groupby("robot_id").cumcount()
 
-    plot_fun = ax.semilogy if logscale else ax.plot
-
-    # full solid curve (ensures continuity)
-    plot_fun(n_vals, y_vals, lw=1.5, color="black", zorder=1)
-
-    # overlay dotted burn-in segment
-    if last_burn_n >= 0:
-        burn_mask = n_vals <= last_burn_n
-        plot_fun(
-            n_vals[burn_mask],
-            y_vals[burn_mask],
-            linestyle=":",
-            lw=1.5,
-            color="black",
-            zorder=2,
+        mean_abs = (
+            sub.assign(abs_s=sub["s"].abs())
+            .groupby("n")["abs_s"]
+            .mean()
+            .sort_index()
         )
+        n_vals, y_vals = mean_abs.index.to_numpy(), mean_abs.to_numpy()
 
-    # burn-in label (bold, two-line, bottom-left)
-    if last_burn_n >= 0:
-        ax.text(
-            0.010, 0.02,
-            r"burn\\  in",
-            transform=ax.transAxes,
-            fontsize=14,
-            fontweight="bold",
-            ha="left",
-            va="bottom",
-        )
+        if use_savgol and len(y_vals) > poly + 2:
+            win = min(window, len(y_vals) if len(y_vals) % 2 else len(y_vals) - 1)
+            win = max(win, poly + 2 | 1)
+            y_vals = savgol_filter(y_vals, win, poly, mode="interp")
 
-    # cosmetics to match plot_log_abs_s
-    ax.set_xlim(left=0)
-    if ylim is not None:
-        ax.set_ylim(ylim)
-    ax.set_xlabel(r"Diffusion step $n$")
-    ax.set_ylabel(r"$| s_{i}^n |$")
-    if logscale:
-        ax.set_yscale("log")
-    # grid intentionally left off (same as your edited version)
+        t0 = sub["time"].min()
+        t_end_burn = t0 + burn_in_seconds
+        # find the last n where ANY robot is still in burn-in
+        last_burn_n = sub.loc[sub["time"] <= t_end_burn, "n"].max()
+        if pd.isna(last_burn_n):          # no burn-in rows? set to -1
+            last_burn_n = -1
 
+        ax_ = axes[sess]
+        plot_fun = ax_.semilogy if logscale else ax_.plot
+        plot_fun(n_vals, y_vals, lw=1.5, color="black")
+        if last_burn_n >= 0:
+            burn_mask = n_vals <= last_burn_n
+            plot_fun(
+                n_vals[burn_mask],
+                y_vals[burn_mask],
+                lw=1.5,
+                color="black",
+                linestyle=":",
+            )
+            ax_.axvspan(0, last_burn_n, facecolor="pink", alpha=0.25, zorder=0)
+
+        if ylim is not None:
+            ax_.set_ylim(ylim)
+        if logscale:
+            ax_.set_yscale("log")
+        ax_.set_ylabel(rf"mean $|s_i^n|$ (s{sess})")
+
+    axes[-1].set_xlabel("Diffusion step n")
     if show_title:
-        ax.set_title(
-            r"$|s_i^n|$ mean"
-            + (" (log-scale)" if logscale else "")
-            + f" – current_it={current_it}, run={run}, arena='{arena_file}'"
-            + (" – Sav-Gol" if use_savgol else " – raw")
+        axes[0].set_title(
+            f"{arena_file}  –  it={current_it}  run={run}"
+            + ("  (Sav-Gol)" if use_savgol else "")
         )
+    return axes[0]
 
-    return ax
 
 
 def export_random_log_abs_s(
@@ -825,7 +795,7 @@ Examples:
 
     # Generate logs of abs(s)
     print("Generating log(abs(s)) lineplots...")
-    categorize_by_iteration(df)   ## THIS FUNCTION
+    categorize_by_iteration(df)
     shutil.rmtree(os.path.join(args.output_dir, "log_abs_s"), ignore_errors=True)
     export_random_log_abs_s(df, 5, out_dir=os.path.join(args.output_dir, "log_abs_s"), burn_in_seconds=15, use_savgol=False, show_title=False, ylim=[1e-4, 1])
     #shutil.rmtree(os.path.join(args.output_dir, "log_abs_s_sg"), ignore_errors=True)
