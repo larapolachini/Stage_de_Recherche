@@ -22,8 +22,8 @@ TEMP_DIR = "tmp_cma"
 N_RUNS_PER_INDIVIDUAL = 5
 PARAMETER_KEYS = ["run_duration_min", "run_duration_max", "tumble_duration_min", "tumble_duration_max"]
 INITIAL_VALUES = [10, 50, 10, 50]  # Reparameterized
-SIGMA = 500
-MAX_ITER = 10
+SIGMA = 10
+MAX_ITER = 50
 OUTPUT_CSV = "cmaes_results.csv"
 FIGURE_FOLDER = "figures"
 os.makedirs(FIGURE_FOLDER, exist_ok=True)
@@ -125,7 +125,7 @@ def objective_function(params):
 
     generation_mean = np.mean(cv_values) if cv_values else 1e6
     fitness_over_time.append(generation_mean)
-    return -generation_mean
+    return generation_mean
 
 def main():
     os.makedirs(TEMP_DIR, exist_ok=True)

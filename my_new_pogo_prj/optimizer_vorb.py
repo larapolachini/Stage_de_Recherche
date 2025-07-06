@@ -30,7 +30,7 @@ PARAMETER_KEYS = [
     "tumble_duration_max"
 ]
 INITIAL_VALUES = [10, 50, 10, 50]  # x0, dx0, x1, dx1
-SIGMA = 500
+SIGMA = 10
 MAX_ITER = 20
 OUTPUT_CSV = "cmaes_results.csv"
 
@@ -178,7 +178,7 @@ def main():
     es.optimize(objective_function)
 
     plt.figure()
-    plt.plot(-v for v in fitness_over_time, marker='o')
+    plt.plot([-v for v in fitness_over_time], marker='o')
     plt.xlabel("Generation")
     plt.ylabel("Mean CV (lower is better)")
     plt.title("CMA-ES Optimization Progress")
