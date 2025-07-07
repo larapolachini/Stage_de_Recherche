@@ -18,6 +18,8 @@ plots/
 *.png
 pogosim.simg/
 *.out
+outcmaes/
+frames/
 
 # build
 *.o

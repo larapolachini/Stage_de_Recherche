@@ -3,7 +3,7 @@
 window_width: 600       # In pixels
 window_height: 600      # In pixels
 
-arena_file: arenas/star.csv
+arena_file: arenas/disk.csv
 #arena_file: arenas/star8.csv
 #arena_file: arenas/star_scaled.csv
 arena_surface: 1.0e6    # In mm²
@@ -103,10 +103,10 @@ objects:
 ########### Parameters used to directly initialize variables from the C code of the robots ###########
 parameters:
     # Configuration parameters for the run_and_tumble example
-    run_duration_min: 8014
-    run_duration_max: 9549
-    tumble_duration_min: 558
-    tumble_duration_max: 8142
+    run_duration_min: 6943
+    run_duration_max: 9875
+    tumble_duration_min: 280
+    tumble_duration_max: 618
     enable_backward_dir: true
 
 # MODELINE "{{{1

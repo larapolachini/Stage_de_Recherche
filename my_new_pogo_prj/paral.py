@@ -99,33 +99,46 @@ def run_one_simulation(p):
     return np.mean(cv_values) if cv_values else None
 
 def objective_function(params):
+    """
+    Fitness = mean coefficient of variation (CV) over arenas and Monte-Carlo
+    replicates.  Lower = better.  Returns a large positive penalty when the
+    logical constraints are violated or when all replications failed.
+    """
     global best_score, best_params
 
-    p = list(map(int, params))
+    # 1. Keep the optimiser variables as floats
+    p_float = list(params)
 
-    # Validate logical constraints
-    if not (p[0] < p[1] and p[2] < p[3]):
-        return 1e6  # heavy penalty
+    # Hard constraints: run_min < run_max and tumble_min < tumble_max
+    if p_float[0] >= p_float[1] or p_float[2] >= p_float[3]:
+        return 1e6          # big penalty (positive → CMA-ES tries to avoid)
 
+    # Cast to int only for the simulator
+    p_int = [int(round(v)) for v in p_float]
+
+    # 2. Launch Monte-Carlo replicates in parallel
     cv_values = []
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        futures = [executor.submit(run_one_simulation, p) for _ in range(N_RUNS_PER_INDIVIDUAL)]
-        for future in concurrent.futures.as_completed(futures):
-            result = future.result()
-            if result is not None:
-                cv_values.append(result)
-                print(f"Avg CV across arenas: {result:.4f} for parameters: {p}")
-                with open(OUTPUT_CSV, 'a') as f:
-                    f.write(",".join(map(str, p)) + f",{result:.6f}\n")
-                if result < best_score:
-                    best_score = result
-                    best_params = p
-            else:
-                print(f"[FAIL] Simulation failed for: {p}")
+    with concurrent.futures.ProcessPoolExecutor(max_workers=os.cpu_count()) as pool:
+        futures = [pool.submit(run_one_simulation, p_int)
+                   for _ in range(N_RUNS_PER_INDIVIDUAL)]
+        for fut in concurrent.futures.as_completed(futures):
+            cv = fut.result()
+            if cv is not None:
+                cv_values.append(cv)
 
-    generation_mean = np.mean(cv_values) if cv_values else 1e6
-    fitness_over_time.append(generation_mean)
-    return generation_mean
+    mean_cv = np.mean(cv_values) if cv_values else 1e6   # fallback penalty
+    fitness_over_time.append(mean_cv)
+
+    # 3. Book-keeping and logging
+    with open(OUTPUT_CSV, "a") as f:
+        f.write(",".join(map(str, p_int)) + f",{mean_cv:.6f}\n")
+
+    if mean_cv < best_score:
+        best_score, best_params = mean_cv, p_int
+        print(f"[BEST] CV={best_score:.4f} @ params {best_params}")
+
+    return mean_cv        # CMA-ES minimises this
+
 
 def main():
     os.makedirs(TEMP_DIR, exist_ok=True)
@@ -145,7 +158,7 @@ def main():
 
     # Plotting fitness over time
     plt.figure()
-    plt.plot([-v for v in fitness_over_time], marker='o')
+    plt.plot(fitness_over_time, marker='o')
     plt.xlabel("Generation")
     plt.ylabel("Mean CV (lower is better)")
     plt.title("CMA-ES Optimization Progress")
