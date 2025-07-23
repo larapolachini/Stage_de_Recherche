@@ -19,7 +19,7 @@ arena_file:
     #batch_options: ["arenas/disk.csv", "arenas/annulus.csv", "arenas/star.csv", "arenas/triangle.csv"]
     #batch_options: ["arenas/disk.csv", "arenas/annulus.csv", "arenas/star.csv"]
     batch_options: ["arenas/disk.csv", "arenas/annulus.csv"]
-arena_surface: 1.5e5    # In mm²
+arena_surface: 1.0e6    # In mm²
 
 delete_old_files: true
 enable_data_logging: true
@@ -95,7 +95,7 @@ objects:
     # An object category containing the Pogobot robots
     robots:
         type: pogobot       # Category type pertaining to Pogobots
-        nb: 15              # Number of objects (Pogobots) in this category
+        nb: 100              # Number of objects (Pogobots) in this category
         geometry: disk                  # Pogobots are always disk-shaped
         radius: 26.5                    # In mm
 
@@ -184,7 +184,7 @@ parameters:
     run_duration_max: 9875
     tumble_duration_min: 280
     tumble_duration_max: 618
-    enable_backward_dir: false   # true lets a RUN phase sometimes go backwards
+    enable_backward_dir: true   # true lets a RUN phase sometimes go backwards
 
 # MODELINE "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8

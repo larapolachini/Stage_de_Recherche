@@ -20,6 +20,7 @@ pogosim.simg/
 *.out
 outcmaes/
 frames/
+plots/
 
 # build
 *.o

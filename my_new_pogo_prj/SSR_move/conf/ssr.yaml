@@ -19,7 +19,7 @@ arena_file:
     #batch_options: ["arenas/disk.csv", "arenas/annulus.csv", "arenas/star.csv", "arenas/triangle.csv"]
     batch_options: ["arenas/disk.csv", "arenas/annulus.csv", "arenas/star.csv"]
     #batch_options: ["arenas/disk.csv", "arenas/annulus.csv"]
-arena_surface: 1.5e5    # In mm²
+arena_surface: 1.0e6    # In mm²
 
 delete_old_files: true
 enable_data_logging: true
@@ -37,7 +37,7 @@ show_light_levels: false            # In the GUI, can enabled/disabled using F7
 GUI: true
 
 # Time
-simulation_time: 600.0     # In s
+simulation_time: 1200.0     # In s
 time_step: 0.01            # In s
 GUI_speed_up: 10.0         # How much the visualisation in the GUI should be sped up
 
@@ -95,7 +95,7 @@ objects:
     # An object category containing the Pogobot robots
     robots:
         type: pogobot       # Category type pertaining to Pogobots
-        nb: 25              # Number of objects (Pogobots) in this category
+        nb: 100              # Number of objects (Pogobots) in this category
         geometry: disk                  # Pogobots are always disk-shaped
         radius: 26.5                    # In mm
 
@@ -107,7 +107,7 @@ objects:
         body_restitution: 0.5
         temporal_noise_stddev: 3000   # In µs
 
-        max_linear_speed: 100.0
+        max_linear_speed: 5.0
         max_angular_speed: 2.0
         linear_noise_stddev: 0
         angular_noise_stddev: 0
@@ -180,11 +180,11 @@ parameters:
     age_start_it_waiting_time: 1
 
      # --- Run-and-tumble parameters -----------------
-    run_duration_min: 100     # ms  (default from demo)
-    run_duration_max: 500
-    tumble_duration_min: 500
-    tumble_duration_max: 1000
-    enable_backward_dir: false   # true lets a RUN phase sometimes go backwards
+    run_duration_min: 60     # ms  (default from demo)
+    run_duration_max: 113
+    tumble_duration_min: 2675
+    tumble_duration_max: 6459
+    enable_backward_dir: true   # true lets a RUN phase sometimes go backwards
 
 
 

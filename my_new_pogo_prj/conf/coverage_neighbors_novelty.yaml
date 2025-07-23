@@ -34,7 +34,7 @@ show_light_levels: false            # In the GUI, can enabled/disabled using F6
 GUI: true
 
 # Time
-simulation_time: 500.0     # In s
+simulation_time: 50.0     # In s
 time_step: 0.01            # In s
 GUI_speed_up: 10.0         # How much the visualisation in the GUI should be sped up
 
@@ -131,7 +131,7 @@ parameters:
     p_backward: 0.20                # Domain: [0, 1]. Probability of going backward rather going foward
 
     # Run / tumble statistics  (ms)
-    urgency_gain: 1.0               # How much surprise influences the linear speed during the run state: 0.0 means no influence (speed is always max_speed_frac), 1.0 means that the speed depends on the urgency level, i.e. speed=max_speed_frac*U. Domain: [0, 1].
+    urgency_gain: 0.0               # How much surprise influences the linear speed during the run state: 0.0 means no influence (speed is always max_speed_frac), 1.0 means that the speed depends on the urgency level, i.e. speed=max_speed_frac*U. Domain: [0, 1].
     repeat_frac_thres: 0.85         # Threshold over repeat_frac. Used in nov_cnt computation. Low values translates into early escapes, high values into stickiness (i.e. many repeated contacts with the same neighbors before escaping). Domain: [0, 1].
     iso_min_ids: 2                  # Threshold over n_ids. Used in iso_cnt computation. Determine the number of neighbors needed (<=) so that a robot is not considered isolated. Domain: [0, 255], but very low values are ideal.
     run_law:              levy      # Can be linear, levy (uses levy_alpha) or exponential. All use run_duration_min and run_duration_max.
@@ -143,10 +143,10 @@ parameters:
     # Encounter graph
     encounter_graph_scale: 4.0      # [s] scale of iso_cnt (isolation) and nov_cnt (novelty) counters. Domain: [0, inf]
     # Surprise Parameters
-    w_iso: -0.5                     # Weighting factor of the isolation objective in the surprise computation. If 0, the isolation objective is not considered, Negative values correspond to negative weights. Domain: [-1, 1].
-    w_nov: 0.7                      # Weighting factor of the novelty objective in the surprise computation. If 0, the novelty objective is not considered, Negative values correspond to negative weights. Domain: [-1, 1].
+    w_iso: 0.0                     # Weighting factor of the isolation objective in the surprise computation. If 0, the isolation objective is not considered, Negative values correspond to negative weights. Domain: [-1, 1].
+    w_nov: 0.0                      # Weighting factor of the novelty objective in the surprise computation. If 0, the novelty objective is not considered, Negative values correspond to negative weights. Domain: [-1, 1].
     use_adaptive_surprise_min: true # If false, surprise_min=surprise_min_0; if true, adapt surprise_min value on each robot automatically
-    surprise_min_0: 1.5             # Threshold for escape hop. Domain: [0, inf]
+    surprise_min_0: 999.9             # Threshold for escape hop. Domain: [0, inf]
     d_surprise_up: 1.50             # Bump after an escape. Domain: [0, inf]
     d_surprise_down: 0.01           # Leak ΔS per second of inactivity. Domain: [0, inf]
     # Memory & decay

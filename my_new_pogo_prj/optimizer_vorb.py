@@ -52,6 +52,13 @@ BOUNDS         = [[0, 1, 0, 1],
 
 FIGURES_DIR.mkdir(exist_ok=True)
 TEMP_DIR.mkdir(exist_ok=True)
+FORMATION_SET = [
+    "disk",
+    "random",
+    "aligned_random",
+    "lloyd",
+    "power_lloyd",
+]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Pre-load static YAML parts once
@@ -80,46 +87,52 @@ def run_simulator(cfg_path: Path, cwd: Path) -> Path | None:
 
 
 def run_one_simulation(params_int: list[int]) -> float | None:
-    """Run *all* arenas once; return mean CV."""
+    """ Run *every* (formation, arena) combination once and return the mean CV."""
     cv_vals: list[float] = []
 
-    for arena in ARENA_FILES:
-        # unique sandbox per arena
-        run_dir = Path(tempfile.mkdtemp(dir=TEMP_DIR))
-        (run_dir / "frames").mkdir(parents=True, exist_ok=True)
+    for formation in FORMATION_SET:
+        for arena in ARENA_FILES:
 
-        # YAML for this arena
-        cfg          = BASE_CFG.copy()
-        cfg["parameters"].update(dict(zip(PARAMETER_KEYS, params_int)))
-        cfg["seed"]          = int(np.random.randint(0, 2**31 - 1))
-        cfg["arena_file"]    = arena
-        cfg["data_filename"] = str(run_dir / "frames" / "data.feather")
+            run_dir = Path(tempfile.mkdtemp(dir=TEMP_DIR,
+                                            prefix=f"{formation}_"))
+            (run_dir / "frames").mkdir(parents=True, exist_ok=True)
 
-        cfg_path = run_dir / "cfg.yaml"
-        yaml.safe_dump(cfg, cfg_path.open("w"))
+            # tailor YAML
+            cfg = BASE_CFG.copy()
+            cfg["parameters"].update(dict(zip(PARAMETER_KEYS, params_int)))
+            cfg["seed"]             = int(np.random.randint(0, 2**31 - 1))
+            cfg["initial_formation"] = formation
+            cfg["arena_file"]        = arena
+            cfg["data_filename"]     = str(run_dir / "frames"
+                                                     / "data.feather")
 
-        feather_file = run_simulator(cfg_path, run_dir)
-        if feather_file is None:
-            shutil.rmtree(run_dir, ignore_errors=True)
-            continue
+            cfg_path = run_dir / "cfg.yaml"
+            yaml.safe_dump(cfg, cfg_path.open("w"))
 
-        try:
-            df   = feather.read_feather(feather_file)
-            poly = load_arena_polygon_from_csv(arena)
-            scale = (ARENA_SURF / poly.area) ** 0.5
-            minx, miny, *_ = poly.bounds
-            poly = affinity.translate(poly, xoff=-minx, yoff=-miny)
-            poly = affinity.scale(poly, xfact=scale, yfact=scale, origin=(0, 0))
+            feather_file = run_simulator(cfg_path, run_dir)
+            if feather_file is None:              # simulator crashed
+                shutil.rmtree(run_dir, ignore_errors=True)
+                continue
 
-            metrics = compute_voronoi_metrics(
-                df=df, arena_polygon=poly, arena_bounds=poly.bounds,
-                arena_surface=ARENA_SURF, communication_radius=133.0
-            )
-            cv_vals.append(float(metrics["cv_area"].mean()))
-        except Exception as exc:                         # pylint: disable=broad-except
-            print(f"[ERROR] {arena}: {exc}", file=sys.stderr)
-        finally:
-            shutil.rmtree(run_dir, ignore_errors=True)
+            try:
+                df   = feather.read_feather(feather_file)
+                poly = load_arena_polygon_from_csv(arena)
+                scale = (ARENA_SURF / poly.area) ** 0.5
+                minx, miny, *_ = poly.bounds
+                poly = affinity.translate(poly, xoff=-minx, yoff=-miny)
+                poly = affinity.scale(poly, xfact=scale, yfact=scale,
+                                      origin=(0, 0))
+
+                metrics = compute_voronoi_metrics(
+                    df=df, arena_polygon=poly, arena_bounds=poly.bounds,
+                    arena_surface=ARENA_SURF, communication_radius=133.0,
+                )
+                cv_vals.append(float(metrics["cv_area"].mean()))
+            except Exception as exc:               # pylint: disable=broad-except
+                print(f"[ANALYSIS‑ERR] {formation} / {arena}: {exc}",
+                      file=sys.stderr)
+            finally:
+                shutil.rmtree(run_dir, ignore_errors=True)
 
     return float(np.mean(cv_vals)) if cv_vals else None
 

@@ -16,9 +16,9 @@ os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
 
 # Configuration
 SIMULATOR_BINARY = "./examples/run_and_tumble/run_and_tumble"
-BASE_CONFIG_PATH = "conf/simpleb.yaml"
+BASE_CONFIG_PATH = "conf/simple.yaml"
 TEMP_DIR = "tmp_cma"
-N_RUNS_PER_INDIVIDUAL = 5
+N_RUNS_PER_INDIVIDUAL = 4
 PARAMETER_KEYS = [
     "run_duration_min",
     "run_duration_max",
@@ -26,11 +26,16 @@ PARAMETER_KEYS = [
     "tumble_duration_max"
 ]
 INITIAL_VALUES = [10, 50, 10, 50]  # x0, dx0, x1, dx1
-SIGMA = 50
-MAX_ITER = 15
+SIGMA = 10
+MAX_ITER = 30
 OUTPUT_CSV = "cmaes_results.csv"
+FORMATION_SET = [
+    "disk",           
+    "power_lloyd",
+    "random_near_walls",
+]
 
-best_score = float("inf")
+best_score = -float("inf")
 best_params = None
 
 def create_temp_config(base_config_path, output_dir, parameters):
@@ -68,11 +73,38 @@ def run_simulation(config_path):
     return feather_path if os.path.exists(feather_path) else None
 
 def run_one_simulation(p):
-    run_dir = tempfile.mkdtemp(dir=TEMP_DIR)
-    config_path = create_temp_config(BASE_CONFIG_PATH, run_dir, p)
-    feather_file = run_simulation(config_path)
+    """
+    Returns the mean CV averaged over every formation in FORMATION_SET.
+    """
+    cv_trials = []
 
-    if feather_file:
+    for formation in FORMATION_SET:
+        run_dir = tempfile.mkdtemp(dir=TEMP_DIR, prefix=f"{formation}_")
+
+        # 1️⃣ load YAML fresh each time so edits don’t leak to next loop
+        with open(BASE_CONFIG_PATH) as f:
+            cfg = yaml.safe_load(f)
+
+        # —— plug in candidate parameters & formation ————————————————
+        for k, v in zip(PARAMETER_KEYS, p):
+            cfg["parameters"][k] = int(v)
+        cfg["initial_formation"] = formation
+        cfg["seed"] = int(np.random.randint(0, 1e6))
+
+        cfg["data_filename"] = os.path.join(run_dir, "frames", "data.feather")
+        os.makedirs(os.path.dirname(cfg["data_filename"]), exist_ok=True)
+
+        cfg_path = os.path.join(run_dir, "simple.yaml")
+        with open(cfg_path, "w") as fp:
+            yaml.safe_dump(cfg, fp)
+
+        # 2️⃣ run simulator (no “-g” flag ➜ head‑less safe)
+        feather_file = run_simulation(cfg_path)
+        if not feather_file:
+            shutil.rmtree(run_dir, ignore_errors=True)
+            continue
+
+        # 3️⃣ analyse result
         try:
             df = feather.read_feather(feather_file)
             metrics_df = compute_voronoi_metrics(
@@ -80,15 +112,15 @@ def run_one_simulation(p):
                 arena_polygon=arena_polygon,
                 arena_bounds=arena_bounds,
                 arena_surface=arena_surface,
-                communication_radius=133.0
+                communication_radius=133.0,
             )
-            mean_cv = metrics_df["cv_area"].mean()
-            shutil.rmtree(run_dir, ignore_errors=True)
-            return mean_cv
-        except Exception as e:
-            print(f"Error during analysis: {e}")
-    shutil.rmtree(run_dir, ignore_errors=True)
-    return None
+            cv_trials.append(metrics_df["cv_area"].mean())
+        except Exception as exc:
+            print(f"[ANALYSIS‑ERR] formation={formation}: {exc}")
+
+        shutil.rmtree(run_dir, ignore_errors=True)
+
+    return float(np.mean(cv_trials)) if cv_trials else None
 
 def objective_function(params):
 
@@ -115,14 +147,14 @@ def objective_function(params):
                     f.write(",".join(map(str, p)) + f",{result:.6f}\n")
 
                 # track best score
-                if result < best_score:
+                if result > best_score:
                     best_score = result 
                     best_params = p 
             else:
                 print(f"Simulation failed for: {p}")
 
     # ---- compute generation score, log it, and return it ----
-    gen_score = np.mean(cv_values) if cv_values else 1e6
+    gen_score = np.mean(cv_values) if cv_values else -1e6
     print(f"[GEN] mean CV = {gen_score:.4f}")
     return -gen_score                    # CMA-ES will minimise –CV
 
