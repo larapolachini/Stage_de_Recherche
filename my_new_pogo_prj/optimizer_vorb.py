@@ -19,6 +19,7 @@ import pyarrow.feather as feather
 import matplotlib.pyplot as plt
 import concurrent.futures as cf
 from pathlib import Path
+import copy
 
 from shapely.geometry import Polygon
 from shapely import affinity
@@ -54,10 +55,8 @@ FIGURES_DIR.mkdir(exist_ok=True)
 TEMP_DIR.mkdir(exist_ok=True)
 FORMATION_SET = [
     "disk",
-    "random",
-    "aligned_random",
-    "lloyd",
     "power_lloyd",
+    "random_near_walls"
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -72,14 +71,21 @@ ARENA_SURF  = float(BASE_CFG["arena_surface"])
 # ─────────────────────────────────────────────────────────────────────────────
 def run_simulator(cfg_path: Path, cwd: Path) -> Path | None:
     """Return the path to frames/data.feather if the simulator ran ok."""
+
+    env = os.environ.copy()
+    env["SDL_VIDEODRIVER"] = "dummy"
+
     try:
         subprocess.run(
             [SIMULATOR_BINARY, "-c", str(cfg_path), "-nr", "-q", "-g"],
             check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            cwd=cwd
+            cwd=cwd,
+            env = env,
         )
     except subprocess.CalledProcessError as err:
-        print("[SIM ERR]", err.stderr.decode().strip(), file=sys.stderr)
+        print("[SIM ERR] STDERR", err.stderr.decode(), file=sys.stderr)
+        print("[SIM ERR] STDOUT:", err.stdout.decode(), file=sys.stderr)
+
         return None
 
     feather_file = cwd / "frames" / "data.feather"
@@ -98,7 +104,7 @@ def run_one_simulation(params_int: list[int]) -> float | None:
             (run_dir / "frames").mkdir(parents=True, exist_ok=True)
 
             # tailor YAML
-            cfg = BASE_CFG.copy()
+            cfg = copy.deepcopy(BASE_CFG)
             cfg["parameters"].update(dict(zip(PARAMETER_KEYS, params_int)))
             cfg["seed"]             = int(np.random.randint(0, 2**31 - 1))
             cfg["initial_formation"] = formation

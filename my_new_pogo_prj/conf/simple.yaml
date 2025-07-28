@@ -120,10 +120,10 @@ objects:
 ########### Parameters used to directly initialize variables from the C code of the robots ###########
 parameters:
     # Configuration parameters for the run_and_tumble example
-    run_duration_min: 319
-    run_duration_max: 479
-    tumble_duration_min: 35
-    tumble_duration_max: 156
+    run_duration_min: 0
+    run_duration_max: 61
+    tumble_duration_min: 8
+    tumble_duration_max: 20
     enable_backward_dir: true
     max_age: 3000
 

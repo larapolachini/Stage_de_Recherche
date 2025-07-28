@@ -17,16 +17,22 @@ import matplotlib.pyplot as plt
 # Configuration
 os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
 os.environ["SDL_VIDEODRIVER"] = "dummy"
+os.environ["SDL_RENDER_DRIVER"] = "software"
 SIMULATOR_BINARY = "./examples/run_and_tumble/run_and_tumble"
 BASE_CONFIG_PATH = "conf/simpleb.yaml"
 TEMP_DIR = "tmp_cma"
-N_RUNS_PER_INDIVIDUAL = 3
+N_RUNS_PER_INDIVIDUAL = 4
 PARAMETER_KEYS = ["run_duration_min", "run_duration_max", "tumble_duration_min", "tumble_duration_max"]
 INITIAL_VALUES = [10, 50, 10, 50]  # Reparameterized
 SIGMA = 10
-MAX_ITER = 5
+MAX_ITER = 20
 OUTPUT_CSV = "cmaes_results.csv"
 FIGURE_FOLDER = "figures"
+FORMATION_SET = [
+    "disk",
+    "power_lloyd",
+    "random_near_walls"
+]
 os.makedirs(FIGURE_FOLDER, exist_ok=True)
 
 best_score = float("inf")
@@ -34,6 +40,10 @@ best_params = None
 fitness_over_time = []
 
 def run_simulation(config_path):
+    env = os.environ.copy()
+    env["SDL_VIDEODRIVER"] = "dummy"
+    env["SDL_RENDER_DRIVER"] = "software"
+
     try:
         subprocess.run(
             [SIMULATOR_BINARY, "-c", config_path, "-nr", "-q", "-g"],
@@ -58,44 +68,46 @@ def run_one_simulation(p):
     arena_files = config["arena_file"]["batch_options"]
     arena_surface = float(config["arena_surface"])
 
-    for arena_file in arena_files:
-        run_dir = tempfile.mkdtemp(dir=TEMP_DIR)
+    for formation in FORMATION_SET:
+        for arena_file in arena_files:
+            run_dir = tempfile.mkdtemp(dir=TEMP_DIR, prefix=f"{formation}_")
 
-        config["parameters"].update({k: int(v) for k, v in zip(PARAMETER_KEYS, p)})
-        config["seed"] = np.random.randint(0, 100000)
-        config["arena_file"] = arena_file
-        config["data_filename"] = os.path.join(run_dir, "frames", "data.feather")
-        os.makedirs(os.path.join(run_dir, "frames"), exist_ok=True)
+            config["parameters"].update({k: int(v) for k, v in zip(PARAMETER_KEYS, p)})
+            config["seed"] = np.random.randint(0, 100000)
+            config["initial_formation"] = formation
+            config["arena_file"] = arena_file
+            config["data_filename"] = os.path.join(run_dir, "frames", "data.feather")
+            os.makedirs(os.path.join(run_dir, "frames"), exist_ok=True)
 
-        config_path = os.path.join(run_dir, "simple.yaml")
-        with open(config_path, "w") as f:
-            yaml.safe_dump(config, f)
+            config_path = os.path.join(run_dir, "simple.yaml")
+            with open(config_path, "w") as f:
+                yaml.safe_dump(config, f)
 
-        feather_file = run_simulation(config_path)
+            feather_file = run_simulation(config_path)
 
-        if feather_file:
-            try:
-                df = feather.read_feather(feather_file)
-                polygon = load_arena_polygon_from_csv(arena_file)
-                scale = (arena_surface / polygon.area) ** 0.5
-                minx, miny, *_ = polygon.bounds
-                polygon = affinity.translate(polygon, xoff=-minx, yoff=-miny)
-                polygon = affinity.scale(polygon, xfact=scale, yfact=scale, origin=(0, 0))
+            if feather_file:
+                try:
+                    df = feather.read_feather(feather_file)
+                    polygon = load_arena_polygon_from_csv(arena_file)
+                    scale = (arena_surface / polygon.area) ** 0.5
+                    minx, miny, *_ = polygon.bounds
+                    polygon = affinity.translate(polygon, xoff=-minx, yoff=-miny)
+                    polygon = affinity.scale(polygon, xfact=scale, yfact=scale, origin=(0, 0))
 
-                metrics_df = compute_voronoi_metrics(
-                    df=df,
-                    arena_polygon=polygon,
-                    arena_bounds=polygon.bounds,
-                    arena_surface=arena_surface,
-                    communication_radius=133.0
-                )
-                cv = metrics_df["cv_area"].mean()
-                if not np.isnan(cv):
-                    cv_values.append(cv)
-            except Exception as e:
-                print(f"[ERROR] Arena {arena_file}: {e}")
-
-        shutil.rmtree(run_dir, ignore_errors=True)
+                    metrics_df = compute_voronoi_metrics(
+                        df=df,
+                        arena_polygon=polygon,
+                        arena_bounds=polygon.bounds,
+                        arena_surface=arena_surface,
+                        communication_radius=133.0
+                    )
+                    cv = metrics_df["cv_area"].mean()
+                    if not np.isnan(cv):
+                        cv_values.append(cv)
+                except Exception as e:
+                    print(f"[ERROR] {formation} / {arena_file}: {e}")
+                finally:
+                    shutil.rmtree(run_dir, ignore_errors=True)
 
     return np.mean(cv_values) if cv_values else None
 
@@ -160,7 +172,7 @@ def main():
     plt.grid(True)
     plt.tight_layout()
     plt.savefig("optimization_curve.png", dpi=150)
-    save_figure(plt.gcf(), "Mean CV evolution.png", FIGURE_FOLDER)
+    save_figure("Mean CV evolution.png", FIGURE_FOLDER)
     plt.show()
 
     print(f"Best evaluated parameters: {best_params} with mean CV = {best_score:.6f}")
