@@ -21,7 +21,8 @@ from sklearn.model_selection import train_test_split
 
 import matplotlib.pyplot as plt                      
 from plots import _to_long          
-from utils import load_data         
+from utils import load_data   
+from collections import Counter, defaultdict      
 # -----------------------------------------------------------------------------#
 # 1. user parameters                                                            #
 # -----------------------------------------------------------------------------#
@@ -34,7 +35,7 @@ BURN_IN_ONLY = True
 BURN_IN_STEPS = 50
 BATCH_SIZE  = 128
 LR          = 1e-3
-EPOCHS      = 40
+EPOCHS      = 100
 HIDDEN      = (64, 32)                  # MLP hidden sizes
 DROPOUT_P = 0.25
 TEST_SIZE   = 0.25                       # fraction of windows for validation
@@ -47,7 +48,7 @@ RNG         = 42
 
 df_raw, _ = load_data(DATA_FILE)   
 df_long   = _to_long(df_raw) 
-features, labels = [], [] 
+features, labels, group_ids = [], [], [] 
 
 def make_windows_three_sessions(sess_arrays):
     """
@@ -107,16 +108,17 @@ for (arena, run, it), g_iter in df_long.groupby(
     for full_vec in make_windows_three_sessions(sess_arrays):
         features.append(full_vec)
         labels.append(arena)
+        group_ids.append((arena, run, it))
 
-
+group_ids = np.array(group_ids, dtype=object)
 X = np.vstack(features).astype(np.float32)      # (n_samples, 3·WINDOW_LEN)
 y = np.array(labels)
 print(f"dataset: {X.shape[0]} samples × {X.shape[1]} features")
 # -----------------------------------------------------------------------------#
 # 3. split + scale (scikit-learn)                                               #
 # -----------------------------------------------------------------------------#
-X_tr, X_te, y_tr, y_te = train_test_split(
-    X, y, test_size=TEST_SIZE, stratify=y, random_state=RNG)
+X_tr, X_te, y_tr, y_te, gid_tr, gid_te = train_test_split(
+    X, y, group_ids, test_size=TEST_SIZE, stratify=y, random_state=RNG)
 
 scaler = StandardScaler()
 X_tr = scaler.fit_transform(X_tr).astype(np.float32)
@@ -180,13 +182,17 @@ for epoch in range(1, EPOCHS + 1):
 # 6. evaluation                                                                 #
 # -----------------------------------------------------------------------------#
 model.eval()
-y_true, y_pred = [], []
+y_true, y_pred, gid_seq = [], [], []
 with torch.no_grad():
+    start = 0
     for xb, yb in test_dl:
+        bs = xb.size(0)
         logits = model(xb.to(DEVICE))
         preds = logits.argmax(dim=1).cpu().numpy()
         y_pred.extend(preds)
         y_true.extend(yb.numpy())
+        gid_seq.extend(gid_te[start : start + bs])
+        start += bs
 
 y_true = np.array(y_true)
 y_pred = np.array(y_pred)
@@ -194,29 +200,72 @@ acc = accuracy_score(y_true, y_pred)
 prec, rec, f1, _ = precision_recall_fscore_support(
     y_true, y_pred, labels=list(idx2label.keys()), zero_division=0)
 
-print(f"\nOVERALL ACCURACY: {acc:.3f}\n")
+print("\n=====  Window-level (individual)  =====")
+print(f"ACCURACY (window): {acc:.3f}\n")
 print(classification_report(
     y_true, y_pred,
     target_names=[idx2label[i] for i in sorted(idx2label)],
     digits=3))
 
+# 1. collect individual votes per swarm
+votes   = defaultdict(list)
+for gid, pred in zip(gid_seq, y_pred):
+    votes[tuple(gid)].append(pred)
+
+# 2. resolve the vote for every swarm
+swarm_pred, swarm_true = [], []
+for gid, pred_list in votes.items():
+    # majority class (break ties by .most_common order)
+    voted = Counter(pred_list).most_common(1)[0][0]
+
+    swarm_pred.append(voted)
+    # gid[0] is the arena label string, convert to the same integer coding
+    swarm_true.append(label2idx[gid[0]])
+
+# 3. swarm-level metrics
+from sklearn.metrics import accuracy_score, classification_report
+print("\n=====  Swarm-level vote  =====")
+print(f"ACCURACY (swarm): {accuracy_score(swarm_true, swarm_pred):.3f}\n")
+
+print(classification_report(
+    swarm_true,
+    swarm_pred,
+    target_names=[idx2label[i] for i in sorted(idx2label)],
+    digits=3))
+
+sw_prec, sw_rec, sw_f1, _ = precision_recall_fscore_support(
+    swarm_true, swarm_pred,
+    labels=list(idx2label.keys()),
+    zero_division=0)
+
+
 # -----------------------------------------------------------------------------#
 # 7. plots                                                                      #
 # -----------------------------------------------------------------------------#
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 4))
 
-# learning curve
+# --- (a) learning curve -------------------------------------------------------
 ax1.plot(loss_curve, lw=2)
 ax1.set_xlabel("epoch"); ax1.set_ylabel("loss")
 ax1.set_title("Training loss")
 
-# per-class bar chart
+# --- (b) window-level bars ----------------------------------------------------
 x = np.arange(len(idx2label))
 w = 0.25
 ax2.bar(x - w, prec, width=w, label="prec")
 ax2.bar(x,     rec,  width=w, label="recall")
 ax2.bar(x + w, f1,   width=w, label="F1")
 ax2.set_xticks(x); ax2.set_xticklabels([idx2label[i] for i in x], rotation=30)
-ax2.set_ylim(0, 1); ax2.legend()
-ax2.set_title("Metrics per class")
+ax2.set_ylim(0, 1); ax2.set_title("Window metrics")
+ax2.legend()
+
+# --- (c) swarm-level bars -----------------------------------------------------
+ax3.bar(x - w, sw_prec, width=w, label="prec")
+ax3.bar(x,     sw_rec,  width=w, label="recall")
+ax3.bar(x + w, sw_f1,   width=w, label="F1")
+ax3.set_xticks(x); ax3.set_xticklabels([idx2label[i] for i in x], rotation=30)
+ax3.set_ylim(0, 1); ax3.set_title("Swarm-vote metrics")
+ax3.legend()
+
 plt.tight_layout(); plt.show()
+
