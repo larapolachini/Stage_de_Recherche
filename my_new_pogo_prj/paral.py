@@ -16,14 +16,15 @@ import matplotlib.pyplot as plt
 
 # Configuration
 os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 SIMULATOR_BINARY = "./examples/run_and_tumble/run_and_tumble"
 BASE_CONFIG_PATH = "conf/simpleb.yaml"
 TEMP_DIR = "tmp_cma"
-N_RUNS_PER_INDIVIDUAL = 5
+N_RUNS_PER_INDIVIDUAL = 3
 PARAMETER_KEYS = ["run_duration_min", "run_duration_max", "tumble_duration_min", "tumble_duration_max"]
 INITIAL_VALUES = [10, 50, 10, 50]  # Reparameterized
 SIGMA = 10
-MAX_ITER = 50
+MAX_ITER = 5
 OUTPUT_CSV = "cmaes_results.csv"
 FIGURE_FOLDER = "figures"
 os.makedirs(FIGURE_FOLDER, exist_ok=True)
@@ -99,46 +100,41 @@ def run_one_simulation(p):
     return np.mean(cv_values) if cv_values else None
 
 def objective_function(params):
-    """
-    Fitness = mean coefficient of variation (CV) over arenas and Monte-Carlo
-    replicates.  Lower = better.  Returns a large positive penalty when the
-    logical constraints are violated or when all replications failed.
-    """
+
     global best_score, best_params
+    
+    # Reparameterize: ensure p[0] < p[1] and p[2] < p[3]
+    x0, dx0, x1, dx1 = params
+    p = [
+        int(x0),
+        int(x0 + abs(dx0)),
+        int(x1),
+        int(x1 + abs(dx1))
+    ]
 
-    # 1. Keep the optimiser variables as floats
-    p_float = list(params)
-
-    # Hard constraints: run_min < run_max and tumble_min < tumble_max
-    if p_float[0] >= p_float[1] or p_float[2] >= p_float[3]:
-        return 1e6          # big penalty (positive → CMA-ES tries to avoid)
-
-    # Cast to int only for the simulator
-    p_int = [int(round(v)) for v in p_float]
-
-    # 2. Launch Monte-Carlo replicates in parallel
     cv_values = []
-    with concurrent.futures.ProcessPoolExecutor(max_workers=os.cpu_count()) as pool:
-        futures = [pool.submit(run_one_simulation, p_int)
-                   for _ in range(N_RUNS_PER_INDIVIDUAL)]
-        for fut in concurrent.futures.as_completed(futures):
-            cv = fut.result()
-            if cv is not None:
-                cv_values.append(cv)
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [executor.submit(run_one_simulation, p) for _ in range(N_RUNS_PER_INDIVIDUAL)]
+        for future in concurrent.futures.as_completed(futures):
+            result = future.result()
+            if result is not None:
+                cv_values.append(result)
+                print(f"Mean CV: {result:.4f} for parameters: {p}")
+                with open(OUTPUT_CSV, 'a') as f:
+                    f.write(",".join(map(str, p)) + f",{result:.6f}\n")
 
-    mean_cv = np.mean(cv_values) if cv_values else 1e6   # fallback penalty
-    fitness_over_time.append(mean_cv)
+                # track best score
+                if result < best_score:
+                    best_score = result 
+                    best_params = p 
+            else:
+                print(f"Simulation failed for: {p}")
 
-    # 3. Book-keeping and logging
-    with open(OUTPUT_CSV, "a") as f:
-        f.write(",".join(map(str, p_int)) + f",{mean_cv:.6f}\n")
-
-    if mean_cv < best_score:
-        best_score, best_params = mean_cv, p_int
-        print(f"[BEST] CV={best_score:.4f} @ params {best_params}")
-
-    return mean_cv        # CMA-ES minimises this
-
+    # ---- compute generation score, log it, and return it ----
+    gen_score = np.mean(cv_values) if cv_values else 1e6
+    print(f"[GEN] mean CV = {gen_score:.4f}")
+    fitness_over_time.append(gen_score)
+    return gen_score                    # CMA-ES will minimise –CV
 
 def main():
     os.makedirs(TEMP_DIR, exist_ok=True)
@@ -151,7 +147,6 @@ def main():
     es = CMAEvolutionStrategy(INITIAL_VALUES, SIGMA, {
         'bounds': bounds,
         'maxiter': MAX_ITER,
-        'popsize': 16
     })
 
     es.optimize(objective_function)
@@ -165,7 +160,7 @@ def main():
     plt.grid(True)
     plt.tight_layout()
     plt.savefig("optimization_curve.png", dpi=150)
-    save_figure("Mean CV evolution.png", FIGURE_FOLDER)
+    save_figure(plt.gcf(), "Mean CV evolution.png", FIGURE_FOLDER)
     plt.show()
 
     print(f"Best evaluated parameters: {best_params} with mean CV = {best_score:.6f}")
