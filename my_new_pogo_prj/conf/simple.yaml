@@ -4,7 +4,7 @@ window_width: 600       # In pixels
 window_height: 600      # In pixels
 
 #arena_file: arenas/square.csv
-arena_file: arenas/disk.csv
+arena_file: arenas/square.csv
 #arena_file: arenas/annulus.csv
 #arena_file: arenas/arena8.csv
 #arena_file: arenas/star.csv
@@ -59,7 +59,7 @@ GUI_speed_up: 10.0         # How much the visualisation in the GUI should be spe
 #       As such, if the distance is enough, the robots will only have max 4 neighbors corresponding to the 4 directions top, left, bottom, right.
 #       The "formation_cluster_at_center" parameter (default=true) specifies whether (true) all robots should put as close as possible to the center of the grid (i.e. center of the arena); or (false) if they should just be placed randomly in the grid.
 #   - aligned_chessboard: similar to formation "chessboard", but all robots have a pi/2 direction.
-initial_formation: power_lloyd
+initial_formation: random_near_walls
 
 # In the chessboard formations, the euclidean distance between two connected points of the grid.
 chessboard_distance_between_neighbors: 110
@@ -120,10 +120,10 @@ objects:
 ########### Parameters used to directly initialize variables from the C code of the robots ###########
 parameters:
     # Configuration parameters for the run_and_tumble example
-    run_duration_min: 0
-    run_duration_max: 61
-    tumble_duration_min: 8
-    tumble_duration_max: 20
+    run_duration_min: 7
+    run_duration_max: 11
+    tumble_duration_min: 6
+    tumble_duration_max: 12
     enable_backward_dir: true
     max_age: 3000
 
