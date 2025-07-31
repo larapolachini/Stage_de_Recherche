@@ -1596,7 +1596,9 @@ void create_data_schema() {
     data_add_column_int8("nb_neighbors");
     data_add_column_int32("current_it");
 
-    data_add_column_double("s"); // Here too
+    data_add_column_double("s0");
+    data_add_column_double("s1");
+    data_add_column_double("s2");
     data_add_column_double("lambda");
     data_add_column_double("avg_lambda");
 }
@@ -1609,7 +1611,9 @@ void export_data() {
     data_set_value_int8("nb_neighbors", mydata->nb_neighbors);
     data_set_value_int32("current_it", mydata->current_it);
 
-    data_set_value_double("s", TO_FLOAT(mydata->curr_diff->s[0]));    //Modify for s0,1,2 
+    data_set_value_double("s0", TO_FLOAT(mydata->curr_diff->s[0]));    
+    data_set_value_double("s1", TO_FLOAT(mydata->curr_diff->s[1]));  
+    data_set_value_double("s2", TO_FLOAT(mydata->curr_diff->s[2])); 
     data_set_value_double("lambda", TO_FLOAT(mydata->diff1.lambda));
     data_set_value_double("avg_lambda", TO_FLOAT(mydata->diff1.avg_lambda));
 }
