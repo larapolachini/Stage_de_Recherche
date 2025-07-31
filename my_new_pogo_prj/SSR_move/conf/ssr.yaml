@@ -114,7 +114,7 @@ objects:
         body_restitution: 0.5
         temporal_noise_stddev: 3000   # In µs
 
-        max_linear_speed: 5.0
+        max_linear_speed: 100.0
         max_angular_speed: 2.0
         linear_noise_stddev: 0
         angular_noise_stddev: 0

@@ -69,7 +69,7 @@ GUI_speed_up: 10.0         # How much the visualisation in the GUI should be spe
 #       As such, if the distance is enough, the robots will only have max 4 neighbors corresponding to the 4 directions top, left, bottom, right.
 #       The "formation_cluster_at_center" parameter (default=true) specifies whether (true) all robots should put as close as possible to the center of the grid (i.e. center of the arena); or (false) if they should just be placed randomly in the grid.
 #   - aligned_chessboard: similar to formation "chessboard", but all robots have a pi/2 direction.
-initial_formation: random_near_walls # random # aligned_random # random
+initial_formation: disk # random # aligned_random # random
 formation_min_space_between_neighbors: 30.0
 formation_max_space_between_neighbors: 80.0
 #formation_attempts_per_point: 100000
