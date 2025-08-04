@@ -1,218 +1,182 @@
-#!/usr/bin/env python3
-"""
-CMA-ES optimiser for the run-and-tumble simulator
--------------------------------------------------
-• Evaluates every arena in conf/simpleb.yaml
-• Spawns one persistent process pool (workers stay warm)
-• Returns mean Voronoï CV across arenas & MC replicates
-"""
-
-from __future__ import annotations
 import os
-import sys
+import yaml
 import shutil
 import tempfile
 import subprocess
-import yaml
 import numpy as np
+import pandas as pd
 import pyarrow.feather as feather
-import matplotlib.pyplot as plt
-import concurrent.futures as cf
-from pathlib import Path
-import copy
-
+from vor import compute_voronoi_metrics, save_figure
+from cma import CMAEvolutionStrategy
 from shapely.geometry import Polygon
 from shapely import affinity
-from cma import CMAEvolutionStrategy
-
-from vor import compute_voronoi_metrics, save_figure
 from data import load_arena_polygon_from_csv
+import concurrent.futures
+import matplotlib.pyplot as plt
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Configuration
-# ─────────────────────────────────────────────────────────────────────────────
-os.environ.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")
-
-from pathlib import Path
-SIMULATOR_BINARY = Path("./examples/run_and_tumble/run_and_tumble").resolve()
-
-BASE_CONFIG_PATH = Path("conf/simpleb.yaml")
-TEMP_DIR          = Path("tmp_cma")
-FIGURES_DIR       = Path("figures")
-OUTPUT_CSV        = Path("cmaes_results.csv")
-
-N_RUNS_PER_INDIVIDUAL = 5
-PARAMETER_KEYS        = ["run_duration_min", "run_duration_max",
-                         "tumble_duration_min", "tumble_duration_max"]
-INITIAL_VALUES = [10.0, 50.0, 10.0, 50.0]
-SIGMA          = 10.0
-MAX_ITER       = 50
-POP_SIZE       = 16
-BOUNDS         = [[0, 1, 0, 1],
-                  [10_000, 10_000, 10_000, 10_000]]
-
-FIGURES_DIR.mkdir(exist_ok=True)
-TEMP_DIR.mkdir(exist_ok=True)
+os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+os.environ["SDL_RENDER_DRIVER"] = "software"
+SIMULATOR_BINARY = "./examples/run_and_tumble/run_and_tumble"
+BASE_CONFIG_PATH = "conf/simpleb.yaml"
+TEMP_DIR = "tmp_cma"
+N_RUNS_PER_INDIVIDUAL = 4
+PARAMETER_KEYS = ["run_duration_min", "run_duration_max", "tumble_duration_min", "tumble_duration_max"]
+INITIAL_VALUES = [10, 50, 10, 50]  # Reparameterized
+SIGMA = 10
+MAX_ITER = 20
+OUTPUT_CSV = "cmaes_results.csv"
+FIGURE_FOLDER = "figures"
 FORMATION_SET = [
     "disk",
     "power_lloyd",
     "random_near_walls"
 ]
+os.makedirs(FIGURE_FOLDER, exist_ok=True)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Pre-load static YAML parts once
-# ─────────────────────────────────────────────────────────────────────────────
-BASE_CFG    = yaml.safe_load(BASE_CONFIG_PATH.read_text())
-ARENA_FILES = BASE_CFG["arena_file"]["batch_options"]
-ARENA_SURF  = float(BASE_CFG["arena_surface"])
+best_score = float("inf")
+best_params = None
+fitness_over_time = []
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Helpers
-# ─────────────────────────────────────────────────────────────────────────────
-def run_simulator(cfg_path: Path, cwd: Path) -> Path | None:
-    """Return the path to frames/data.feather if the simulator ran ok."""
-
+def run_simulation(config_path):
     env = os.environ.copy()
     env["SDL_VIDEODRIVER"] = "dummy"
+    env["SDL_RENDER_DRIVER"] = "software"
 
     try:
         subprocess.run(
-            [SIMULATOR_BINARY, "-c", str(cfg_path), "-nr", "-q", "-g"],
-            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            cwd=cwd,
-            env = env,
+            [SIMULATOR_BINARY, "-c", config_path, "-nr", "-q", "-g"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
-    except subprocess.CalledProcessError as err:
-        print("[SIM ERR] STDERR", err.stderr.decode(), file=sys.stderr)
-        print("[SIM ERR] STDOUT:", err.stdout.decode(), file=sys.stderr)
-
+    except subprocess.CalledProcessError as e:
+        print("STDERR:", e.stderr.decode())
+        print("STDOUT:", e.stdout.decode())
         return None
 
-    feather_file = cwd / "frames" / "data.feather"
-    return feather_file if feather_file.exists() else None
+    feather_path = os.path.join(os.path.dirname(config_path), "frames", "data.feather")
+    return feather_path if os.path.exists(feather_path) else None
 
+def run_one_simulation(p):
+    cv_values = []
 
-def run_one_simulation(params_int: list[int]) -> float | None:
-    """ Run *every* (formation, arena) combination once and return the mean CV."""
-    cv_vals: list[float] = []
+    with open(BASE_CONFIG_PATH, 'r') as f:
+        config = yaml.safe_load(f)
+
+    arena_files = config["arena_file"]["batch_options"]
+    arena_surface = float(config["arena_surface"])
 
     for formation in FORMATION_SET:
-        for arena in ARENA_FILES:
+        for arena_file in arena_files:
+            run_dir = tempfile.mkdtemp(dir=TEMP_DIR, prefix=f"{formation}_")
 
-            run_dir = Path(tempfile.mkdtemp(dir=TEMP_DIR,
-                                            prefix=f"{formation}_"))
-            (run_dir / "frames").mkdir(parents=True, exist_ok=True)
+            config["parameters"].update({k: int(v) for k, v in zip(PARAMETER_KEYS, p)})
+            config["seed"] = np.random.randint(0, 100000)
+            config["initial_formation"] = formation
+            config["arena_file"] = arena_file
+            config["data_filename"] = os.path.join(run_dir, "frames", "data.feather")
+            os.makedirs(os.path.join(run_dir, "frames"), exist_ok=True)
 
-            # tailor YAML
-            cfg = copy.deepcopy(BASE_CFG)
-            cfg["parameters"].update(dict(zip(PARAMETER_KEYS, params_int)))
-            cfg["seed"]             = int(np.random.randint(0, 2**31 - 1))
-            cfg["initial_formation"] = formation
-            cfg["arena_file"]        = arena
-            cfg["data_filename"]     = str(run_dir / "frames"
-                                                     / "data.feather")
+            config_path = os.path.join(run_dir, "simple.yaml")
+            with open(config_path, "w") as f:
+                yaml.safe_dump(config, f)
 
-            cfg_path = run_dir / "cfg.yaml"
-            yaml.safe_dump(cfg, cfg_path.open("w"))
+            feather_file = run_simulation(config_path)
 
-            feather_file = run_simulator(cfg_path, run_dir)
-            if feather_file is None:              # simulator crashed
-                shutil.rmtree(run_dir, ignore_errors=True)
-                continue
+            if feather_file:
+                try:
+                    df = feather.read_feather(feather_file)
+                    polygon = load_arena_polygon_from_csv(arena_file)
+                    scale = (arena_surface / polygon.area) ** 0.5
+                    minx, miny, *_ = polygon.bounds
+                    polygon = affinity.translate(polygon, xoff=-minx, yoff=-miny)
+                    polygon = affinity.scale(polygon, xfact=scale, yfact=scale, origin=(0, 0))
 
-            try:
-                df   = feather.read_feather(feather_file)
-                poly = load_arena_polygon_from_csv(arena)
-                scale = (ARENA_SURF / poly.area) ** 0.5
-                minx, miny, *_ = poly.bounds
-                poly = affinity.translate(poly, xoff=-minx, yoff=-miny)
-                poly = affinity.scale(poly, xfact=scale, yfact=scale,
-                                      origin=(0, 0))
+                    metrics_df = compute_voronoi_metrics(
+                        df=df,
+                        arena_polygon=polygon,
+                        arena_bounds=polygon.bounds,
+                        arena_surface=arena_surface,
+                        communication_radius=133.0
+                    )
+                    cv = metrics_df["cv_area"].mean()
+                    if not np.isnan(cv):
+                        cv_values.append(cv)
+                except Exception as e:
+                    print(f"[ERROR] {formation} / {arena_file}: {e}")
+                finally:
+                    shutil.rmtree(run_dir, ignore_errors=True)
 
-                metrics = compute_voronoi_metrics(
-                    df=df, arena_polygon=poly, arena_bounds=poly.bounds,
-                    arena_surface=ARENA_SURF, communication_radius=133.0,
-                )
-                cv_vals.append(float(metrics["cv_area"].mean()))
-            except Exception as exc:               # pylint: disable=broad-except
-                print(f"[ANALYSIS‑ERR] {formation} / {arena}: {exc}",
-                      file=sys.stderr)
-            finally:
-                shutil.rmtree(run_dir, ignore_errors=True)
+    return np.mean(cv_values) if cv_values else None
 
-    return float(np.mean(cv_vals)) if cv_vals else None
+def objective_function(params):
 
+    global best_score, best_params
+    
+    # Reparameterize: ensure p[0] < p[1] and p[2] < p[3]
+    x0, dx0, x1, dx1 = params
+    p = [
+        int(x0),
+        int(x0 + abs(dx0)),
+        int(x1),
+        int(x1 + abs(dx1))
+    ]
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Main
-# ─────────────────────────────────────────────────────────────────────────────
-def main() -> None:
-    best_score  = float("inf")
-    best_params = None
-    fitness_over_time: list[float] = []
+    cv_values = []
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [executor.submit(run_one_simulation, p) for _ in range(N_RUNS_PER_INDIVIDUAL)]
+        for future in concurrent.futures.as_completed(futures):
+            result = future.result()
+            if result is not None:
+                cv_values.append(result)
+                print(f"Mean CV: {result:.4f} for parameters: {p}")
+                with open(OUTPUT_CSV, 'a') as f:
+                    f.write(",".join(map(str, p)) + f",{result:.6f}\n")
 
-    # CSV header
-    OUTPUT_CSV.write_text(
-        "run_duration_min,run_duration_max,tumble_duration_min,"
-        "tumble_duration_max,mean_cv\n"
-    )
+                # track best score
+                if result < best_score:
+                    best_score = result 
+                    best_params = p 
+            else:
+                print(f"Simulation failed for: {p}")
 
-    # persistent pool
-    with cf.ProcessPoolExecutor(max_workers=os.cpu_count()) as pool:
+    # ---- compute generation score, log it, and return it ----
+    gen_score = np.mean(cv_values) if cv_values else 1e6
+    print(f"[GEN] mean CV = {gen_score:.4f}")
+    fitness_over_time.append(gen_score)
+    return gen_score                    # CMA-ES will minimise –CV
 
-        def objective(params_f: list[float]) -> float:
-            nonlocal best_score, best_params
+def main():
+    os.makedirs(TEMP_DIR, exist_ok=True)
 
-            # constraints
-            if params_f[0] >= params_f[1] or params_f[2] >= params_f[3]:
-                return 1e6
+    bounds = [[0, 1, 0, 1], [10000, 10000, 10000, 10000]]
 
-            params_int = [int(round(v)) for v in params_f]
+    with open(OUTPUT_CSV, 'w') as f:
+        f.write("run_duration_min,run_duration_max,tumble_duration_min,tumble_duration_max,mean_cv\n")
 
-            futures = [pool.submit(run_one_simulation, params_int)
-                       for _ in range(N_RUNS_PER_INDIVIDUAL)]
-            cvs = [f.result() for f in futures if f.result() is not None]
-            mean_cv = float(np.mean(cvs)) if cvs else 1e6
-            fitness_over_time.append(mean_cv)
+    es = CMAEvolutionStrategy(INITIAL_VALUES, SIGMA, {
+        'bounds': bounds,
+        'maxiter': MAX_ITER,
+    })
 
-            OUTPUT_CSV.open("a").write(
-                ",".join(map(str, params_int)) + f",{mean_cv:.6f}\n"
-            )
+    es.optimize(objective_function)
 
-            if mean_cv < best_score:
-                best_score, best_params = mean_cv, params_int
-                print(f"[BEST] CV={best_score:.4f}  @ {best_params}")
-
-            return mean_cv   # CMA-ES minimises
-
-        # ── CMA-ES run ────────────────────────────────────────────────────
-        es = CMAEvolutionStrategy(
-            INITIAL_VALUES, SIGMA,
-            {"bounds": BOUNDS, "maxiter": MAX_ITER, "popsize": POP_SIZE}
-        )
-        es.optimize(objective)
-
-    # ──────────────────────────────────────────────────────────────────
+    # Plotting fitness over time
     plt.figure()
-    plt.plot(fitness_over_time, marker="o")
+    plt.plot(fitness_over_time, marker='o')
     plt.xlabel("Generation")
     plt.ylabel("Mean CV (lower is better)")
-    plt.title("CMA-ES optimisation progress")
+    plt.title("CMA-ES Optimization Progress")
     plt.grid(True)
     plt.tight_layout()
-    out_png = FIGURES_DIR / "optimization_curve.png"
-    plt.savefig(out_png, dpi=150)
+    plt.savefig("optimization_curve.png", dpi=150)
+    save_figure("Mean CV evolution.png", FIGURE_FOLDER)
+    plt.show()
 
-    try:
-        save_figure(plt.gcf(), "mean_cv_evolution.png", FIGURES_DIR)  # if helper expects this
-    except Exception:  # pragma: no cover
-        pass
-
-    print("== DONE ==")
-    print(f"Best parameters: {best_params}")
-    print(f"Best mean CV   : {best_score:.6f}")
+    print(f"Best evaluated parameters: {best_params} with mean CV = {best_score:.6f}")
     shutil.rmtree(TEMP_DIR, ignore_errors=True)
-
 
 if __name__ == "__main__":
     main()

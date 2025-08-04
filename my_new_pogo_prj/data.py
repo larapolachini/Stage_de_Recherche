@@ -96,7 +96,7 @@ plt.gca().set_aspect('equal')
 plt.title("Scaled Arena Polygon")
 plt.grid(True)
 plt.legend()
-plt.show()
+#plt.savefig("arena_polygon.png")   #see if the shape of the arena is correct
 
 
 print(arena_bounds)

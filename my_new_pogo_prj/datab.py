@@ -72,7 +72,7 @@ def process_arena(arena_file, arena_surface):
     plt.title(f"Arena: {os.path.basename(arena_file)}")
     plt.grid(True)
     plt.legend()
-    plt.show()
+    #plt.savefig(f"arena_polygon_{os.path.basename(arena_file)}.png")      # check the shape of the arena
 
     return arena_polygon, arena_bounds
 

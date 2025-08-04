@@ -552,7 +552,7 @@ def compute_fano_over_time_corrected(df, figure_folder, communication_radius=133
         plt.grid(True)
         plt.tight_layout()
         save_figure("fano_factor_over_time_corrected.png", figure_folder)
-        plt.show()
+
 
     return fano_df
 
@@ -600,7 +600,7 @@ def compute_overall_neighbor_degree_histogram(df, figure_folder, communication_r
         plt.grid(True)
         plt.tight_layout()
         save_figure("overall_neighbor_degree_histogram.png", figure_folder)
-        plt.show()
+
 
     return {
         "degrees": all_degrees,
@@ -674,7 +674,7 @@ def compute_degree_histogram_first_last(df, figure_folder, communication_radius=
 
         plt.tight_layout()
         plt.savefig("figures/degree_histogram_first_last.png", dpi=300)
-        plt.show()
+
 
     return stats
 
@@ -721,7 +721,7 @@ def compute_fano_over_time_all_runs(df, figure_folder, communication_radius=133.
         plt.grid(True)
         plt.tight_layout()
         save_figure("fano_factor_over_time_all_runs.png", figure_folder)
-        plt.show()
+
 
     return fano_df
 
@@ -768,7 +768,7 @@ def compute_overall_neighbor_degree_histogram_all_runs(df, figure_folder, commun
         plt.grid(True)
         plt.tight_layout()
         save_figure("overall_neighbor_degree_histogram_all_runs.png", figure_folder)
-        plt.show()
+        
 
     return {
         "degrees": all_degrees,
