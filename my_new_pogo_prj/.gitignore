@@ -4,10 +4,13 @@ env/
 venv/
 
 # Python
-__pycache__
 *.pyc
 *.egg-info
 dist/
+build/
+dist/
+docs/_build/
+__pycache__/
 
 # Data
 results/
@@ -26,13 +29,18 @@ frames/
 plots/
 *.gif
 *.sif
+
+# SDK
+pogobot-sdk
 pogosim
 pogo-utils
 
 # build
 *.o
 *.so
-build/
+build/sim
+SSR/build/
+SSR_move/build/
 **/build/
 
 # Example binaries
@@ -103,3 +111,4 @@ dkms.conf
 # Apptainer
 *.sif
 *.simg
+
