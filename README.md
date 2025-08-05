@@ -72,7 +72,7 @@ python3 optimizer_vorb.py
 ## Spectral Swarm Robotics (SSR)
 
 In the part of the Spectral Swarm robotics, we have the code that simulates how the robots discover the shape of the arena, 
-and in this code we have the SSR code with the run_and_tumble algorithm
+and now we have the SSR code with the run_and_tumble algorithm
 
 ### SSR
 

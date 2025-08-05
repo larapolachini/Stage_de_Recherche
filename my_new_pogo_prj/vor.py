@@ -17,7 +17,7 @@ import os
 figure_folder = "figures"
 os.makedirs(figure_folder, exist_ok=True)
 
-
+SAVE_FIGURES: bool = False
 
 # ---------- k-NN Distance Plotting ----------
 
@@ -235,9 +235,14 @@ def voronoi_finite_polygons_2d(vor, radius=None):
 
 sns.set(font_scale = 1.3)   # Scale the font size for the entire script
 
-def save_figure(filename, figure_folder, dpi=300):
-    path = os.path.join(figure_folder, filename)
-    print(f"Saving figure to: {path}")
+def save_figure(filename: str, folder: str, dpi: int = 300) -> None:
+    """Save current matplotlib figure *only* if SAVE_FIGURES is True."""
+    if not SAVE_FIGURES:
+        plt.close()
+        return
+    path = os.path.join(folder, filename)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    print(f"[fig] → {path}")
     plt.savefig(path, dpi=dpi)
     plt.close()
 
@@ -270,6 +275,7 @@ def plot_voronoi_std(df_voronoi, figure_folder):
 
 
 def plot_cv(df_voronoi, figure_folder):
+    plt.figure(figsize=(10, 6))
     # Example: Plot CV over time for each run
     for run_id in df_voronoi["run"].unique():
         run_df = df_voronoi[df_voronoi["run"] == run_id]
@@ -673,7 +679,7 @@ def compute_degree_histogram_first_last(df, figure_folder, communication_radius=
                          ha='center', va='center', fontsize=12)
 
         plt.tight_layout()
-        plt.savefig("figures/degree_histogram_first_last.png", dpi=300)
+        save_figure("degree_histogram_first_last.png", figure_folder)
 
 
     return stats
@@ -784,43 +790,44 @@ def compute_overall_neighbor_degree_histogram_all_runs(df, figure_folder, commun
 #yaml_path = "conf/simple.yaml"
 #arena_polygon, arena_bounds, arena_surface = load_arena_polygon_and_surface(yaml_path)
 
-feather_path = "results/result.feather"
-df = pd.read_feather(feather_path)
+
+def main() -> None:
+    """Run full analysis pipeline & write figures."""
+    global SAVE_FIGURES
+    SAVE_FIGURES = True  # enable figure writing
+
+    feather_path = "results/result.feather"
+    if not os.path.exists(feather_path):
+        raise FileNotFoundError(f"{feather_path} not found – generate simulation output first.")
+
+    df = pd.read_feather(feather_path)
+
+    # k‑NN plot
+    interindividual_distance_knn_over_time_plot(feather_path, figure_folder, k=3, communication_radius=133.0)
+
+    # Voronoi metrics & plots
+    df_vor = compute_voronoi_metrics(df, arena_polygon, arena_bounds, arena_surface, communication_radius=133.0)
+    plot_voronoi_variance(df_vor, figure_folder)
+    plot_voronoi_std(df_vor, figure_folder)
+    plot_cv(df_vor, figure_folder)
+    plot_voronoi_global_variance(df_vor, figure_folder)
+    plot_coverage_ratio(df_vor, figure_folder)
+
+    # Single & multi‑time Voronoi diagrams
+    times = sorted(df["time"].unique())
+    mid_time = times[len(times) // 2]
+    plot_voronoi_diagram(df, figure_folder, arena_polygon, arena_bounds, mid_time, run_id=0)
+    sample_times = [times[i] for i in [0, len(times)//4, len(times)//2, 3*len(times)//4, -1]]
+    plot_voronoi_evolution(df, figure_folder, arena_polygon, arena_bounds, sample_times, run_id=0)
+
+    # Fano / degree stats
+    compute_fano_over_time_corrected(df, figure_folder, communication_radius=133.0)
+    compute_overall_neighbor_degree_histogram(df, figure_folder, communication_radius=133.0)
+    compute_overall_neighbor_degree_histogram_all_runs(df, figure_folder, communication_radius=133.0)
+    compute_degree_histogram_first_last(df, figure_folder, communication_radius=133.0)
+
+    print("✅ Analysis complete – figures saved to", figure_folder)
 
 
-# k-NN plot
-interindividual_distance_knn_over_time_plot(feather_path, figure_folder, k=3, communication_radius=133.0, time_step=100)
-
-# Voronoi metrics with real arena
-df_voronoi = compute_voronoi_metrics(df, arena_polygon, arena_bounds, arena_surface, communication_radius=133.0)
-
-plot_voronoi_variance(df_voronoi, figure_folder)
-plot_voronoi_std(df_voronoi, figure_folder)
-plot_cv(df_voronoi, figure_folder)
-plot_voronoi_global_variance(df_voronoi, figure_folder)
-plot_coverage_ratio(df_voronoi, figure_folder)
-
-# NEW: Plot Voronoi diagrams
-print("\nPlotting Voronoi diagrams...")
-
-# Plot single Voronoi diagram at a specific time
-available_times = sorted(df["time"].unique())
-mid_time = available_times[len(available_times)//2]  # Middle time point
-plot_voronoi_diagram(df, figure_folder, arena_polygon, arena_bounds, mid_time, run_id=0, communication_radius=133.0)
-
-# Plot evolution of Voronoi diagrams at multiple time points
-sample_times = [available_times[i] for i in [0, len(available_times)//4, len(available_times)//2, 3*len(available_times)//4, -1]]
-plot_voronoi_evolution(df, figure_folder, arena_polygon, arena_bounds, sample_times, run_id=0, communication_radius=133.0) 
-
-
-
-# Compute Fano factor over time
-print("\nComputing Fano factor over time...")
-fano_df = compute_fano_over_time_corrected(df, figure_folder, communication_radius=133.0, run_id=0)
-
-compute_overall_neighbor_degree_histogram(df, figure_folder, communication_radius=133.0, run_id=0)
-
-compute_overall_neighbor_degree_histogram_all_runs(df, figure_folder, communication_radius=133.0)
-
-stats = compute_degree_histogram_first_last(df, figure_folder, communication_radius=133.0)
-
+if __name__ == "__main__":
+    main()
