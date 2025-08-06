@@ -29,14 +29,14 @@ from collections import Counter, defaultdict
 DATA_FILE  = "results/result.feather"
 SUBSTEP    = 3               # keep 1 every 3 points  →  down-sample ×3
 WINDOW_LEN = 100             # *after* sub-sampling
-INPUT_DIM  = 3 * WINDOW_LEN  # 3 sessions × 100 points = 300/3 = 100
+INPUT_DIM  = WINDOW_LEN  # 3 sessions × 100 points = 300/3 = 100
 SHIFT      = 50 // SUBSTEP   # slide window by 50 raw steps → 16 subs
 BURN_IN_STEPS = 50 // SUBSTEP
 BURN_IN_ONLY  = True         # use windows after burn-in zone
 BATCH_SIZE = 128
 LR, EPOCHS = 1e-3, 100
-HIDDEN     = (16, 8)
-DROPOUT_P  = 0.25
+HIDDEN     = (8, 8)
+DROPOUT_P  = 0.05
 TEST_SIZE  = 0.25
 DEVICE     = "cuda" if torch.cuda.is_available() else "cpu"
 RNG        = 42
@@ -72,8 +72,11 @@ def windows_from_sessions(sess_arrays):
         idx_starts = range(0, min_len - WINDOW_LEN + 1, SHIFT)
 
     # build windows
-    wins = [np.hstack([sa[i0:i0+WINDOW_LEN] for sa in sess_arrays])
-            for i0 in idx_starts]
+    wins = []
+    for i0 in idx_starts:
+       block = np.vstack([sa[i0:i0 + WINDOW_LEN] for sa in sess_arrays])
+       feat  = block.T.reshape(-1)[:WINDOW_LEN]             # (300,) → (100,)
+       wins.append(feat)
     return wins
 
 
@@ -153,7 +156,7 @@ for epoch in range(1, EPOCHS+1):
         loss.backward(); opt.step()
         run += loss.item() * xb.size(0)
     loss_curve.append(run / len(train_dl.dataset))
-    if epoch % 10 == 0 or epoch == 1:
+    if epoch % 5 == 0 or epoch == 1:
         print(f"Epoch {epoch:3d}/{EPOCHS}  |  loss {loss_curve[-1]:.4f}")
 
 # ------------------------------------------------------------------- #
