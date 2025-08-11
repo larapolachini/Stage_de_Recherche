@@ -39,9 +39,9 @@ BURN_IN_ONLY   = True
 
 BATCH_SIZE     = 128
 LR             = 1e-3
-EPOCHS         = 150
+EPOCHS         = 200
 HIDDEN         = (16, 8)
-DROPOUT_P      = 0.05
+DROPOUT_P      = 0.10
 TEST_SIZE      = 0.25
 
 DEVICE         = "cuda" if torch.cuda.is_available() else "cpu"
@@ -125,7 +125,7 @@ X_tr = scaler.fit_transform(X_tr).astype(np.float32)
 X_te = scaler.transform(X_te).astype(np.float32)
 
 # PCA to 50 dims (fit on train only)
-pca = PCA(n_components=50, whiten=True, random_state=RNG)
+pca = PCA(n_components=50, whiten= False, random_state=RNG)
 X_tr = pca.fit_transform(X_tr).astype(np.float32)
 X_te = pca.transform(X_te).astype(np.float32)
 
@@ -164,8 +164,12 @@ class MLP(nn.Module):
     def forward(self, x): return self.net(x)
 
 model = MLP(INPUT_DIM, HIDDEN, len(lbl2idx), DROPOUT_P).to(DEVICE)
-opt    = torch.optim.Adam(model.parameters(), lr=LR)  # add weight_decay=1e-4 if needed
-crit   = nn.CrossEntropyLoss()
+opt    = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-4)  # add weight_decay=1e-4 if needed
+classes = [lbl2idx[k] for k in sorted(lbl2idx)]
+counts = np.bincount([lbl2idx[v] for v in y_tr], minlength=len(lbl2idx))
+weights = counts.sum() / (len(lbl2idx) * np.maximum(counts, 1))  # inverse-freq
+weights = torch.tensor(weights, dtype=torch.float32, device=DEVICE)
+crit = nn.CrossEntropyLoss(weight=weights)
 
 # -------------------------------------------------------------- #
 # 6. Training                                                    #
