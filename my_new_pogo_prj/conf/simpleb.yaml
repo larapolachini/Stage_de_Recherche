@@ -11,7 +11,7 @@ window_height: 600      # In pixels
 
 arena_file:        # Test the results on two arenas
     default_option: arenas/disk.csv
-    batch_options: ["arenas/disk.csv", "arenas/square.csv", "arenas/annulus.csv"]
+    batch_options: ["arenas/disk.csv", "arenas/annulus.csv"]
 arena_surface: 1.0e6    # In mm²
 
 delete_old_files: true
@@ -31,7 +31,7 @@ show_light_levels: false            # In the GUI, can enabled/disabled using F6
 GUI: true
 
 # Time
-simulation_time: 50.0    # In s
+simulation_time: 100.0    # In s
 time_step: 0.01            # In s
 GUI_speed_up: 10.0         # How much the visualisation in the GUI should be sped up
 
@@ -124,10 +124,10 @@ objects:
 ########### Parameters used to directly initialize variables from the C code of the robots ###########
 parameters:
     # Configuration parameters for the run_and_tumble example
-    run_duration_min: 0
-    run_duration_max: 61
-    tumble_duration_min: 8
-    tumble_duration_max: 20
+    run_duration_min: 2
+    run_duration_max: 11
+    tumble_duration_min: 5
+    tumble_duration_max: 7
     enable_backward_dir: true
     max_age: 3000
 

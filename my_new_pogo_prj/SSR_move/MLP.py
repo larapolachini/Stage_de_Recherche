@@ -200,8 +200,8 @@ acc = accuracy_score(y_true, y_pred)
 prec, rec, f1, _ = precision_recall_fscore_support(
     y_true, y_pred, labels=list(idx2label.keys()), zero_division=0)
 
-print("\n=====  Window-level (individual)  =====")
-print(f"ACCURACY (window): {acc:.3f}\n")
+print("\n=====  Individual robot  =====")
+print(f"ACCURACY (individual): {acc:.3f}\n")
 print(classification_report(
     y_true, y_pred,
     target_names=[idx2label[i] for i in sorted(idx2label)],
@@ -256,7 +256,7 @@ ax2.bar(x - w, prec, width=w, label="prec")
 ax2.bar(x,     rec,  width=w, label="recall")
 ax2.bar(x + w, f1,   width=w, label="F1")
 ax2.set_xticks(x); ax2.set_xticklabels([idx2label[i] for i in x], rotation=30)
-ax2.set_ylim(0, 1); ax2.set_title("Window metrics")
+ax2.set_ylim(0, 1); ax2.set_title("Individual metrics")
 ax2.legend()
 
 # --- (c) swarm-level bars -----------------------------------------------------
@@ -266,6 +266,26 @@ ax3.bar(x + w, sw_f1,   width=w, label="F1")
 ax3.set_xticks(x); ax3.set_xticklabels([idx2label[i] for i in x], rotation=30)
 ax3.set_ylim(0, 1); ax3.set_title("Swarm-vote metrics")
 ax3.legend()
+
+# === 8. Accuracy bar plot ===
+window_acc = accuracy_score(y_true, y_pred)
+swarm_acc = accuracy_score(swarm_true, swarm_pred)
+
+fig_acc, ax_acc = plt.subplots(figsize=(5, 5))
+
+ax_acc.bar(["Individual robot", "Swarm"],
+           [window_acc, swarm_acc],
+           color=["skyblue", "orange"])
+
+ax_acc.set_ylim(0, 1.08)
+ax_acc.set_ylabel("Accuracy")
+ax_acc.set_title("Classification Accuracy")
+for i, v in enumerate([window_acc, swarm_acc]):
+    ax_acc.text(i, v + 0.02, f"{v:.3f}", ha='center', fontweight='bold')
+
+plt.tight_layout()
+plt.savefig("accuracy_comparison.png", dpi=300)
+plt.close(fig_acc) 
 
 plt.tight_layout(); plt.show()
 

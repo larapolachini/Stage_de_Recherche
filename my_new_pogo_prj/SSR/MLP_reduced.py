@@ -23,8 +23,8 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
 from plots import _to_long
-from utils  import load_data
-from collections import Counter, defaultdict
+from utils  import load_data  
+from collections import Counter, defaultdict 
 
 # -------------------------------------------------------------- #
 # 1. User parameters                                             #
@@ -39,9 +39,9 @@ BURN_IN_ONLY   = True
 
 BATCH_SIZE     = 128
 LR             = 1e-3
-EPOCHS         = 200
+EPOCHS         = 150
 HIDDEN         = (16, 8)
-DROPOUT_P      = 0.10
+DROPOUT_P      = 0.05
 TEST_SIZE      = 0.25
 
 DEVICE         = "cuda" if torch.cuda.is_available() else "cpu"
@@ -75,7 +75,7 @@ def windows_from_sessions(sess_arrays):
             return []
         idx_starts = range(start0, min_len - WINDOW_LEN + 1, SHIFT)
     else:
-        idx_starts = range(0, min_len - WINDOW_LEN + 1, SHIFT)
+                idx_starts = range(0, min_len - WINDOW_LEN + 1, SHIFT)
 
     wins = []
     for i0 in idx_starts:
@@ -99,7 +99,7 @@ for (arena, run, it), g_iter in df_long.groupby(["arena_file", "run", "current_i
         sess_arrays.append(arr)
     if not complete:
         continue
-
+        
     for win in windows_from_sessions(sess_arrays):
         features.append(win)
         labels.append(arena)
@@ -125,14 +125,13 @@ X_tr = scaler.fit_transform(X_tr).astype(np.float32)
 X_te = scaler.transform(X_te).astype(np.float32)
 
 # PCA to 50 dims (fit on train only)
-pca = PCA(n_components=50, whiten= False, random_state=RNG)
+pca = PCA(n_components=50, whiten=False, random_state=RNG)
 X_tr = pca.fit_transform(X_tr).astype(np.float32)
 X_te = pca.transform(X_te).astype(np.float32)
 
 print("after PCA:", X_tr.shape, X_te.shape)  # (*, 50), (*, 50)
 
 INPUT_DIM = X_tr.shape[1]    # should be 50 now
-
 # -------------------------------------------------------------- #
 # 4. Datasets & loaders                                          #
 # -------------------------------------------------------------- #
@@ -148,7 +147,6 @@ idx2lbl = {v: k for k, v in lbl2idx.items()}
 
 train_dl = DataLoader(ArenaDS(X_tr, y_tr, lbl2idx), batch_size=BATCH_SIZE, shuffle=True)
 test_dl  = DataLoader(ArenaDS(X_te, y_te, lbl2idx), batch_size=BATCH_SIZE)
-
 # -------------------------------------------------------------- #
 # 5. Tiny MLP (16, 8)                                            #
 # -------------------------------------------------------------- #
@@ -164,13 +162,12 @@ class MLP(nn.Module):
     def forward(self, x): return self.net(x)
 
 model = MLP(INPUT_DIM, HIDDEN, len(lbl2idx), DROPOUT_P).to(DEVICE)
-opt    = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-4)  # add weight_decay=1e-4 if needed
+opt    = torch.optim.Adam(model.parameters(), lr=LR)  # add weight_decay=1e-4 if needed
 classes = [lbl2idx[k] for k in sorted(lbl2idx)]
 counts = np.bincount([lbl2idx[v] for v in y_tr], minlength=len(lbl2idx))
 weights = counts.sum() / (len(lbl2idx) * np.maximum(counts, 1))  # inverse-freq
 weights = torch.tensor(weights, dtype=torch.float32, device=DEVICE)
 crit = nn.CrossEntropyLoss(weight=weights)
-
 # -------------------------------------------------------------- #
 # 6. Training                                                    #
 # -------------------------------------------------------------- #
@@ -188,7 +185,6 @@ for epoch in range(1, EPOCHS + 1):
     loss_curve.append(run / len(train_dl.dataset))
     if epoch % 10 == 0 or epoch == 1:
         print(f"Epoch {epoch:3d}/{EPOCHS}  |  loss {loss_curve[-1]:.4f}")
-
 # -------------------------------------------------------------- #
 # 7. Evaluation (window + swarm vote)                            #
 # -------------------------------------------------------------- #
@@ -207,8 +203,8 @@ with torch.no_grad():
 y_true = np.array(y_true)
 y_pred = np.array(y_pred)
 
-print("\n=====  Window-level (individual)  =====")
-print(f"ACCURACY (window): {accuracy_score(y_true, y_pred):.3f}\n")
+print("\n=====  Individual robot  =====")
+print(f"ACCURACY (individual): {accuracy_score(y_true, y_pred):.3f}\n")
 print(classification_report(
     y_true, y_pred,
     target_names=[idx2lbl[i] for i in sorted(idx2lbl)],
@@ -229,7 +225,6 @@ print(classification_report(
     swarm_true, swarm_pred,
     target_names=[idx2lbl[i] for i in sorted(idx2lbl)],
     digits=3))
-
 # -------------------------------------------------------------- #
 # 8. Plots (loss + window metrics + swarm metrics)               #
 # -------------------------------------------------------------- #
@@ -252,7 +247,7 @@ ax2.bar(x     , rec , width=w, label="recall")
 ax2.bar(x + w , f1  , width=w, label="F1")
 ax2.set_xticks(x)
 ax2.set_xticklabels([idx2lbl[i] for i in x], rotation=30)
-ax2.set_ylim(0, 1); ax2.set_title("Window metrics"); ax2.legend(frameon=False)
+ax2.set_ylim(0, 1); ax2.set_title("Individual robot metrics"); ax2.legend(frameon=False)
 
 # (c) swarm metrics
 ax3.bar(x - w, sw_prec, width=w, label="prec")
@@ -261,5 +256,25 @@ ax3.bar(x + w , sw_f1  , width=w, label="F1")
 ax3.set_xticks(x)
 ax3.set_xticklabels([idx2lbl[i] for i in x], rotation=30)
 ax3.set_ylim(0, 1); ax3.set_title("Swarm-vote metrics"); ax3.legend(frameon=False)
+
+# === 8. Accuracy bar plot ===
+window_acc = accuracy_score(y_true, y_pred)
+swarm_acc = accuracy_score(swarm_true, swarm_pred)
+
+fig_acc, ax_acc = plt.subplots(figsize=(5, 5))
+
+ax_acc.bar(["Individual robot", "Swarm"],
+           [window_acc, swarm_acc],
+           color=["skyblue", "orange"])
+
+ax_acc.set_ylim(0, 1.08)
+ax_acc.set_ylabel("Accuracy")
+ax_acc.set_title("Classification Accuracy")
+for i, v in enumerate([window_acc, swarm_acc]):
+    ax_acc.text(i, v + 0.02, f"{v:.3f}", ha='center', fontweight='bold')
+
+plt.tight_layout()
+plt.savefig("accuracy_comparison_reduced.png", dpi=300)
+plt.close(fig_acc) 
 
 plt.tight_layout(); plt.show()

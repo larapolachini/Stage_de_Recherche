@@ -117,4 +117,9 @@ Predict arena shapes with a simple MLP:
 python3 MLP.py
 ```
 
+Predict arena shapes with a simple MLP but with reduced data input:
+```bash
+python3 MLP_reduced.py
+```
+
 ---
